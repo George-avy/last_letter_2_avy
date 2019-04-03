@@ -9,22 +9,22 @@ Propulsion::Propulsion(Model *parent, int id) :tfListener(tfBuffer)
     motor_number = id;
 
     //Init services
-    ros::service::waitForService("last_letter_2/link_inputs");
-    motor_input_client = nh.serviceClient<last_letter_2_msgs::get_link_inputs_srv>("last_letter_2/link_inputs", true);
+    ros::service::waitForService("last_letter_2/motor_input");
+    motor_input_client = nh.serviceClient<last_letter_2_msgs::get_motor_input_srv>("last_letter_2/motor_input", true  );
 }
 
 //calculation steps
 void Propulsion::calculationCycle()
 {
-    std::cout<< "03.2.1="<< ros::WallTime::now()<<std::endl;
+    // std::cout<< "03.2.1="<< ros::WallTime::now()<<std::endl;
     getStates();
-    std::cout<< "03.2.2="<< ros::WallTime::now()<<std::endl;
+    // std::cout<< "03.2.2="<< ros::WallTime::now()<<std::endl;
     getInputSignals();
-    std::cout<< "03.2.3="<< ros::WallTime::now()<<std::endl;
+    // std::cout<< "03.2.3="<< ros::WallTime::now()<<std::endl;
     rotateWind();
-    std::cout<< "03.2.4="<< ros::WallTime::now()<<std::endl;
+    // std::cout<< "03.2.4="<< ros::WallTime::now()<<std::endl;
     calcAirspeed();
-    std::cout<< "03.2.5="<< ros::WallTime::now()<<std::endl;
+    // std::cout<< "03.2.5="<< ros::WallTime::now()<<std::endl;
     calcWrench();
 }
 
@@ -38,18 +38,18 @@ void Propulsion::getStates()
 void Propulsion::getInputSignals()
 {
      //call motor_inputs srv
-    link_inputs_srv.request.motor_number=motor_number;
-    link_inputs_srv.request.airfoil_number=0;
+    motor_input_srv.request.motor_number=motor_number;
+    // motor_input_srv.request.airfoil_number=0;
 
     if (motor_input_client.isValid())
     {
-        if (motor_input_client.call(link_inputs_srv))
+        if (motor_input_client.call(motor_input_srv))
         {
             // ROS_INFO("succeed service call\n");
         }
         else
         {
-            ROS_ERROR("Failed to call service get_link_inputs_srv\n");
+            ROS_ERROR("Failed to call service get_motor_input_srv\n");
             //break;
         }
     }
@@ -57,9 +57,9 @@ void Propulsion::getInputSignals()
     {
         ROS_ERROR("Service getInputSignals down, waiting reconnection...");
         motor_input_client.waitForExistence();
-        motor_input_client = nh.serviceClient<last_letter_2_msgs::get_link_inputs_srv>("last_letter_2/link_inputs", true);
+        //connectToClient
     }
-    motor_input=link_inputs_srv.response.inputs.x;
+    motor_input=motor_input_srv.response.input;
 }
 
 // rotate wind vector from body to airfoil Link

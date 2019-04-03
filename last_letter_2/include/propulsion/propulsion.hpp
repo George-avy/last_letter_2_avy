@@ -15,7 +15,7 @@ public:
   ros::ServiceClient motor_input_client;
 
   //Declare msgs
-  last_letter_2_msgs::get_link_inputs_srv link_inputs_srv;
+  last_letter_2_msgs::get_motor_input_srv motor_input_srv;
   last_letter_2_msgs::link_states motor_states;
   last_letter_2_msgs::prop_wrenches prop_wrenches;
 

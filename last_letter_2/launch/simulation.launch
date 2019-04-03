@@ -41,8 +41,8 @@
     <param name="deadzone" value="0.01" />
   </node>
   <node pkg="last_letter_2" name="joy2chan" type="joy2chan" output="screen" />
-  <!-- <node pkg="last_letter_2" name="controller" type="controller" output="screen" /> -->
-  <node pkg="last_letter_2" name="controller1" type="controller1" output="screen" />
+  <node pkg="last_letter_2" name="controller" type="controller" output="screen" />
+  <!-- <node pkg="last_letter_2" name="controller1" type="controller1" output="screen" /> -->
   
   <node pkg="last_letter_2" name="core" type="core" output="screen" />
 

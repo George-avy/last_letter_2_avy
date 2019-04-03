@@ -19,7 +19,7 @@ class Aerodynamics
     ros::ServiceClient airfoil_inputs_client;
 
      //Declare msgs 
-    last_letter_2_msgs::get_link_inputs_srv link_inputs_srv;
+    last_letter_2_msgs::get_airfoil_inputs_srv airfoil_inputs_srv;
     last_letter_2_msgs::link_states wing_states;
     last_letter_2_msgs::aero_wrenches aero_wrenches;
 

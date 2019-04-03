@@ -43,15 +43,15 @@ void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr& ms
 
 void Model::modelStep()
 {
-    std::cout<<(ros::WallTime::now()-t)<<std::endl;
-    t=ros::WallTime::now();
-    std::cout<< "02=    "<< ros::WallTime::now()<<std::endl;
+    // std::cout<<(ros::WallTime::now()-t)<<std::endl;
+    // t=ros::WallTime::now();
+    // std::cout<< "02=    "<< ros::WallTime::now()<<std::endl;
     getAirdata();
-    std::cout<< "03=    "<< ros::WallTime::now()<<std::endl;
+    // std::cout<< "03=    "<< ros::WallTime::now()<<std::endl;
     calcDynamics();
-    std::cout<< "04=    "<< ros::WallTime::now()<<std::endl;
+    // std::cout<< "04=    "<< ros::WallTime::now()<<std::endl;
     applyWrenches();
-    std::cout<< "05=    "<< ros::WallTime::now()<<std::endl<<std::endl;
+    // std::cout<< "05=    "<< ros::WallTime::now()<<std::endl<<std::endl;
 }
 
 void Model::getAirdata()
@@ -69,11 +69,11 @@ void Model::getAirdata()
 
 void Model::calcDynamics()
 {
-    std::cout<< "03.1=  "<< ros::WallTime::now()<<std::endl;
+    // std::cout<< "03.1=  "<< ros::WallTime::now()<<std::endl;
     dynamics.calcAero();
-    std::cout<< "03.2=  "<< ros::WallTime::now()<<std::endl;
+    // std::cout<< "03.2=  "<< ros::WallTime::now()<<std::endl;
     dynamics.calcProp();
-    std::cout<< "03.3=  "<< ros::WallTime::now()<<std::endl;
+    // std::cout<< "03.3=  "<< ros::WallTime::now()<<std::endl;
 }
 
 void Model::applyWrenches()

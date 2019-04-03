@@ -1,5 +1,5 @@
 #service for gettin model inputs from controller
 
-std_msgs/Int16 airfoil_number
+int16 airfoil_number
 ---
 geometry_msgs/Vector3 inputs

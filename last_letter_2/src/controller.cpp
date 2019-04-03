@@ -26,9 +26,9 @@ void chan2signal(last_letter_2_msgs::joystick_input msg)
 bool return_airfoil_inputs(last_letter_2_msgs::get_airfoil_inputs_srv::Request &req,
                            last_letter_2_msgs::get_airfoil_inputs_srv::Response &res)
 {
-    res.inputs.x=model_inputs.wing_input_x[req.airfoil_number.data-1];
-    res.inputs.y=model_inputs.wing_input_y[req.airfoil_number.data-1];
-    res.inputs.z=model_inputs.wing_input_z[req.airfoil_number.data-1];
+    res.inputs.x=model_inputs.wing_input_x[req.airfoil_number-1];
+    res.inputs.y=model_inputs.wing_input_y[req.airfoil_number-1];
+    res.inputs.z=model_inputs.wing_input_z[req.airfoil_number-1];
     return true;
 }
 

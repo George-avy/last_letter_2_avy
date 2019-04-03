@@ -69,7 +69,7 @@ void Environment::calcWind()
     if (isnan(wind.x) || isnan(wind.y) || isnan(wind.z))
     {
         ROS_FATAL("earth wind NAN in environmentNode!");
-        std::cout << wind.x << " " << wind.y << " " << wind.z << std::endl;
+        // std::cout << wind.x << " " << wind.y << " " << wind.z << std::endl;
         ros::shutdown();
     }
 
