@@ -27,7 +27,7 @@ class ElectricEng : public Propulsion
     ////////////////
     // Functions //
     ////////////////
-    ElectricEng(Model *);
+    ElectricEng(Model * parent,int id);
     ~ElectricEng();
 
     void updateRadPS();

@@ -4,7 +4,7 @@
 
 motor/nMotors: 1
 
-
+motor1/enable: 1  #1 if motor is in use, 0 if out of use
 motor1/chanMotor: 2
 
 motor1/CGOffset: [-0.25, 0.0, -0.13] # location offset of the motor mount relative to CG
@@ -42,3 +42,13 @@ motor1/k_motor: 80
 motor1/k_t_p: 0.0
 motor1/k_omega: 20.0
 motor1/c_prop: 1.0
+
+#motor 2 charachteristics
+motor2/enable: 1  #1 if motor is in use, 0 if out of use
+motor2/chanMotor: 2
+motor2/motorType: 0
+
+#motor 3 charachteristics
+motor3/enable: 1  #1 if motor is in use, 0 if out of use
+motor3/chanMotor: 2
+motor3/motorType: 1

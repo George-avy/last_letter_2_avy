@@ -1,3 +1,4 @@
+
 // A node that convert channels signals, to input signals for the model,
 // based on what kind of model is loaded (plane, multirotor etc)
 
@@ -6,8 +7,7 @@
 #include <cstdlib>
 #include <last_letter_2_msgs/joystick_input.h>
 #include <last_letter_2_msgs/model_inputs.h>
-#include <last_letter_2_msgs/get_airfoil_inputs_srv.h>
-#include <last_letter_2_msgs/get_motor_input_srv.h>
+#include <last_letter_2_msgs/get_link_inputs_srv.h>
 
 ros::Publisher pub;
 
@@ -23,37 +23,45 @@ void chan2signal(last_letter_2_msgs::joystick_input msg)
     channels=msg;
 }
 
-bool return_airfoil_inputs(last_letter_2_msgs::get_airfoil_inputs_srv::Request &req,
-                           last_letter_2_msgs::get_airfoil_inputs_srv::Response &res)
+bool return_link_inputs(last_letter_2_msgs::get_link_inputs_srv::Request &req,
+                  last_letter_2_msgs::get_link_inputs_srv::Response &res)
 {
-    res.inputs.x=model_inputs.wing_input_x[req.airfoil_number.data-1];
-    res.inputs.y=model_inputs.wing_input_y[req.airfoil_number.data-1];
-    res.inputs.z=model_inputs.wing_input_z[req.airfoil_number.data-1];
-    return true;
-}
+    // std::cout << "03.1.1.1=" << ros::WallTime::now() << std::endl;
 
-bool return_motor_input(last_letter_2_msgs::get_motor_input_srv::Request &req,
-                           last_letter_2_msgs::get_motor_input_srv::Response &res)
-{
-    res.input=model_inputs.motor_input[req.motor_number-1];
+    if (req.airfoil_number != 0 && req.motor_number == 0) // return airfoil inputs 
+    {
+        res.inputs.x = model_inputs.wing_input_x[req.airfoil_number - 1];
+        res.inputs.y = model_inputs.wing_input_y[req.airfoil_number - 1];
+        res.inputs.z = model_inputs.wing_input_z[req.airfoil_number - 1];
+    }
+    else if (req.airfoil_number == 0 && req.motor_number != 0) // return motor inputs
+    {
+        res.inputs.x = model_inputs.motor_input[req.motor_number - 1];
+        res.inputs.y = 0;
+        res.inputs.z = 0;
+    }
+    else //rsomething else
+    {
+
+    }
+    // std::cout << "03.1.1.2=" << ros::WallTime::now() << std::endl;
+
     return true;
 }
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "controller_node");
+    ros::init(argc, argv, "controller_node1");
     ros::NodeHandle n;
 
     //Subscribtions
     ros::Subscriber sub = n.subscribe("last_letter_2/rawPWM", 1, chan2signal);
-    pub = n.advertise<last_letter_2_msgs::model_inputs>("last_letter_2/model_inputs", 1);
 
     //Servers 
-    ros::ServiceServer get_airfoil_inputs_service = n.advertiseService("last_letter_2/airfoil_inputs", return_airfoil_inputs);
-    ros::ServiceServer get_motor_input_service = n.advertiseService("last_letter_2/motor_input", return_motor_input);
+    ros::ServiceServer get_link_input_service = n.advertiseService("last_letter_2/link_inputs", return_link_inputs);
    
     int i;
-    ros::WallRate r(1100);
+    ros::WallRate r(1000);
 
     // Read the mixer type
     if (!ros::param::getCached("HID/mixerid", mixerid)) { ROS_INFO("No mixing function selected"); mixerid = 0; }
@@ -103,7 +111,6 @@ int main(int argc, char **argv)
     }
 
     //Calculation loop
-    
     while (ros::ok())
     {
         //Choose which channel covnertion, based on model type
@@ -139,9 +146,8 @@ int main(int argc, char **argv)
         }
         //Publish data
         model_inputs.header.stamp = ros::Time::now();
-        // pub.publish(model_inputs);    // no need, will be send through srv
         ros::spinOnce();
-        r.sleep();
+        // r.sleep();
     }
     return 0;
 }

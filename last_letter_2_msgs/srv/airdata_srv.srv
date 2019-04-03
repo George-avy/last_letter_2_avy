@@ -1,6 +1,0 @@
-#service for gettin airdata from environment
-#send the states of model, and get airdata
-
-last_letter_2_msgs/model_states states
----
-last_letter_2_msgs/air_data airdata

@@ -1,0 +1,6 @@
+#service for gettin link inputs from controller
+
+int16 airfoil_number
+int16 motor_number
+---
+geometry_msgs/Vector3 inputs

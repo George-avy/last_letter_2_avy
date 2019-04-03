@@ -2,8 +2,8 @@
  {
    public:
    double s_prop, c_prop, k_motor, k_omega, k_t_p;
-   BeardEngine(Model *);
-   void initParam();
+   BeardEngine(Model * parent, int id);
+   void initParam(int id);
    void calcThrust();
    void calcTorque();
  };

@@ -1,9 +1,12 @@
+// Dynamics model class
+
 class Dynamics
 {
   public:
   Model * model;
-  Aerodynamics *aerodynamics;
-  Propulsion * propulsion;
+  std::list<Aerodynamics*> listOfAerodynamics;
+  std::list<Propulsion*> listOfPropulsion;
+  
   Dynamics(Model *);
   void calcAero();
   void calcProp();

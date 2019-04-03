@@ -4,11 +4,10 @@
 #include <ignition/math/Vector3.hh>
 #include "ros/callback_queue.h"
 #include <boost/bind.hpp>
-#include <last_letter_2_msgs/apply_wrench_srv.h>
-#include <last_letter_2_msgs/model_wrenches.h>
+// #include <last_letter_2_msgs/step_srv.h>
 #include <rosgraph_msgs/Clock.h>
-#include <tf2_ros/static_transform_broadcaster.h>
-#include <tf2/LinearMath/Quaternion.h>
+// #include <tf2_ros/static_transform_broadcaster.h>
+// #include <tf2/LinearMath/Quaternion.h>
 #include <ctime> // for timer
 #include <ros/service.h>
 #include <thread>
@@ -33,7 +32,7 @@ private:
 
   // ROS publisher
   // ros::Publisher pub_;
-  ros::ServiceServer srv_;
+  // ros::ServiceServer srv_;
 
   ///  A ROS callbackqueue that helps process messages
   ros::CallbackQueue rosQueue;
@@ -57,59 +56,63 @@ public:
       ROS_INFO("Waiting for node to rise");
     }
     // Spin up the queue helper thread.
-    this->rosQueueThread =
-        std::thread(std::bind(&world_plugin::QueueThread, this));
+    // this->rosQueueThread =
+        // std::thread(std::bind(&world_plugin::QueueThread, this));
     // Connect a callback to the world update start signal.
     this->updateConnection = event::Events::ConnectWorldUpdateBegin(std::bind(&world_plugin::OnUpdate, this));
-    ros::AdvertiseServiceOptions so = (ros::AdvertiseServiceOptions::create<last_letter_2_msgs::apply_wrench_srv>("last_letter_2/step",
+    // ros::AdvertiseServiceOptions so = (ros::AdvertiseServiceOptions::create<last_letter_2_msgs::step_srv>("last_letter_2/step",
                                                                                                                   boost::bind(&world_plugin::giveStep, this, _1, _2), ros::VoidPtr(), &this->rosQueue));
     this->srv_ = this->rosNode->advertiseService(so);
 
-    publishWorldStaticFrames();
+    // publishWorldStaticFrames();
   }
 
   // publish the relation between the world static frames Inertial_NWU-Inertial_NED 
-  void publishWorldStaticFrames()
-  {
-    static tf2_ros::StaticTransformBroadcaster static_broadcaster;
-    geometry_msgs::TransformStamped static_transformStamped;
-    tf2::Quaternion quat;
+  // void publishWorldStaticFrames()
+  // {
+  //   static tf2_ros::StaticTransformBroadcaster static_broadcaster;
+  //   geometry_msgs::TransformStamped static_transformStamped;
+  //   tf2::Quaternion quat;
 
-    static_transformStamped.header.stamp = ros::Time::now();
-    static_transformStamped.header.frame_id = "inertial_NWU";
-    static_transformStamped.child_frame_id = "inertial_NED";
-    static_transformStamped.transform.translation.x = 0;
-    static_transformStamped.transform.translation.y = 0;
-    static_transformStamped.transform.translation.z = 0;
-    quat.setRPY(M_PI, 0, 0);
-    static_transformStamped.transform.rotation.x = quat.x();
-    static_transformStamped.transform.rotation.y = quat.y();
-    static_transformStamped.transform.rotation.z = quat.z();
-    static_transformStamped.transform.rotation.w = quat.w();
+  //   static_transformStamped.header.stamp = ros::Time::now();
+  //   static_transformStamped.header.frame_id = "inertial_NWU";
+  //   static_transformStamped.child_frame_id = "inertial_NED";
+  //   static_transformStamped.transform.translation.x = 0;
+  //   static_transformStamped.transform.translation.y = 0;
+  //   static_transformStamped.transform.translation.z = 0;
+  //   quat.setRPY(M_PI, 0, 0);
+  //   static_transformStamped.transform.rotation.x = quat.x();
+  //   static_transformStamped.transform.rotation.y = quat.y();
+  //   static_transformStamped.transform.rotation.z = quat.z();
+  //   static_transformStamped.transform.rotation.w = quat.w();
 
-    static_broadcaster.sendTransform(static_transformStamped);
-  }
+  //   static_broadcaster.sendTransform(static_transformStamped);
+  // }
 
   //  ROS helper function that processes messages
-  void QueueThread()
-  {
-    static const double timeout = 0.01;
-    ROS_INFO(" i am in QueueThread now\n");
-    while (this->rosNode->ok())
-    {
-      // this->rosQueue.callAvailable(ros::WallDuration(timeout));
-      this->rosQueue.callAvailable();
-    }
-  }
+  // void QueueThread()
+  // {
+  //   static const double timeout = 0.01;
+    // ROS_INFO(" i am in QueueThread now\n");
+  //   ros::WallRate r(1000);
+  //   while (this->rosNode->ok())
+  //   {
+  //     // this->rosQueue.callAvailable(ros::WallDuration(timeout));
+  //     this->rosQueue.callAvailable();
+  //     // r.sleep();
+  //   }
+  // }
 
   // service that enables the gazebo to make the next step
-  bool giveStep(last_letter_2_msgs::apply_wrench_srv::Request &req,
-                last_letter_2_msgs::apply_wrench_srv::Response &res)
-  {
-    this->World->Step(1);
+  // bool giveStep(last_letter_2_msgs::step_srv::Request &req,
+  //               last_letter_2_msgs::step_srv::Response &res)
+  // {
+  //   // std::cout<< "05.4=  "<< ros::WallTime::now()<<std::endl;
+  //   this->World->Step(req.step_num.data);
 
-    return true;
-  }
+  //   // std::cout<< "05.5=  "<< ros::WallTime::now()<<std::endl;
+  //   return true;
+  // }
 
   void OnUpdate()
   {

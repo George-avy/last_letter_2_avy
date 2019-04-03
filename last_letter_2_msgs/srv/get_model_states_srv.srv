@@ -1,5 +1,0 @@
-#service for gettin model_states from gazebo
-
-std_msgs/Empty empty
----
-last_letter_2_msgs/model_states model_states

@@ -3,75 +3,34 @@
 ////////////////////////
 
 // Constructor
-ElectricEng::ElectricEng(Model *parent) : Propulsion(parent)
+ElectricEng::ElectricEng(Model *parent, int id) : Propulsion(parent,id)
 {
-    int id = 1;
     XmlRpc::XmlRpcValue list;
     int i, length;
     char s[100];
     char paramMsg[50];
 
     sprintf(paramMsg, "motor%i/propDiam", id);
-    if (!ros::param::getCached(paramMsg, propDiam))
-    {
-        ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg);
-        ros::shutdown();
-    }
+    if (!ros::param::getCached(paramMsg, propDiam)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "motor%i/rotationDir", id);
-    if (!ros::param::getCached(paramMsg, rotationDir))
-    {
-        ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg);
-        ros::shutdown();
-    }
+    if (!ros::param::getCached(paramMsg, rotationDir)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "motor%i/engInertia", id);
-    if (!ros::param::getCached(paramMsg, engInertia))
-    {
-        ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg);
-        ros::shutdown();
-    }
+    if (!ros::param::getCached(paramMsg, engInertia)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "motor%i/Kv", id);
-    if (!ros::param::getCached(paramMsg, Kv))
-    {
-        ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg);
-        ros::shutdown();
-    }
+    if (!ros::param::getCached(paramMsg, Kv)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "motor%i/Rm", id);
-    if (!ros::param::getCached(paramMsg, Rm))
-    {
-        ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg);
-        ros::shutdown();
-    }
+    if (!ros::param::getCached(paramMsg, Rm)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "battery%i/Rs", id);
-    if (!ros::param::getCached(paramMsg, Rs))
-    {
-        ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg);
-        ros::shutdown();
-    }
+    if (!ros::param::getCached(paramMsg, Rs)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "battery%i/Cells", id);
-    if (!ros::param::getCached(paramMsg, Cells))
-    {
-        ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg);
-        ros::shutdown();
-    }
+    if (!ros::param::getCached(paramMsg, Cells)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "motor%i/I0", id);
-    if (!ros::param::getCached(paramMsg, I0))
-    {
-        ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg);
-        ros::shutdown();
-    }
+    if (!ros::param::getCached(paramMsg, I0)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airframe/m");
-    if (!ros::param::getCached(paramMsg, mass))
-    {
-        ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg);
-        ros::shutdown();
-    }
+    if (!ros::param::getCached(paramMsg, mass)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     // Initialize RadPS limits
     sprintf(paramMsg, "motor%i/RadPSLimits", id);
-    if (!ros::param::getCached(paramMsg, list))
-    {
-        ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg);
-        ros::shutdown();
-    }
+    if (!ros::param::getCached(paramMsg, list)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     ROS_ASSERT(list[0].getType() == XmlRpc::XmlRpcValue::TypeDouble);
     omegaMin = list[0];
     omegaMax = list[1];
@@ -89,9 +48,8 @@ ElectricEng::ElectricEng(Model *parent) : Propulsion(parent)
     prop_wrenches.thrust = 0.0;
     prop_wrenches.torque = 0.0;
 
-    // sprintf(paramMsg, "propulsion%i", id);
-    // ros::NodeHandle n;
-    // pub = n.advertise<last_letter_msgs::ElectricEng>(paramMsg, 1000); //propulsion data publisher
+    sprintf(paramMsg, "propulsion%i", id);
+    ros::NodeHandle n;
 }
 
 // Destructor
@@ -106,7 +64,7 @@ void ElectricEng::calcThrust()
 {
 
     rho = model->airdata.density;
-    double inputMotor = model->control_signals.delta_t;
+    double inputMotor = motor_input;
     double Ei = std::fabs(omega) / 2 / M_PI / Kv;
     // double Ei = rotationDir * omega/2/M_PI/Kv;
     double Im = (Cells * 4.0 * inputMotor - Ei) / (Rs * inputMotor + Rm);
@@ -135,27 +93,11 @@ void ElectricEng::calcThrust()
     double deltaT = (engPower - propPower) / std::fabs(omega);
     double omegaDot = 1 / engInertia * deltaT;
 
-    omega += rotationDir * omegaDot * model->control_signals.delta_t;
+    omega += rotationDir * omegaDot * motor_input;
 
     omega = rotationDir * std::max(std::min(std::fabs(omega), omegaMax), omegaMin); // Constrain omega to working range
-    if (!std::isfinite(prop_wrenches.thrust))
-    {
-        ROS_FATAL("propulsion.cpp: State NaN in prop_wrenches.thrust");
-        ros::shutdown();
-    }
-    // model->states.rotorspeed[0]=std::fabs(omega); // Write engine speed to states message
-
-    // message.header.stamp = ros::Time::now();
-    // message.powerEng = propPower;
-    // message.omega = omega;
-    // message.throttle = inputMotor*100.0;
-    // message.powerProp = propPower;
-    // message.thrust = prop_wrenches.thrust;
-    // message.torque = prop_wrenches.torque;
-    // message.advRatio = advRatio;
-    // message.airspeed = normalWind;
-    // message.ncoeff = npCoeff;
-    // pub.publish(message);
+    if (!std::isfinite(prop_wrenches.thrust)) { ROS_FATAL("propulsion.cpp: State NaN in prop_wrenches.thrust"); ros::shutdown(); }
+     // model->states.rotorspeed[0]=std::fabs(omega); // Write engine speed to states message
 }
 
 void ElectricEng::calcTorque()

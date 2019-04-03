@@ -1,36 +1,47 @@
+#include <last_letter_2_headers.hpp>
+#include "environment.hpp" 
+#include "dynamics.hpp"
+#include "aerodynamics.hpp"
+#include "propulsion/propulsion.hpp"
+#include "factory.hpp"
+  
+ // The model object
+ // A class that cordinates all processes for a model step
+ 
  class Model
 {
   public:
-    last_letter_2_msgs::model_states model_states;
-    last_letter_2_msgs::air_data airdata;
-    last_letter_2_msgs::control_signals control_signals;
-    last_letter_2_msgs::model_wrenches model_wrenches;
-    double airspeed,alpha,beta;
-    double u_r, v_r, w_r;   //relative body wind
-    
     ros::NodeHandle nh;
-    ros::ServiceClient states_client;
-    ros::ServiceClient control_signals_client;
-    ros::ServiceClient airdata_client;
+    
+    //Declare service clients
     ros::ServiceClient apply_wrench_client;
     ros::ServiceClient sim_step_client;
-    ros::ServiceClient pauseGazebo;
+    ros::ServiceClient pauseGazebo; 
 
-    ros::Publisher signals_publisher;
-    last_letter_2_msgs::get_model_states_srv states_srv;
-    last_letter_2_msgs::get_control_signals_srv signals_srv;
-    last_letter_2_msgs::airdata_srv air_data;
-    last_letter_2_msgs::apply_wrench_srv apply_wrench_srv;
+    //Declare subscribers
+    ros::Subscriber gazebo_sub;
 
+    ros::Publisher loop_number;
+
+    // Declare service msgs
+    last_letter_2_msgs::apply_model_wrenches_srv apply_wrenches_srv;
+    last_letter_2_msgs::step_srv step_msg;
+
+
+    Environment environment;
     Dynamics dynamics;
-    // Airdata airdata;
+    last_letter_2_msgs::air_data airdata;
+    last_letter_2_msgs::model_states model_states;
+    ros::WallTime t;
+
+    std_msgs::Int32 loop_num;
+
+    //Class methods
     Model();
+    void gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr&);
     void modelStep();
-    void getStates();
-    void getControlSignals();
     void getAirdata();
-    void calcAirdataTriplet();
-    void calcWrenches();
+    void calcDynamics();
     void applyWrenches();
-    void simulationStep();
 };
+

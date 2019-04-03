@@ -23,7 +23,7 @@ last_letter_2_msgs::joystick_input mixer(double *input, int mixerid)
             channels.value[i] = (unsigned int)(input[i] * 500 + 1500);
         }
         return channels;
-    case 1:																 // Airplane mixing
+    case 1: // Airplane mixing
         channels.value[0] = (unsigned int)(input[0] * 500 + 1500);		 // Aileron channel
         channels.value[1] = (unsigned int)(input[1] * 500 + 1500);		 // Elevator channel
         channels.value[2] = (unsigned int)((input[2] + 1) * 500 + 1000); // Throttle channel
@@ -49,7 +49,7 @@ last_letter_2_msgs::joystick_input mixer(double *input, int mixerid)
         channels.value[9] = (unsigned int)(input[9] * 1000 + 1000);   // Reset channel
         channels.value[10] = (unsigned int)(input[10] * 1000 + 1000); // Generic channel
         return channels;
-    case 3:																														 // Firefly Y6 mixing
+    case 3: // Firefly Y6 mixing
         channels.value[0] = (unsigned int)(500 * ((input[2] + 1) - 0.11 * input[0] + 0.11 * input[1] - 0.11 * input[3]) + 1000); // top-right motor channel
         channels.value[1] = (unsigned int)(500 * ((input[2] + 1) - 0.11 * input[0] + 0.11 * input[1] + 0.11 * input[3]) + 1000); // bottom-right motor channel
         channels.value[2] = (unsigned int)(500 * ((input[2] + 1) + 0.00 * input[0] - 0.11 * input[1] - 0.11 * input[3]) + 1000); // top-rear motor channel
@@ -112,33 +112,21 @@ int main(int argc, char **argv)
     // Read the controller configuration parameters from the HID.yaml file
     XmlRpc::XmlRpcValue listInt, listDouble;
     int i;
-    if (!ros::param::getCached("/HID/throws", listDouble))
-    {
-        ROS_FATAL("Invalid parameters for -/HID/throws- in param server!");
-        ros::shutdown();
-    }
+    if (!ros::param::getCached("/HID/throws", listDouble)) { ROS_FATAL("Invalid parameters for -/HID/throws- in param server!"); ros::shutdown(); }
     for (i = 0; i < listDouble.size(); ++i)
     {
         ROS_ASSERT(listDouble[i].getType() == XmlRpc::XmlRpcValue::TypeDouble); //Asserts that the provided condition evaluates to true.
         throwIndex[i] = listDouble[i];
     }
     std::cout << "Reading input axes" << std::endl;
-    if (!ros::param::getCached("/HID/axes", listInt))
-    {
-        ROS_FATAL("Invalid parameters for -/HID/axes- in param server!");
-        ros::shutdown();
-    }
+    if (!ros::param::getCached("/HID/axes", listInt)) { ROS_FATAL("Invalid parameters for -/HID/axes- in param server!"); ros::shutdown(); }
     for (i = 0; i < listInt.size(); ++i)
     {
         ROS_ASSERT(listInt[i].getType() == XmlRpc::XmlRpcValue::TypeInt);
         axisIndex[i] = listInt[i];
     }
     ROS_INFO("Reading input buttons configuration");
-    if (!ros::param::getCached("/HID/buttons", listInt))
-    {
-        ROS_FATAL("Invalid parameters for -/HID/buttons- in param server!");
-        ros::shutdown();
-    }
+    if (!ros::param::getCached("/HID/buttons", listInt)) { ROS_FATAL("Invalid parameters for -/HID/buttons- in param server!"); ros::shutdown(); }
     for (i = 0; i < listInt.size(); ++i)
     {
         ROS_ASSERT(listInt[i].getType() == XmlRpc::XmlRpcValue::TypeInt);

@@ -1,7 +1,7 @@
 class Factory
 {
     public:
-    Aerodynamics * buildAerodynamics(Model *);
-    Propulsion * buildPropulsion(Model *);
+    Aerodynamics * buildAerodynamics(Model *parent, int id);
+    Propulsion * buildPropulsion(Model * parent, int id);
     Polynomial * buildPolynomial(char * );
 };

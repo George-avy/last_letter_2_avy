@@ -7,31 +7,32 @@ find_package(catkin REQUIRED
   roscpp
   std_msgs
   message_generation
+  geometry_msgs
 )
 
 add_message_files(
   FILES
   joystick_input.msg
-  input_signals.msg
-  model_wrenches.msg
+  link_states.msg
   model_states.msg
   air_data.msg
-  control_signals.msg
   aero_wrenches.msg
   prop_wrenches.msg
+  model_inputs.msg
 )
 
 add_service_files(
   FILES
-  apply_wrench_srv.srv
-  get_model_states_srv.srv
-  get_control_signals_srv.srv
-  airdata_srv.srv
+  apply_model_wrenches_srv.srv
+  get_airfoil_inputs_srv.srv
+  get_motor_input_srv.srv
+  get_link_inputs_srv.srv
 )
 
 generate_messages(
   DEPENDENCIES
   std_msgs
+  geometry_msgs
 )
 
 

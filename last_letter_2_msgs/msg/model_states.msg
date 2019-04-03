@@ -1,14 +1,6 @@
-# Basic model states
+# states of all links of the model
 Header header
-float32 x
-float32 y
-float32 z
-float32 roll
-float32 pitch
-float32 yaw
-float32 u
-float32 v
-float32 w
-float32 p
-float32 q
-float32 r
+last_letter_2_msgs/link_states base_link_states
+last_letter_2_msgs/link_states[3] airfoil_states
+last_letter_2_msgs/link_states[4] motor_states
+std_msgs/Int32 loop_number

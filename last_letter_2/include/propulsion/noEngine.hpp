@@ -2,7 +2,7 @@
 class NoEngine : public Propulsion
  {
    public:
-   NoEngine(Model *);
+   NoEngine(Model * parent, int id);
    void calcThrust();
    void calcTorque();
  };

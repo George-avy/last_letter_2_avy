@@ -1,40 +1,10 @@
-#include <ros/ros.h>
-#include <last_letter_2_msgs/airdata_srv.h>
-#include <last_letter_2_msgs/air_data.h>
-#include <last_letter_2_msgs/model_states.h>
-#include <geometry_msgs/Vector3.h>
-#include <stdio.h>
-#include <iostream>
-
 #define Rd 287.05307  //Gas constant for dry air, J/kg K
 #define L0 -6.5  //Temperature lapse rate, at sea level deg K/km
 
-ros::Publisher pub;
-
-class Environment
+Environment::Environment(Model *parent)
 {
-    public:
-        last_letter_2_msgs::air_data airdata;
-        last_letter_2_msgs::model_states states;
-        double windDir, windRef, windRefAlt,surfSmooth, kwind;
-        double T0; //Temperature at sea level, degrees K
-        double P0; //Pressure at sea level, in HG
-        double rho; //Density at sea level, kg/m**3
-        double windDistU;
-        double windDistV[2], windDistW[2];
-        double Lu,Lw,sigmau,sigmaw;
-        double allowTurbulence, dt, grav0;
-        Environment();
-        bool calcAirdata(last_letter_2_msgs::airdata_srv::Request& req, last_letter_2_msgs::airdata_srv::Response& res );
-        void calcWind();
-        void calcDens();
-        void calcPres();
-        void calcTemp();
+    model=parent;
 
-};
-
-Environment::Environment()
-{
     grav0 = 9.81; // need fix:  last_letter_msgs::Geoid::EARTH_grav;
     if(!ros::param::getCached("/world/deltaT", dt)) {ROS_FATAL("Invalid parameters for -deltaT- in param server!"); ros::shutdown();}
     if(!ros::param::getCached("/environment/Dryden/use", allowTurbulence)) {ROS_FATAL("Invalid parameters for -/environment/Dryden/use- in param server!"); ros::shutdown();}
@@ -67,19 +37,13 @@ Environment::Environment()
 
 }
 
-bool Environment::calcAirdata(last_letter_2_msgs::airdata_srv::Request &req, last_letter_2_msgs::airdata_srv::Response &res)
+void Environment::calculateAirdata()
 {
-    states = req.states;
-
+    states = model->model_states.base_link_states;
     calcTemp();
     calcWind();
     calcDens();
     calcPres();
-    pub.publish(airdata);
-
-    // Send back airdata
-    res.airdata = airdata;
-    return true;
 }
 
 ///////////////////////
@@ -176,22 +140,4 @@ void Environment::calcPres()
     double Hb = 0, Tb = T0, Pb = P0, L = L0;
     pressure = Pb * pow(1 - (L / Tb) * (altitude / 1000.0 - Hb), ((1000.0 * grav0) / (Rd * L))); //Corrected to 1 - (L/...)
     airdata.pressure = pressure;
-}
-
-int main(int argc, char **argv)
-{
-    ros::init(argc, argv, "environment_node");
-    Environment env_object;
-    ros::NodeHandle nh;
-    ros::ServiceServer envir_server = nh.advertiseService("last_letter_2/airdata", &Environment::calcAirdata, &env_object);
-    pub = nh.advertise<last_letter_2_msgs::air_data>("last_letter_2/Environment", 1);
-
-    while (ros::ok())
-    {
-        ros::spin();
-    }
-
-    ros::shutdown();
-
-    return 0;
 }

@@ -2,7 +2,7 @@
 <package format="2">
     <name>last_letter_2</name>
     <version>0.0.0</version>
-    <description>Last_letter simulator main code</description>
+    <description>Last_letter simulator New code for plane-multirotor simulation</description>
 
     <maintainer email="tailwhipx4@gmail.com">George Zogopoulos-Papaliakos</maintainer>
 

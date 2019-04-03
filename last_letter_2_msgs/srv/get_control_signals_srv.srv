@@ -1,5 +1,0 @@
-#service for gettin control_signals from controller
-
-std_msgs/Empty empty
----
-last_letter_2_msgs/control_signals signals

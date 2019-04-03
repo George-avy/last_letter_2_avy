@@ -1,16 +1,20 @@
 <?xml version="1.0"?>
 <robot name="plane" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
+<xacro:property name="source" value="$(find last_letter_2)/config/param/aircrafts/csl_2k19/rigidBody.yaml" />
+<xacro:property name="dictionary" value="${load_yaml(source)}"/>
+<xacro:property name="mass" value="${dictionary['airframe/m']}"/>
+    
 <!-- body, airfoil sizes -->
 <xacro:property name="body_s" value="1" />   
 <xacro:property name="airfoil_s" value="1" />
-<xacro:property name="pi" value="3.1415" />
 
-<!-- body link -->
+<!-- body link , body_height, body_rad, body_mass -->
 <xacro:property name="body_h" value="${2.5*body_s}" />
 <xacro:property name="body_r" value="${0.5*body_s}" />
 <xacro:property name="body_m" value="${body_s/10}" />
 
+    <!-- only body_FLU acceptable name for base_link -->
     <link name="body_FLU">
         <visual>
             <origin rpy="0 -${pi/2} 0 " />
@@ -25,23 +29,25 @@
                 <cylinder radius="${body_r}" length="${body_h}" />
             </geometry>
         </collision>
-        
+
         <inertial>
             <origin rpy="0 -${pi/2} 0 " />
             <mass value="${body_m}" />
-            <inertia ixx="${1/12*(3*body_r*body_r+body_h*body_h)*body_m}" ixy="0" ixz="0" iyz="0"
-                iyy="${1/12*(3*body_r*body_r+body_h*body_h)*body_m}" izz="${1/2*body_m*body_r*body_r}" />
+            <inertia    ixx="${1/12*(3*body_r*body_r+body_h*body_h)*body_m}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*(3*body_r*body_r+body_h*body_h)*body_m}"
+                        izz="${1/2*body_m*body_r*body_r}" />
         </inertial>
-
     </link>
-    ----------------------------------------------------------------------------  wing
-<!-- airfoil link -->
+
+    ----------------------------------------------------------------------------  airfoils
+<!-- airfoil1 link parameters , x, y, z, mass-->
 <xacro:property name="airfoil_x" value="${airfoil_s/2}" />
 <xacro:property name="airfoil_y" value="${airfoil_s*6}" />
-<xacro:property name="airfoil_z" value="${airfoil_s/10}" />
-<xacro:property name="airfoil_m" value="2" />
+<xacro:property name="airfoil_z" value="${airfoil_s/10}"/>
+<xacro:property name="airfoil_m" value="2" />               ----airfoil mass
     
-    <link name="airfoil">
+    <!-- only airfoil(Number_0f_Airfoil) acceptable name for airfoils -->
+    <link name="airfoil1">
         <visual>
             <geometry>
                 <box size="${airfoil_x} ${airfoil_y} ${airfoil_z}" />
@@ -56,60 +62,105 @@
 
          <inertial>
             <mass value="${airfoil_m}" />
-            <inertia ixx="${1/12*airfoil_m*(airfoil_y*airfoil_y+airfoil_z*airfoil_z)}" ixy="0" ixz="0" iyz="0"
-                iyy="${1/12*airfoil_m*(airfoil_x*airfoil_x+airfoil_z*airfoil_z)}" izz="${1/12*airfoil_m*(airfoil_x*airfoil_x+airfoil_y*airfoil_y)}" />
+            <inertia    ixx="${1/12*airfoil_m*(airfoil_y*airfoil_y+airfoil_z*airfoil_z)}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*airfoil_m*(airfoil_x*airfoil_x+airfoil_z*airfoil_z)}" 
+                        izz="${1/12*airfoil_m*(airfoil_x*airfoil_x+airfoil_y*airfoil_y)}" />
         </inertial>
     </link>
     
-    <joint name="body_FLUToWing" type="revolute">
+    <joint name="body_FLU_to_airfoil1" type="revolute">
         <origin xyz="0 0 0" rpy ="0 0 0"/>
         <parent link="body_FLU" />
-        <child link="airfoil" />
-        <limit effort="1000.0" lower="-0.000872665" upper="0.000872665" velocity="0.5"/>
+        <child link="airfoil1" />
+        <limit effort="1000.0" velocity="0.5"/>   ---default limits upper=lower=0
     </joint>
-    
- -----------------------------------------------------------------------------------propeller
-<!-- arm link -->
-<xacro:property name="arm_m" value="${body_m/2}" />
-<xacro:property name="arm_r" value="${body_r/5}" />
-<xacro:property name="arm_h" value="${body_h/12}" />
-    
-    <link name="arm">
+
+
+    ----------------------------------------------------------------------------------- motors
+<!-- motor link -->
+<!-- motor parameters , x, y, z, mass -->
+<xacro:property name="motor_x" value="${body_s/10}" />
+<xacro:property name="motor_y" value="${body_s/5}" />
+<xacro:property name="motor_z" value="${body_s/5}" />
+<xacro:property name="motor_m" value="${body_m/5}" />
+
+<!-- only motor(Number_0f_Motor) acceptable name for motors -->
+ <link name="motor1">
         <visual>
-            <origin xyz="${arm_h/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${0.5*motor_x} 0 0"/>
             <geometry>
-                <cylinder radius="${arm_r}" length="${arm_h}" />
+                <box size="${motor_x} ${motor_y} ${motor_z}" />
             </geometry>
         </visual>
 
         <collision>
-            <origin xyz="${arm_h/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${0.5*motor_x} 0 0"/>
             <geometry>
-                <cylinder radius="${arm_r}" length="${arm_h}" />
+                <box size="${motor_x} ${motor_y} ${motor_z}" />
             </geometry>
         </collision>
 
         <inertial>
-            <origin xyz="${arm_h/2} 0 0" />
-            <mass value="${arm_m}" />
-            <inertia ixx="${1/12*arm_m*arm_h*arm_h+1/4*arm_m*arm_r*arm_r}" ixy="0" ixz="0" iyz="0"
-                iyy="${1/12*arm_m*arm_h*arm_h+1/4*arm_m*arm_r*arm_r}" izz="${1/2*arm_m*arm_r*arm_r}" />
+            <origin xyz="${0.5*motor_x} 0 0"/>
+            <mass value="${motor_m}" />
+            <inertia    ixx="${1/12*motor_m*(motor_y*motor_y+motor_z*motor_z)}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*motor_m*(motor_x*motor_x+motor_z*motor_z)}" 
+                        izz="${1/12*motor_m*(motor_x*motor_x+motor_y*motor_y)}" />
         </inertial>
     </link>
 
-    <joint name="body_FLU_to_arm" type="continuous">
-        <origin xyz="${body_h/2} 0 0" rpy="0 0 0" />
-        <axis xyz="1 0 0" />
+    <joint name="body_FLU_to_motor1" type="revolute">
+        <origin xyz="${0.5*body_h} 0 0" rpy="0 0 0" />
+        <limit effort="1000.0" velocity="0.5"/>
         <parent link="body_FLU" />
-        <child link="arm" />
+        <child link="motor1" />
     </joint>
 
-<!-- propeller link -->
-<xacro:property name="propeller_m" value="${body_m/2}" />
+ -----------------------------------------------------------------------------------propeller
+<!-- axle link parameters height, rad, mass-->
+<xacro:property name="axle_h" value="${body_h/12}" />
+<xacro:property name="axle_r" value="${body_r/10}" />
+<xacro:property name="axle_m" value="${body_m/2}" />
+    
+    <link name="axle1">
+        <visual>
+            <origin xyz="${axle_h/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <cylinder radius="${axle_r}" length="${axle_h}" />
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin xyz="${axle_h/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <cylinder radius="${axle_r}" length="${axle_h}" />
+            </geometry>
+        </collision>
+
+        <inertial>
+            <origin xyz="${axle_h/2} 0 0" />
+            <mass value="${axle_m}" />
+            <inertia    ixx="${1/12*axle_m*axle_h*axle_h+1/4*axle_m*axle_r*axle_r}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*axle_m*axle_h*axle_h+1/4*axle_m*axle_r*axle_r}" 
+                        izz="${1/2*axle_m*axle_r*axle_r}" />
+        </inertial>
+    </link>
+
+    <joint name="motor1_to_axle1" type="continuous">
+        <origin xyz="${motor_x} 0 0" rpy="0 0 0" />
+        <axis xyz="1 0 0" />
+        <parent link="motor1" />
+        <child link="axle1" />
+    </joint>
+
+<!-- propeller link parameters x, y, z, mass -->
 <xacro:property name="propeller_x" value="${0.8*body_s}" />
 <xacro:property name="propeller_y" value="${0.2*body_s}" />
 <xacro:property name="propeller_z" value="${0.05*body_s}" />
-    <link name="propeller">
+<xacro:property name="propeller_m" value="${body_m/2}" />
+
+    
+    <link name="propeller1">
         <visual>
             <geometry>
                 <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
@@ -124,25 +175,26 @@
 
         <inertial>
             <mass value="${propeller_m}" />
-           <inertia ixx="${1/12*propeller_m*(propeller_y*propeller_y+propeller_z*propeller_z)}" ixy="0" ixz="0" iyz="0"
-                iyy="${1/12*propeller_m*(propeller_x*propeller_x+propeller_z*propeller_z)}" izz="${1/12*propeller_m*(propeller_x*propeller_x+propeller_y*propeller_y)}" />
+           <inertia     ixx="${1/12*propeller_m*(propeller_y*propeller_y+propeller_z*propeller_z)}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*propeller_m*(propeller_x*propeller_x+propeller_z*propeller_z)}" 
+                        izz="${1/12*propeller_m*(propeller_x*propeller_x+propeller_y*propeller_y)}" />
         </inertial>
 
     </link>
 
-    <joint name="arm_to_propeller" type="fixed">
-        <origin xyz="${arm_h} 0 0" rpy="0 ${pi/2} 0" />
-        <parent link="arm" />
-        <child link="propeller" />
+    <joint name="axle1_to_propeller1" type="fixed">
+        <origin xyz="${axle_h} 0 0" rpy="0 ${pi/2} 0" />
+        <parent link="axle1" />
+        <child link="propeller1" />
     </joint>
     
      ---------------------------------------------------------------------------front wheels
      
-     <!-- wheel_base_link -->
-<xacro:property name="wheel_base_m" value="${0.5*body_m}" />
+     <!-- wheel_base_link parameters, x, y, z, mass-->
 <xacro:property name="wheel_base_x" value="${0.05*body_s}" />
 <xacro:property name="wheel_base_y" value="${2*body_s}" />
 <xacro:property name="wheel_base_z" value="${0.05*body_s}" />
+<xacro:property name="wheel_base_m" value="${0.5*body_m}" />
 
     <link name="wheel_base">
         <visual>
@@ -159,8 +211,9 @@
 
         <inertial>
             <mass value="${wheel_base_m}" />
-            <inertia ixx="${1/12*wheel_base_m*(wheel_base_y*wheel_base_y+wheel_base_z*wheel_base_z)}" ixy="0" ixz="0" iyz="0"
-                iyy="${1/12*wheel_base_m*(wheel_base_x*wheel_base_x+wheel_base_z*wheel_base_z)}" izz="${1/12*wheel_base_m*(wheel_base_x*wheel_base_x+wheel_base_y*propeller_y)}" />
+            <inertia    ixx="${1/12*wheel_base_m*(wheel_base_y*wheel_base_y+wheel_base_z*wheel_base_z)}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*wheel_base_m*(wheel_base_x*wheel_base_x+wheel_base_z*wheel_base_z)}" 
+                        izz="${1/12*wheel_base_m*(wheel_base_x*wheel_base_x+wheel_base_y*propeller_y)}" />
         </inertial>
 
     </link>
@@ -171,10 +224,10 @@
         <child link="wheel_base" />
     </joint>
 
-<!-- left wheel link -->
-<xacro:property name="left_wheel_m" value="${body_m/2}" />
+<!-- left wheel link parameters, rad, height, mass-->
 <xacro:property name="left_wheel_r" value="${0.3*body_s}" />
 <xacro:property name="left_wheel_h" value="${0.1*body_s}" />
+<xacro:property name="left_wheel_m" value="${body_m/2}" />
 
     <link name="left_wheel">
         <visual>
@@ -194,8 +247,9 @@
         <inertial>
             <origin xyz="0 0 ${left_wheel_h/2}" />
             <mass value="${left_wheel_m}" />
-           <inertia ixx="${1/12*left_wheel_m*left_wheel_h*left_wheel_h+1/4*left_wheel_m*left_wheel_r*left_wheel_r}" ixy="0" ixz="0" iyz="0"
-                iyy="${1/12*left_wheel_m*left_wheel_h*left_wheel_h+1/4*left_wheel_m*left_wheel_r*left_wheel_r}" izz="${1/2*left_wheel_m*left_wheel_r*left_wheel_r}" />
+           <inertia     ixx="${1/12*left_wheel_m*left_wheel_h*left_wheel_h+1/4*left_wheel_m*left_wheel_r*left_wheel_r}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*left_wheel_m*left_wheel_h*left_wheel_h+1/4*left_wheel_m*left_wheel_r*left_wheel_r}" 
+                        izz="${1/2*left_wheel_m*left_wheel_r*left_wheel_r}" />
         </inertial>
     </link>
 
@@ -206,10 +260,10 @@
         <axis xyz=" 0 0 1" />
     </joint>
 
-<!-- right wheel link -->
-<xacro:property name="right_wheel_m" value="${left_wheel_m}" />
+<!-- right wheel link parameters rad, height, mass-->
 <xacro:property name="right_wheel_r" value="${left_wheel_r}" />
 <xacro:property name="right_wheel_h" value="${left_wheel_h}" />
+<xacro:property name="right_wheel_m" value="${left_wheel_m}" />
 
     <link name="right_wheel">
         <visual>
@@ -229,8 +283,9 @@
         <inertial>
             <origin xyz="0 0 -${right_wheel_h/2}" />
            <mass value="${right_wheel_m}" />
-           <inertia ixx="${1/12*right_wheel_m*right_wheel_h*right_wheel_h+1/4*right_wheel_m*right_wheel_r*right_wheel_r}" ixy="0" ixz="0" iyz="0"
-                iyy="${1/12*right_wheel_m*right_wheel_h*right_wheel_h+1/4*right_wheel_m*right_wheel_r*right_wheel_r}" izz="${1/2*right_wheel_m*right_wheel_r*right_wheel_r}" />
+           <inertia     ixx="${1/12*right_wheel_m*right_wheel_h*right_wheel_h+1/4*right_wheel_m*right_wheel_r*right_wheel_r}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*right_wheel_m*right_wheel_h*right_wheel_h+1/4*right_wheel_m*right_wheel_r*right_wheel_r}" 
+                        izz="${1/2*right_wheel_m*right_wheel_r*right_wheel_r}" />
         </inertial>
     </link>
 
@@ -242,7 +297,7 @@
     </joint>
 
     ------------------------------------------------------------------------------------ rear sphere wheel
-<!-- rear wheel link -->
+<!-- rear wheel link parameters, rad, mass -->
 <xacro:property name="rear_wheel_m" value="${body_m/2}" />
 <xacro:property name="rear_wheel_r" value="${0.1*body_s}" />
 
@@ -261,8 +316,9 @@
 
         <inertial>
             <mass value="${rear_wheel_m}" />
-            <inertia ixx="${2/5*rear_wheel_m*rear_wheel_r*rear_wheel_r}" ixy="0" ixz="0" iyz="0"
-                iyy=" ${2/5*rear_wheel_m*rear_wheel_r*rear_wheel_r}" izz="${2/5*rear_wheel_m*rear_wheel_r*rear_wheel_r}" />
+            <inertia    ixx="${2/5*rear_wheel_m*rear_wheel_r*rear_wheel_r}" ixy="0" ixz="0" iyz="0"
+                        iyy="${2/5*rear_wheel_m*rear_wheel_r*rear_wheel_r}"
+                        izz="${2/5*rear_wheel_m*rear_wheel_r*rear_wheel_r}" />
         </inertial>
     </link>
 
@@ -278,7 +334,7 @@
     <gazebo>
     <plugin name="model_plugin" filename="libmodel_plugin.so"/>
     <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
-        <jointName>body_FLUToWing, body_FLU_to_arm, wheel_base_to_left_wheel, wheel_base_to_right_wheel, body_FLU_to_rear_wheel </jointName>
+        <jointName>body_FLU_to_airfoil1, body_FLU_to_motor1, wheel_base_to_left_wheel, wheel_base_to_right_wheel, body_FLU_to_rear_wheel </jointName>
         <robotNamespace>last_letter_2</robotNamespace>
         <updateRate>0</updateRate>
     </plugin>
