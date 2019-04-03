@@ -106,7 +106,7 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "joystick_node");
     ros::NodeHandle n;
-    ros::Subscriber sub = n.subscribe("joy", 1, joy2chan);
+    ros::Subscriber sub = n.subscribe("joy", 1, joy2chan,ros::TransportHints().tcpNoDelay());
     pub = n.advertise<last_letter_2_msgs::joystick_input>("last_letter_2/rawPWM", 1);
 
     // Read the controller configuration parameters from the HID.yaml file

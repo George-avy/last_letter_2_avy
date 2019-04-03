@@ -35,23 +35,17 @@ class model_plugin : public ModelPlugin
     ///  A node use for ROS transport
     ros::NodeHandle *rosNode;
 
-    ///  A ROS subscriber
-    //ros::Subscriber rosSub;
-
     // ROS publisher
     ros::Publisher states_pub;
 
     // Ros services
     ros::ServiceServer apply_wrenches_server;
-    // ros::ServiceServer returnStates_server;
 
     ///  A ROS callbackqueue that helps process messages
     ros::CallbackQueue wrenches_rosQueue;
-    // ros::CallbackQueue states_rosQueue;
 
     ///  A thread the keeps running the rosQueue
     std::thread rosQueueThread1;
-    // std::thread rosQueueThread2;
 
     last_letter_2_msgs::link_states base_link_states;
     last_letter_2_msgs::link_states airfoil_states[3];
@@ -156,13 +150,11 @@ class model_plugin : public ModelPlugin
     //  ROS helper function that processes messages
     void QueueThread1()
     {
-        static const double timeout = 0.1;
         ROS_INFO(" i am in QueueThread1 now\n");
-        ros::WallRate r(1100);
-
+        ros::WallRate r(1100);  
+        // the sleep rate, increase dramaticaly the preformance
         while (this->rosNode->ok())
         {
-            // this->wrenches_rosQueue.callAvailable(ros::WallDuration(timeout));
             this->wrenches_rosQueue.callAvailable();
             r.sleep();
         }
@@ -173,9 +165,7 @@ class model_plugin : public ModelPlugin
     bool applyWrenchOnModel(last_letter_2_msgs::apply_model_wrenches_srv::Request &req,
                             last_letter_2_msgs::apply_model_wrenches_srv::Response &res)
     {
-        // std::cout<< "gazebo:Wsrv  at "<<ros::WallTime::now()<< std::endl;
-
-        // printf("wrenches applied\n");
+        //apply wrenches to each airfoil and motor
          for (i = 0; i < num_wings; i++)
         {
             ignition::math::Vector3d force, torque;
@@ -184,7 +174,6 @@ class model_plugin : public ModelPlugin
             force[1]=req.airfoil_forces[i].y;
             force[2]=req.airfoil_forces[i].z;
             sprintf(link_name_temp, "airfoil%i", i + 1);
-            // sprintf(link_name_temp,"airfoil1");
             link_name.assign(link_name_temp);
             model->GetLink(link_name)->AddLinkForce(force);
 
@@ -202,7 +191,6 @@ class model_plugin : public ModelPlugin
             force[1] = 0;
             force[2] = 0;
             sprintf(link_name_temp, "motor%i", i + 1);
-            // sprintf(link_name_temp,"motor1");
             link_name.assign(link_name_temp);
             model->GetLink(link_name)->AddLinkForce(force);
 
@@ -211,27 +199,22 @@ class model_plugin : public ModelPlugin
             torque[2] = 0;
             model->GetLink(link_name)->AddRelativeTorque(torque);
         }
+        //unlock gazebo step
         wrenches_applied=true;
         return true;
     }
 
     void BeforeUpdate()
     {
-        // std::cout<< "gazebo:bfup  at "<<ros::WallTime::now()<< std::endl;
-
-        while(!wrenches_applied && loop_number>24)
-        {
-        }
-        // std::cout<< "gazebo:true  at "<<ros::WallTime::now()<< std::endl;
-
+        //wait until wrenches are ready 
+        while(!wrenches_applied && loop_number>24) {   }
+        
+        //lock gazebo step
         wrenches_applied=false;
     }
 
     void OnUpdate()
     {
-        // sprintf(link_name_temp, "airfoil%i", i + 1);
-        // std::cout<< "gazebo:onup  at "<<ros::WallTime::now()<< std::endl;
-
         relLinVel = model->GetLink("body_FLU")->RelativeLinearVel();
         rotation = model->GetLink("body_FLU")->WorldPose().Rot().Euler();
         relAngVel = model->GetLink("body_FLU")->RelativeAngularVel();
@@ -257,7 +240,6 @@ class model_plugin : public ModelPlugin
         for (i = 0; i < num_wings; i++)
         {
             sprintf(link_name_temp, "airfoil%i", i + 1);
-            // sprintf(link_name_temp, "airfoil");
             link_name.assign(link_name_temp);
             relLinVel = model->GetLink(link_name)->RelativeLinearVel();
             rotation = model->GetLink(link_name)->WorldPose().Rot().Euler();
@@ -285,7 +267,6 @@ class model_plugin : public ModelPlugin
         for (i = 0; i < num_motors; i++)
         {
             sprintf(link_name_temp, "motor%i", i + 1);
-            // sprintf(link_name_temp, "motor");
             link_name.assign(link_name_temp);
             relLinVel = model->GetLink(link_name)->RelativeLinearVel();
             rotation = model->GetLink(link_name)->WorldPose().Rot().Euler();
@@ -309,13 +290,11 @@ class model_plugin : public ModelPlugin
 
             model_states.motor_states[i]=motor_states[i];
         }
-        loop_number++;
-        // printf("gazebo: %i at ",loop_number);
-        // std::cout<< ros::WallTime::now()<< std::endl;
+        loop_number++; // check if start from zero!
 
         model_states.loop_number.data=loop_number;
+        //publish model states, ros starts calculation step
         this->states_pub.publish(model_states);
-        // std::cout<< "gazebo:afpb  at "<<ros::WallTime::now()<< std::endl;
 
         //publish tranform between gazebo inertia NWU and body frame FLU
         //if declaration is placed in data area of class, causes problems. So it is placed here.

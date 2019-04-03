@@ -24,9 +24,7 @@ add_message_files(
 add_service_files(
   FILES
   apply_model_wrenches_srv.srv
-  get_airfoil_inputs_srv.srv
-  get_motor_input_srv.srv
-  get_link_inputs_srv.srv
+  get_control_inputs_srv.srv
 )
 
 generate_messages(

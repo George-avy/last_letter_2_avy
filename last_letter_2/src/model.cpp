@@ -1,14 +1,20 @@
-#include <ros/transport_hints.h>
 
 
 Model::Model() : environment(this), dynamics(this)
 {
+    //Read the number of airfoils
+    if (!ros::param::getCached("airfoil/nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown(); }
+    //Read the number of motors
+    if (!ros::param::getCached("motor/nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
+
     //Subscriber that gets model states from gazebo after physics step
     gazebo_sub = nh.subscribe("last_letter_2/gazebo/model_states", 1, &Model::gazeboStatesClb, this,ros::TransportHints().tcpNoDelay());
 
     //Service to send the calculated wrenches to gazebo
     ros::service::waitForService("last_letter_2/apply_model_wrenches_srv");
     apply_wrench_client = nh.serviceClient<last_letter_2_msgs::apply_model_wrenches_srv>("last_letter_2/apply_model_wrenches_srv", true);
+    ros::service::waitForService("last_letter_2/get_control_inputs_srv");
+    get_control_inputs_client = nh.serviceClient<last_letter_2_msgs::get_control_inputs_srv>("last_letter_2/get_control_inputs_srv", true);
     
     // Start gazebo on pause state
     // Freeze gazebo with service after the initialization of all gazebo classes, services and topics.
@@ -45,6 +51,8 @@ void Model::modelStep()
 {
     // std::cout<<(ros::WallTime::now()-t)<<std::endl;
     // t=ros::WallTime::now();
+    // std::cout<< "01=    "<< ros::WallTime::now()<<std::endl;
+    getControlInputs();
     // std::cout<< "02=    "<< ros::WallTime::now()<<std::endl;
     getAirdata();
     // std::cout<< "03=    "<< ros::WallTime::now()<<std::endl;
@@ -52,6 +60,44 @@ void Model::modelStep()
     // std::cout<< "04=    "<< ros::WallTime::now()<<std::endl;
     applyWrenches();
     // std::cout<< "05=    "<< ros::WallTime::now()<<std::endl<<std::endl;
+}
+
+// get control inputs for all airfoils and motor from controller node
+void Model::getControlInputs()
+{
+    // call get_contol_inputs_srv
+    if (get_control_inputs_client.isValid())
+    {
+        if (get_control_inputs_client.call(control_inputs_msg))
+        {
+            // ROS_INFO("succeed service call\n");
+        }
+        else
+        {
+            ROS_ERROR("Failed to call service get_contol_inputs_srv\n");
+        }
+    }
+    else
+    {
+        ROS_ERROR("Service apply_wrench down, waiting reconnection...");
+        get_control_inputs_client.waitForExistence();
+        //    connectToClient(); //Why this??
+    }
+
+    //store airfoil inputs
+    for (i = 0; i < num_wings; i++)
+    {
+        airfoil_inputs[i].x=control_inputs_msg.response.airfoil_inputs[i].x;
+        airfoil_inputs[i].y=control_inputs_msg.response.airfoil_inputs[i].y;
+        airfoil_inputs[i].z=control_inputs_msg.response.airfoil_inputs[i].z;
+    }
+
+    //store motor inputs
+    for (i = 0; i < num_motors; i++)
+    {
+        motor_input[i]=control_inputs_msg.response.motor_input[i];
+    }
+
 }
 
 void Model::getAirdata()

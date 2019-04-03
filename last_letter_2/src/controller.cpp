@@ -6,14 +6,14 @@
 #include <cstdlib>
 #include <last_letter_2_msgs/joystick_input.h>
 #include <last_letter_2_msgs/model_inputs.h>
-#include <last_letter_2_msgs/get_airfoil_inputs_srv.h>
-#include <last_letter_2_msgs/get_motor_input_srv.h>
+#include <last_letter_2_msgs/get_control_inputs_srv.h>
 
 ros::Publisher pub;
 
 int mixerid;
 int num_wings;
 int num_motors;
+int i;
 last_letter_2_msgs::joystick_input channels;
 last_letter_2_msgs::model_inputs model_inputs;
 
@@ -23,19 +23,20 @@ void chan2signal(last_letter_2_msgs::joystick_input msg)
     channels=msg;
 }
 
-bool return_airfoil_inputs(last_letter_2_msgs::get_airfoil_inputs_srv::Request &req,
-                           last_letter_2_msgs::get_airfoil_inputs_srv::Response &res)
+bool return_control_inputs(last_letter_2_msgs::get_control_inputs_srv::Request &req,
+                           last_letter_2_msgs::get_control_inputs_srv::Response &res)
 {
-    res.inputs.x=model_inputs.wing_input_x[req.airfoil_number-1];
-    res.inputs.y=model_inputs.wing_input_y[req.airfoil_number-1];
-    res.inputs.z=model_inputs.wing_input_z[req.airfoil_number-1];
-    return true;
-}
-
-bool return_motor_input(last_letter_2_msgs::get_motor_input_srv::Request &req,
-                           last_letter_2_msgs::get_motor_input_srv::Response &res)
-{
-    res.input=model_inputs.motor_input[req.motor_number-1];
+    for (i = 0; i < num_wings; i++)
+    {
+        res.airfoil_inputs[i].x=model_inputs.wing_input_x[i];
+        res.airfoil_inputs[i].y=model_inputs.wing_input_y[i];
+        res.airfoil_inputs[i].z=model_inputs.wing_input_z[i];
+    }
+    // Motor inputs
+    for (i = 0; i < num_motors; i++)
+    {
+        res.motor_input[i] = model_inputs.motor_input[i];
+    }
     return true;
 }
 
@@ -45,12 +46,11 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
 
     //Subscribtions
-    ros::Subscriber sub = n.subscribe("last_letter_2/rawPWM", 1, chan2signal);
+    ros::Subscriber sub = n.subscribe("last_letter_2/rawPWM", 1, chan2signal,ros::TransportHints().tcpNoDelay());
     pub = n.advertise<last_letter_2_msgs::model_inputs>("last_letter_2/model_inputs", 1);
 
     //Servers 
-    ros::ServiceServer get_airfoil_inputs_service = n.advertiseService("last_letter_2/airfoil_inputs", return_airfoil_inputs);
-    ros::ServiceServer get_motor_input_service = n.advertiseService("last_letter_2/motor_input", return_motor_input);
+    ros::ServiceServer get_control_inputs_service = n.advertiseService("last_letter_2/get_control_inputs_srv", return_control_inputs);
    
     int i;
     ros::WallRate r(1100);

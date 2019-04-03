@@ -7,10 +7,6 @@ Propulsion::Propulsion(Model *parent, int id) :tfListener(tfBuffer)
     model = parent;
     //Motor ID number
     motor_number = id;
-
-    //Init services
-    ros::service::waitForService("last_letter_2/motor_input");
-    motor_input_client = nh.serviceClient<last_letter_2_msgs::get_motor_input_srv>("last_letter_2/motor_input", true  );
 }
 
 //calculation steps
@@ -34,32 +30,10 @@ void Propulsion::getStates()
     motor_states=model->model_states.motor_states[motor_number-1];
 }
 
-// get insput Signals from controller node
+// load motor input from model
 void Propulsion::getInputSignals()
 {
-     //call motor_inputs srv
-    motor_input_srv.request.motor_number=motor_number;
-    // motor_input_srv.request.airfoil_number=0;
-
-    if (motor_input_client.isValid())
-    {
-        if (motor_input_client.call(motor_input_srv))
-        {
-            // ROS_INFO("succeed service call\n");
-        }
-        else
-        {
-            ROS_ERROR("Failed to call service get_motor_input_srv\n");
-            //break;
-        }
-    }
-    else
-    {
-        ROS_ERROR("Service getInputSignals down, waiting reconnection...");
-        motor_input_client.waitForExistence();
-        //connectToClient
-    }
-    motor_input=motor_input_srv.response.input;
+    motor_input=model->motor_input[motor_number-1];
 }
 
 // rotate wind vector from body to airfoil Link

@@ -55,7 +55,7 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
 
     //Subscribtions
-    ros::Subscriber sub = n.subscribe("last_letter_2/rawPWM", 1, chan2signal);
+    ros::Subscriber sub = n.subscribe("last_letter_2/rawPWM", 1, chan2signal,ros::TransportHints().tcpNoDelay());
 
     //Servers 
     ros::ServiceServer get_link_input_service = n.advertiseService("last_letter_2/link_inputs", return_link_inputs);

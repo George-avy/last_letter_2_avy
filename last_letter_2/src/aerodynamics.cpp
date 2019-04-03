@@ -6,12 +6,6 @@ Aerodynamics::Aerodynamics(Model *parent, int id) :tfListener(tfBuffer)
     model = parent;
     //airfoil ID number
     airfoil_number = id;
-
-    //Init services
-    ros::service::waitForService("last_letter_2/airfoil_inputs");
-    airfoil_inputs_client = nh.serviceClient<last_letter_2_msgs::get_airfoil_inputs_srv>("last_letter_2/airfoil_inputs", true);
-
-    
 }
 
 //calculation steps
@@ -35,33 +29,12 @@ void Aerodynamics::getStates()
     wing_states=model->model_states.airfoil_states[airfoil_number-1];
 }
 
-// get insput Signals from controller node
+// load airfoil input signals from model
 void Aerodynamics::getInputSignals()
 {
-     //call airfoil_inputs srv
-    airfoil_inputs_srv.request.airfoil_number=airfoil_number;
-    // airfoil_inputs_srv.request.motor_number=0;
-
-    if (airfoil_inputs_client.isValid())
-    {
-        if (airfoil_inputs_client.call(airfoil_inputs_srv))
-        {
-            // ROS_INFO("succeed service call\n");
-        }
-        else
-        {
-            ROS_ERROR("Failed to call service get_airfoil_inputs_srv\n");
-        }
-    }
-    else
-    {
-        ROS_ERROR("Service getInputSignals Aero down, waiting reconnection...");
-        airfoil_inputs_client.waitForExistence();
-        airfoil_inputs_client = nh.serviceClient<last_letter_2_msgs::get_airfoil_inputs_srv>("last_letter_2/airfoil_inputs", true);
-    }
-    airfoil_inputs.x=airfoil_inputs_srv.response.inputs.x;
-    airfoil_inputs.y=airfoil_inputs_srv.response.inputs.y;
-    airfoil_inputs.z=airfoil_inputs_srv.response.inputs.z;
+    airfoil_inputs.x = model->airfoil_inputs[airfoil_number - 1].x;
+    airfoil_inputs.y = model->airfoil_inputs[airfoil_number - 1].y;
+    airfoil_inputs.z = model->airfoil_inputs[airfoil_number - 1].z;
 }
 
 // rotate wind vector from body to airfoil Link

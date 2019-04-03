@@ -1,5 +1,0 @@
-#service for getting model inputs from controller
-
-float32 motor_number
----
-float32 input
