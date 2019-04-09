@@ -2,11 +2,12 @@
   <!-- these are the arguments you can pass this launch file, for example paused:=true -->
   <arg name="gui" default="true" />
   <arg name="paused" default="false"/>
-  <arg name="use_sim_time" default="true"/>
+  <arg name="use_sim_time" default="false"/>
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
   <!-- <arg name="uav_name" default="quadrotor"/> -->
   <arg name="uav_name" default="csl_2k19"/>
+  <!-- <arg name="uav_name" default="csl_2k20"/> -->
 
   <arg name="model" default="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/urdf/model.urdf.xacro"/>
 
@@ -42,8 +43,6 @@
   </node>
   <node pkg="last_letter_2" name="joy2chan" type="joy2chan" output="screen" />
   <node pkg="last_letter_2" name="controller" type="controller" output="screen" />
-  <!-- <node pkg="last_letter_2" name="controller1" type="controller1" output="screen" /> -->
-  
   <node pkg="last_letter_2" name="core" type="core" output="screen" />
 
   <node pkg="robot_state_publisher" name="robot_state_publisher" type="robot_state_publisher">

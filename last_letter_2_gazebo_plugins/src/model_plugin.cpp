@@ -151,12 +151,10 @@ class model_plugin : public ModelPlugin
     void QueueThread1()
     {
         ROS_INFO(" i am in QueueThread1 now\n");
-        ros::WallRate r(1100);  
         // the sleep rate, increase dramaticaly the preformance
         while (this->rosNode->ok())
         {
             this->wrenches_rosQueue.callAvailable();
-            r.sleep();
         }
     }
 
@@ -294,6 +292,7 @@ class model_plugin : public ModelPlugin
 
         model_states.loop_number.data=loop_number;
         //publish model states, ros starts calculation step
+        model_states.header.stamp=ros::Time::now();
         this->states_pub.publish(model_states);
 
         //publish tranform between gazebo inertia NWU and body frame FLU
