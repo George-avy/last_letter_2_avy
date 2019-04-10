@@ -19,6 +19,7 @@
 #include <boost/bind.hpp>
 #include <ctime> // for timer
 #include <iostream>
+#include <string>
 
 namespace gazebo
 {
@@ -63,6 +64,9 @@ class model_plugin : public ModelPlugin
     char link_name_temp[20];
     bool wrenches_applied;
 
+    int wait_loop;
+    int queue_loop;
+
     int loop_number;
 
   public:
@@ -76,10 +80,13 @@ class model_plugin : public ModelPlugin
         ROS_INFO("model_plugin just started");
 
         this->rosNode = new ros::NodeHandle; //Create a ros node for transport
+
         while (!this->rosNode->ok())
         {
             ROS_INFO("Waiting for node to rise");
         }
+        if (!ros::param::getCached("simulation/wait_loop", wait_loop)) { ROS_FATAL("Invalid parameters for wait_loop in param server!"); ros::shutdown();}
+        if (!ros::param::getCached("simulation/queue_thread", queue_loop)) { ROS_FATAL("Invalid parameters for queue_loop in param server!"); ros::shutdown();}
 
         // Spin up the queue helper thread.
         this->rosQueueThread1 =
@@ -88,6 +95,7 @@ class model_plugin : public ModelPlugin
         //Connect a callback to the world update start signal.
         this->beforeUpdateConnection = event::Events::ConnectBeforePhysicsUpdate(std::bind(&model_plugin::BeforeUpdate, this));
         this->updateConnectionEnd = event::Events::ConnectWorldUpdateEnd(std::bind(&model_plugin::OnUpdate, this));
+       
         ros::AdvertiseServiceOptions so = (ros::AdvertiseServiceOptions::create<last_letter_2_msgs::apply_model_wrenches_srv>("last_letter_2/apply_model_wrenches_srv",
                                                                                                                       boost::bind(&model_plugin::applyWrenchOnModel, this, _1, _2), ros::VoidPtr(), &this->wrenches_rosQueue));
         this->apply_wrenches_server = this->rosNode->advertiseService(so);
@@ -98,8 +106,8 @@ class model_plugin : public ModelPlugin
         //Read the number of airfoils
         if (!ros::param::getCached("airfoil/nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown(); }
         //Read the number of motors
+       
         if (!ros::param::getCached("motor/nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
-
         wrenches_applied=false;
         loop_number=0;
         modelStateInit();
@@ -119,7 +127,7 @@ class model_plugin : public ModelPlugin
         ignition::math::Vector3d velLin(list[0], list[1], list[2]);
         if (!ros::param::getCached("init/velAng", list)) { ROS_FATAL("Invalid parameters for init/velAng in param server!"); ros::shutdown();}
         ignition::math::Vector3d velAng(list[0], list[1], list[2]);
-
+        
         //Set the initial position and rotation
         ignition::math::Pose3d init_pose;
         init_pose.Set(xyz_pose, rpy_pose);
@@ -152,9 +160,11 @@ class model_plugin : public ModelPlugin
     {
         ROS_INFO(" i am in QueueThread1 now\n");
         // the sleep rate, increase dramaticaly the preformance
+        ros::WallRate r(queue_loop);
         while (this->rosNode->ok())
         {
             this->wrenches_rosQueue.callAvailable();
+            r.sleep();
         }
     }
 
@@ -163,6 +173,8 @@ class model_plugin : public ModelPlugin
     bool applyWrenchOnModel(last_letter_2_msgs::apply_model_wrenches_srv::Request &req,
                             last_letter_2_msgs::apply_model_wrenches_srv::Response &res)
     {
+        std::cout << "06.1=  " << ros::WallTime::now() << std::endl;
+
         //apply wrenches to each airfoil and motor
          for (i = 0; i < num_wings; i++)
         {
@@ -180,6 +192,7 @@ class model_plugin : public ModelPlugin
             torque[2]=req.airfoil_torques[i].z;
             model->GetLink(link_name)->AddRelativeTorque(torque);
         }
+        std::cout << "06.2=  " << ros::WallTime::now() << std::endl;
 
         for (i = 0; i < num_motors; i++)
         {
@@ -198,15 +211,22 @@ class model_plugin : public ModelPlugin
             model->GetLink(link_name)->AddRelativeTorque(torque);
         }
         //unlock gazebo step
+        std::cout << "06.3=  " << ros::WallTime::now() << std::endl;
         wrenches_applied=true;
+        std::cout << "06.4=  " << ros::WallTime::now() << std::endl;
         return true;
     }
 
     void BeforeUpdate()
     {
-        //wait until wrenches are ready 
-        while(!wrenches_applied && loop_number>24) {   }
-        
+        //wait until wrenches are ready
+        while (!wrenches_applied && loop_number > 24)
+        {
+            // wait_time.sleep();
+        ros::WallRate(wait_loop).sleep();
+        }
+        std::cout << "06=    " << ros::WallTime::now() << std::endl;
+
         //lock gazebo step
         wrenches_applied=false;
     }
@@ -293,6 +313,8 @@ class model_plugin : public ModelPlugin
         model_states.loop_number.data=loop_number;
         //publish model states, ros starts calculation step
         model_states.header.stamp=ros::Time::now();
+        std::cout << "07=    " << ros::WallTime::now() << std::endl;
+
         this->states_pub.publish(model_states);
 
         //publish tranform between gazebo inertia NWU and body frame FLU
@@ -300,6 +322,7 @@ class model_plugin : public ModelPlugin
         static tf2_ros::TransformBroadcaster broadcaster_;
         geometry_msgs::TransformStamped transformStamped_;
         tf2::Quaternion quat_;
+        std::cout << "08=    " << ros::WallTime::now() << std::endl;
 
         transformStamped_.header.stamp = ros::Time::now();
         transformStamped_.header.frame_id = "inertial_NWU";
@@ -312,8 +335,10 @@ class model_plugin : public ModelPlugin
         transformStamped_.transform.rotation.y = quat_.y();
         transformStamped_.transform.rotation.z = quat_.z();
         transformStamped_.transform.rotation.w = quat_.w();
+        std::cout << "08.1=  " << ros::WallTime::now() << std::endl;
 
         broadcaster_.sendTransform(transformStamped_);
+        std::cout << "08.2=  " << ros::WallTime::now() << std::endl;
         
         //publish body static tranformations between body_FLU and body_FRD
         transformStamped_.header.stamp = ros::Time::now();
@@ -329,7 +354,10 @@ class model_plugin : public ModelPlugin
         transformStamped_.transform.rotation.w = quat_.w();
 
         broadcaster_.sendTransform(transformStamped_);
+        std::cout << "08.3=  " << ros::WallTime::now() << std::endl<< std::endl;
+
     }
+
 };
 // Register this plugin with the simulator
 GZ_REGISTER_MODEL_PLUGIN(model_plugin)

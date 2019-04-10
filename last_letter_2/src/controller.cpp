@@ -53,7 +53,6 @@ int main(int argc, char **argv)
     ros::ServiceServer get_control_inputs_service = n.advertiseService("last_letter_2/get_control_inputs_srv", return_control_inputs);
    
     int i;
-    ros::WallRate r(1100);
 
     // Read the mixer type
     if (!ros::param::getCached("HID/mixerid", mixerid)) { ROS_INFO("No mixing function selected"); mixerid = 0; }
@@ -61,6 +60,8 @@ int main(int argc, char **argv)
     if (!ros::param::getCached("airfoil/nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown(); }
     //Read the number of motors
     if (!ros::param::getCached("motor/nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
+    //Read the wait_loop delay
+    if (!ros::param::getCached("simulation/controller_loop", i)) { ROS_FATAL("Invalid parameters for controller_loop in param server!"); ros::shutdown(); }
     
     //Create essencial variables, based on param server values.
     int aileron[num_wings], elevator[num_wings], rudder[num_wings], motor_enable[num_motors];
@@ -69,6 +70,8 @@ int main(int argc, char **argv)
     float deltax_max[num_wings], deltay_max[num_wings], deltaz_max[num_wings];
 
     char paramMsg[50];
+    ros::WallRate r(i);
+
     //Load basic characteristics for each airfoil
     for (i = 0; i < num_wings; ++i)
     {
@@ -103,7 +106,8 @@ int main(int argc, char **argv)
     }
 
     //Calculation loop
-    
+    // ros::AsyncSpinner spinner(2); // Use 2 threads
+    // spinner.start();
     while (ros::ok())
     {
         //Choose which channel covnertion, based on model type

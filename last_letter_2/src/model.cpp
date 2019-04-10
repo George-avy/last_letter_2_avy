@@ -43,23 +43,22 @@ void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr& ms
     // NWUtoNED(base_link_states.u, base_link_states.v, base_link_states.w);
     // NWUtoNED(base_link_states.p, base_link_states.q, base_link_states.r);
     // // printf("x=%f    y=%f    z=%f\n",base_link_states.x, base_link_states.y,base_link_states.z);
-
     modelStep();
 }
 
 void Model::modelStep()
 {
-    // std::cout<<(ros::WallTime::now()-t)<<std::endl;
-    // t=ros::WallTime::now();
-    // std::cout<< "01=    "<< ros::WallTime::now()<<std::endl;
+    std::cout<<(ros::WallTime::now()-t)<<std::endl;
+    t=ros::WallTime::now();
+    std::cout<< "01=    "<< ros::WallTime::now()<<std::endl;
     getControlInputs();
-    // std::cout<< "02=    "<< ros::WallTime::now()<<std::endl;
+    std::cout<< "02=    "<< ros::WallTime::now()<<std::endl;
     getAirdata();
-    // std::cout<< "03=    "<< ros::WallTime::now()<<std::endl;
+    std::cout<< "03=    "<< ros::WallTime::now()<<std::endl;
     calcDynamics();
-    // std::cout<< "04=    "<< ros::WallTime::now()<<std::endl;
+    std::cout<< "04=    "<< ros::WallTime::now()<<std::endl;
     applyWrenches();
-    // std::cout<< "05=    "<< ros::WallTime::now()<<std::endl<<std::endl;
+    std::cout<< "05=    "<< ros::WallTime::now()<<std::endl;
 }
 
 // get control inputs for all airfoils and motor from controller node
