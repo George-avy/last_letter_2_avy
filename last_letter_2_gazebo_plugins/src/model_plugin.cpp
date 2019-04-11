@@ -173,7 +173,7 @@ class model_plugin : public ModelPlugin
     bool applyWrenchOnModel(last_letter_2_msgs::apply_model_wrenches_srv::Request &req,
                             last_letter_2_msgs::apply_model_wrenches_srv::Response &res)
     {
-        std::cout << "06.1=  " << ros::WallTime::now() << std::endl;
+        // std::cout << "06.1=  " << ros::WallTime::now() << std::endl;
 
         //apply wrenches to each airfoil and motor
          for (i = 0; i < num_wings; i++)
@@ -192,7 +192,7 @@ class model_plugin : public ModelPlugin
             torque[2]=req.airfoil_torques[i].z;
             model->GetLink(link_name)->AddRelativeTorque(torque);
         }
-        std::cout << "06.2=  " << ros::WallTime::now() << std::endl;
+        // std::cout << "06.2=  " << ros::WallTime::now() << std::endl;
 
         for (i = 0; i < num_motors; i++)
         {
@@ -211,9 +211,9 @@ class model_plugin : public ModelPlugin
             model->GetLink(link_name)->AddRelativeTorque(torque);
         }
         //unlock gazebo step
-        std::cout << "06.3=  " << ros::WallTime::now() << std::endl;
+        // std::cout << "06.3=  " << ros::WallTime::now() << std::endl;
         wrenches_applied=true;
-        std::cout << "06.4=  " << ros::WallTime::now() << std::endl;
+        // std::cout << "06.4=  " << ros::WallTime::now() << std::endl;
         return true;
     }
 
@@ -223,9 +223,9 @@ class model_plugin : public ModelPlugin
         while (!wrenches_applied && loop_number > 24)
         {
             // wait_time.sleep();
-        ros::WallRate(wait_loop).sleep();
+            ros::WallRate(wait_loop).sleep();
         }
-        std::cout << "06=    " << ros::WallTime::now() << std::endl;
+        // std::cout << "06=    " << ros::WallTime::now() << std::endl;
 
         //lock gazebo step
         wrenches_applied=false;
@@ -313,7 +313,7 @@ class model_plugin : public ModelPlugin
         model_states.loop_number.data=loop_number;
         //publish model states, ros starts calculation step
         model_states.header.stamp=ros::Time::now();
-        std::cout << "07=    " << ros::WallTime::now() << std::endl;
+        // std::cout << "07=    " << ros::WallTime::now() << std::endl;
 
         this->states_pub.publish(model_states);
 
@@ -322,7 +322,7 @@ class model_plugin : public ModelPlugin
         static tf2_ros::TransformBroadcaster broadcaster_;
         geometry_msgs::TransformStamped transformStamped_;
         tf2::Quaternion quat_;
-        std::cout << "08=    " << ros::WallTime::now() << std::endl;
+        // std::cout << "08=    " << ros::WallTime::now() << std::endl;
 
         transformStamped_.header.stamp = ros::Time::now();
         transformStamped_.header.frame_id = "inertial_NWU";
@@ -335,10 +335,10 @@ class model_plugin : public ModelPlugin
         transformStamped_.transform.rotation.y = quat_.y();
         transformStamped_.transform.rotation.z = quat_.z();
         transformStamped_.transform.rotation.w = quat_.w();
-        std::cout << "08.1=  " << ros::WallTime::now() << std::endl;
+        // std::cout << "08.1=  " << ros::WallTime::now() << std::endl;
 
         broadcaster_.sendTransform(transformStamped_);
-        std::cout << "08.2=  " << ros::WallTime::now() << std::endl;
+        // std::cout << "08.2=  " << ros::WallTime::now() << std::endl;
         
         //publish body static tranformations between body_FLU and body_FRD
         transformStamped_.header.stamp = ros::Time::now();
@@ -354,7 +354,7 @@ class model_plugin : public ModelPlugin
         transformStamped_.transform.rotation.w = quat_.w();
 
         broadcaster_.sendTransform(transformStamped_);
-        std::cout << "08.3=  " << ros::WallTime::now() << std::endl<< std::endl;
+        // std::cout << "08.3=  " << ros::WallTime::now() << std::endl<< std::endl;
 
     }
 

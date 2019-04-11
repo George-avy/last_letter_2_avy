@@ -2,6 +2,5 @@
 
 simulation/synch_sim_contr: false
 
-simulation/controller_loop: 1100
-simulation/queue_thread: 1100
-simulation/wait_loop: 1100
+simulation/queue_thread: 3000
+simulation/wait_loop: 3000

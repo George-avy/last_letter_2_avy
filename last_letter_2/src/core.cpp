@@ -14,7 +14,9 @@ int main(int argc, char **argv)
     //Start spin
     while (ros::ok())
     {
-        ros::spin();
+        ros::AsyncSpinner spinner(1); // Use 4 threads
+    spinner.start();
+    ros::waitForShutdown();
     }
     ros::shutdown();
 }
