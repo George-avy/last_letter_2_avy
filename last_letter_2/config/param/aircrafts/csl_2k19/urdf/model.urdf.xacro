@@ -334,7 +334,7 @@
     <gazebo>
     <plugin name="model_plugin" filename="libmodel_plugin.so"/>
     <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
-        <jointName>body_FLU_to_airfoil1, body_FLU_to_motor1, wheel_base_to_left_wheel, wheel_base_to_right_wheel, body_FLU_to_rear_wheel </jointName>
+        <jointName>body_FLU_to_airfoil1, body_FLU_to_motor1, motor1_to_axle1, wheel_base_to_left_wheel, wheel_base_to_right_wheel, body_FLU_to_rear_wheel </jointName>
         <robotNamespace>last_letter_2</robotNamespace>
         <updateRate>0</updateRate>
     </plugin>
