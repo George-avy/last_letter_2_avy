@@ -23,7 +23,6 @@ Model::Model() : environment(this), dynamics(this)
     pauseGazebo = nh.serviceClient<std_srvs::Empty>("/gazebo/pause_physics");
     std_srvs::Empty emptySrv;
     pauseGazebo.call(emptySrv);
-     t=ros::WallTime::now();
 }
 
 void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr& msg)
@@ -48,17 +47,11 @@ void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr& ms
 
 void Model::modelStep()
 {
-    // std::cout<<(ros::WallTime::now()-t)<<std::endl;
-    // t=ros::WallTime::now();
-    // std::cout<< "01=    "<< ros::WallTime::now()<<std::endl;
+
     getControlInputs();
-    // std::cout<< "02=    "<< ros::WallTime::now()<<std::endl;
     getAirdata();
-    // std::cout<< "03=    "<< ros::WallTime::now()<<std::endl;
     calcDynamics();
-    // std::cout<< "04=    "<< ros::WallTime::now()<<std::endl;
     applyWrenches();
-    // std::cout<< "05=    "<< ros::WallTime::now()<<std::endl;
 }
 
 // get control inputs for all airfoils and motor from controller node
@@ -114,11 +107,8 @@ void Model::getAirdata()
 
 void Model::calcDynamics()
 {
-    // std::cout<< "03.1=  "<< ros::WallTime::now()<<std::endl;
     dynamics.calcAero();
-    // std::cout<< "03.2=  "<< ros::WallTime::now()<<std::endl;
     dynamics.calcProp();
-    // std::cout<< "03.3=  "<< ros::WallTime::now()<<std::endl;
 }
 
 void Model::applyWrenches()
@@ -138,7 +128,6 @@ void Model::applyWrenches()
         // NEDtoNWU(apply_wrenches_srv.request.airfoil_torques[i].x,apply_wrenches_srv.request.airfoil_torques[i].y,apply_wrenches_srv.request.airfoil_torques[i].z);
         i++;
     }
-    // std::cout<< "04.1=  "<< ros::WallTime::now()<<std::endl;
 
     i=0;
     std::list<Propulsion *>::iterator itProp = dynamics.listOfPropulsion.begin();
@@ -148,7 +137,6 @@ void Model::applyWrenches()
         apply_wrenches_srv.request.motor_torque[i] = (*itProp)->prop_wrenches.torque;
         i++;
     }
-    // std::cout<< "04.2=  "<< ros::WallTime::now()<<std::endl;
 
     // call apply_model_wrenches_srv
     if (apply_wrench_client.isValid())
@@ -168,6 +156,5 @@ void Model::applyWrenches()
         apply_wrench_client.waitForExistence();
         //    connectToClient(); //Why this??
     }
-    // std::cout<< "04.3=  "<< ros::WallTime::now()<<std::endl;
 
 }

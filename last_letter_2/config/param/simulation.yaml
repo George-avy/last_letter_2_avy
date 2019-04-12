@@ -1,6 +1,3 @@
 #simulation characteristics
 
 simulation/synch_sim_contr: false
-
-simulation/queue_thread: 3000
-simulation/wait_loop: 3000
