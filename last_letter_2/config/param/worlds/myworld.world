@@ -37,7 +37,7 @@
 
   
     <!-- reference to your plugin -->
-    <!-- <plugin name="world_plugin" filename="libworld_plugin.so"/> -->
+    <plugin name="world_plugin" filename="libworld_plugin.so"/>
 
   </world>
 </sdf>

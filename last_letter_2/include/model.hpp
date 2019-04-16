@@ -22,7 +22,6 @@
     ros::Subscriber gazebo_sub;
 
     ros::Publisher loop_number;
-
     // Declare service msgs
     last_letter_2_msgs::apply_model_wrenches_srv apply_wrenches_srv;
     last_letter_2_msgs::get_control_inputs_srv control_inputs_msg;

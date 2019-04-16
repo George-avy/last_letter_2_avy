@@ -137,15 +137,15 @@ double Spline3::evaluate(double x)
     return value;
 }
 
-//convert a vector from NWU to NED frame
-void NWUtoNED(float &x, float &y, float &z)
+//convert a vector from FLU to FRD frame
+void FLUtoFRD(float &x, float &y, float &z)
 {
     y = -y;
     z = -z;
 }
 
-//convert a vector from NED to NWU frame
-void NEDtoNWU(float &x, float &y, float &z)
+//convert a vector from FRD to FLU frame
+void FRDtoFLU(float &x, float &y, float &z)
 {
     y = -y;
     z = -z;

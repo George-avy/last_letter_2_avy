@@ -49,5 +49,5 @@ public:
   double evaluate(double x);
 };
 
-void NWUtoNED(float &x, float &y, float &z);
-void NEDtoNWU(float &x, float &y, float &z);
+void FLUtoFRD(float &x, float &y, float &z);
+void FRDtoFLU(float &x, float &y, float &z);

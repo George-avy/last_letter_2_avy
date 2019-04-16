@@ -167,18 +167,23 @@ class model_plugin : public ModelPlugin
     {
         ROS_INFO(" i am in QueueThread1 now\n");
         // the sleep rate, increase dramaticaly the preformance
-        ros::WallDuration timeout(0.0001);
+        ros::WallRate r(100000);
         while (this->rosNode->ok())
         {
-            this->wrenches_rosQueue.callAvailable(timeout);
+            // std::cout << "cal1Av=" << ros::WallTime::now() << std::endl;
+
+                this->wrenches_rosQueue.callAvailable();
+            // std::cout << "cal2Av=" << ros::WallTime::now() << std::endl;
+            r.sleep();
         }
     }
-
 
     //service that apply the calculated aerodynamic and propulsion wrenches on relative links of model
     bool applyWrenchOnModel(last_letter_2_msgs::apply_model_wrenches_srv::Request &req,
                             last_letter_2_msgs::apply_model_wrenches_srv::Response &res)
     {
+    std::cout<<"04.1=  "<<ros::WallTime::now()<<std::endl;
+
         std::lock_guard<std::mutex> lk(m);
         //apply wrenches to each airfoil and motor
          for (i = 0; i < num_wings; i++)
@@ -197,6 +202,7 @@ class model_plugin : public ModelPlugin
             torque[2]=req.airfoil_torques[i].z;
             model->GetLink(link_name)->AddRelativeTorque(torque);
         }
+    std::cout<<"04.2=  "<<ros::WallTime::now()<<std::endl;
 
         for (i = 0; i < num_motors; i++)
         {
@@ -214,9 +220,14 @@ class model_plugin : public ModelPlugin
             torque[2] = 0;
             model->GetLink(link_name)->AddRelativeTorque(torque);
         }
+    std::cout<<"04.3=  "<<ros::WallTime::now()<<std::endl;
+
         //unlock gazebo step
         wrenches_applied=true;
+    std::cout<<"04.4=  "<<ros::WallTime::now()<<std::endl;
+
         cv.notify_one();
+    std::cout<<"04.5=  "<<ros::WallTime::now()<<std::endl;
 
         return true;
     }
@@ -224,7 +235,9 @@ class model_plugin : public ModelPlugin
     void BeforeUpdate()
     {
         std::unique_lock<std::mutex> lk(m);
-
+        // std::cout << "bfWait=" << ros::WallTime::now() << std::endl;
+        // printf("model_states.seq=%i\n",model_states.header.seq);
+        // std::cout<< "seq=" << model_states.header.stamp << std::endl;
         // //wait until wrenches are ready
         if (loop_number>24)
         {
@@ -233,93 +246,12 @@ class model_plugin : public ModelPlugin
 
         //lock gazebo's next step
         wrenches_applied=false;
+        // std::cout << "bfGzSt=" << ros::WallTime::now() << std::endl;
+
     }
 
     void OnUpdate()
     {
-        relLinVel = model->GetLink("body_FLU")->RelativeLinearVel();
-        rotation = model->GetLink("body_FLU")->WorldPose().Rot().Euler();
-        relAngVel = model->GetLink("body_FLU")->RelativeAngularVel();
-        position = model->GetLink("body_FLU")->WorldPose().Pos();
-
-        base_link_states.header.stamp = ros::Time::now();
-        base_link_states.header.frame_id = "body_FLU";
-        base_link_states.x = position[0];
-        base_link_states.y = -position[1];
-        base_link_states.z = -position[2];
-        base_link_states.roll = rotation[0];
-        base_link_states.pitch = -rotation[1];
-        base_link_states.yaw = -rotation[2];
-        base_link_states.u = relLinVel[0];
-        base_link_states.v = -relLinVel[1];
-        base_link_states.w = -relLinVel[2];
-        base_link_states.p = relAngVel[0];
-        base_link_states.q = -relAngVel[1];
-        base_link_states.r = -relAngVel[2];
-
-        model_states.base_link_states=base_link_states;
-
-        for (i = 0; i < num_wings; i++)
-        {
-            sprintf(link_name_temp, "airfoil%i", i + 1);
-            link_name.assign(link_name_temp);
-            relLinVel = model->GetLink(link_name)->RelativeLinearVel();
-            rotation = model->GetLink(link_name)->WorldPose().Rot().Euler();
-            relAngVel = model->GetLink(link_name)->RelativeAngularVel();
-            position = model->GetLink(link_name)->WorldPose().Pos();
-
-            airfoil_states[i].header.stamp = ros::Time::now();
-            airfoil_states[i].header.frame_id = link_name;
-            airfoil_states[i].x = position[0];
-            airfoil_states[i].y = -position[1];
-            airfoil_states[i].z = -position[2];
-            airfoil_states[i].roll = rotation[0];
-            airfoil_states[i].pitch = -rotation[1];
-            airfoil_states[i].yaw = -rotation[2];
-            airfoil_states[i].u = relLinVel[0];
-            airfoil_states[i].v = -relLinVel[1];
-            airfoil_states[i].w = -relLinVel[2];
-            airfoil_states[i].p = relAngVel[0];
-            airfoil_states[i].q = -relAngVel[1];
-            airfoil_states[i].r = -relAngVel[2];
-
-            model_states.airfoil_states[i]=airfoil_states[i];
-        }
-
-        for (i = 0; i < num_motors; i++)
-        {
-            sprintf(link_name_temp, "motor%i", i + 1);
-            link_name.assign(link_name_temp);
-            relLinVel = model->GetLink(link_name)->RelativeLinearVel();
-            rotation = model->GetLink(link_name)->WorldPose().Rot().Euler();
-            relAngVel = model->GetLink(link_name)->RelativeAngularVel();
-            position = model->GetLink(link_name)->WorldPose().Pos();
-
-            motor_states[i].header.stamp = ros::Time::now();
-            motor_states[i].header.frame_id = link_name;
-            motor_states[i].x = position[0];
-            motor_states[i].y = -position[1];
-            motor_states[i].z = -position[2];
-            motor_states[i].roll = rotation[0];
-            motor_states[i].pitch = -rotation[1];
-            motor_states[i].yaw = -rotation[2];
-            motor_states[i].u = relLinVel[0];
-            motor_states[i].v = -relLinVel[1];
-            motor_states[i].w = -relLinVel[2];
-            motor_states[i].p = relAngVel[0];
-            motor_states[i].q = -relAngVel[1];
-            motor_states[i].r = -relAngVel[2];
-
-            model_states.motor_states[i]=motor_states[i];
-        }
-        loop_number++; // check if start from zero!
-
-        model_states.loop_number.data=loop_number;
-        //publish model states, ros starts calculation step
-        model_states.header.stamp=ros::Time::now();
-
-        this->states_pub.publish(model_states);
-
         //publish tranform between gazebo inertia NWU and body frame FLU
         //if declaration is placed in data area of class, causes problems. So it is placed here.
         static tf2_ros::TransformBroadcaster broadcaster_;
@@ -354,6 +286,93 @@ class model_plugin : public ModelPlugin
         transformStamped_.transform.rotation.w = quat_.w();
 
         broadcaster_.sendTransform(transformStamped_);
+        // std::cout << "afTfpb=" << ros::WallTime::now() << std::endl;
+
+        
+        relLinVel = model->GetLink("body_FLU")->RelativeLinearVel();
+        rotation = model->GetLink("body_FLU")->WorldPose().Rot().Euler();
+        relAngVel = model->GetLink("body_FLU")->RelativeAngularVel();
+        position = model->GetLink("body_FLU")->WorldPose().Pos();
+
+        base_link_states.header.stamp = ros::Time::now();
+        base_link_states.header.frame_id = "body_FLU";
+        base_link_states.x = position[0];
+        base_link_states.y = position[1];
+        base_link_states.z = position[2];
+        base_link_states.roll = rotation[0];
+        base_link_states.pitch = rotation[1];
+        base_link_states.yaw = rotation[2];
+        base_link_states.u = relLinVel[0];
+        base_link_states.v = relLinVel[1];
+        base_link_states.w = relLinVel[2];
+        base_link_states.p = relAngVel[0];
+        base_link_states.q = relAngVel[1];
+        base_link_states.r = relAngVel[2];
+
+        model_states.base_link_states=base_link_states;
+
+        for (i = 0; i < num_wings; i++)
+        {
+            sprintf(link_name_temp, "airfoil%i", i + 1);
+            link_name.assign(link_name_temp);
+            relLinVel = model->GetLink(link_name)->RelativeLinearVel();
+            rotation = model->GetLink(link_name)->WorldPose().Rot().Euler();
+            relAngVel = model->GetLink(link_name)->RelativeAngularVel();
+            position = model->GetLink(link_name)->WorldPose().Pos();
+
+            airfoil_states[i].header.stamp = ros::Time::now();
+            airfoil_states[i].header.frame_id = link_name;
+            airfoil_states[i].x = position[0];
+            airfoil_states[i].y = position[1];
+            airfoil_states[i].z = position[2];
+            airfoil_states[i].roll = rotation[0];
+            airfoil_states[i].pitch = rotation[1];
+            airfoil_states[i].yaw = rotation[2];
+            airfoil_states[i].u = relLinVel[0];
+            airfoil_states[i].v = relLinVel[1];
+            airfoil_states[i].w = relLinVel[2];
+            airfoil_states[i].p = relAngVel[0];
+            airfoil_states[i].q = relAngVel[1];
+            airfoil_states[i].r = relAngVel[2];
+
+            model_states.airfoil_states[i]=airfoil_states[i];
+        }
+
+        for (i = 0; i < num_motors; i++)
+        {
+            sprintf(link_name_temp, "motor%i", i + 1);
+            link_name.assign(link_name_temp);
+            relLinVel = model->GetLink(link_name)->RelativeLinearVel();
+            rotation = model->GetLink(link_name)->WorldPose().Rot().Euler();
+            relAngVel = model->GetLink(link_name)->RelativeAngularVel();
+            position = model->GetLink(link_name)->WorldPose().Pos();
+
+            motor_states[i].header.stamp = ros::Time::now();
+            motor_states[i].header.frame_id = link_name;
+            motor_states[i].x = position[0];
+            motor_states[i].y = position[1];
+            motor_states[i].z = position[2];
+            motor_states[i].roll = rotation[0];
+            motor_states[i].pitch = rotation[1];
+            motor_states[i].yaw = rotation[2];
+            motor_states[i].u = relLinVel[0];
+            motor_states[i].v = relLinVel[1];
+            motor_states[i].w = relLinVel[2];
+            motor_states[i].p = relAngVel[0];
+            motor_states[i].q = relAngVel[1];
+            motor_states[i].r = relAngVel[2];
+
+            model_states.motor_states[i]=motor_states[i];
+        }
+        loop_number++; // check if start from zero!
+
+        model_states.loop_number.data=loop_number;
+        //publish model states, ros starts calculation step
+        model_states.header.stamp=ros::Time::now();
+        // std::cout << "befpub=" << ros::WallTime::now() << std::endl;
+
+        this->states_pub.publish(model_states);
+        // std::cout << "aftpub=" << ros::WallTime::now() << std::endl;
     }
 
 };

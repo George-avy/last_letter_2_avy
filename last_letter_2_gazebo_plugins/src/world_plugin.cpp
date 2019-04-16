@@ -44,7 +44,6 @@ public:
   // publish the relation between the world static frames Inertial_NWU-Inertial_NED 
   void publishWorldStaticFrames()
   {
-    printf("hellooooo i am here tooooooooooooooooooooooooooooo\n");
     static tf2_ros::StaticTransformBroadcaster static_broadcaster;
     geometry_msgs::TransformStamped static_transformStamped;
     tf2::Quaternion quat;

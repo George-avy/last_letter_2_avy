@@ -23,6 +23,7 @@ Model::Model() : environment(this), dynamics(this)
     pauseGazebo = nh.serviceClient<std_srvs::Empty>("/gazebo/pause_physics");
     std_srvs::Empty emptySrv;
     pauseGazebo.call(emptySrv);
+    t=ros::WallTime::now();
 }
 
 void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr& msg)
@@ -33,25 +34,43 @@ void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr& ms
     model_states.motor_states=msg->motor_states;
 
     loop_num.data = msg->loop_number.data;
-    // printf("ros   : %i at ", loop_num.data);
-    // std::cout<< ros::WallTime::now()<< "start"<< std::endl;
-    // //the states exported from gazebo are expressed in NWU frame, but the calculations are based on NED frame
-    // //so convert gazebo data from NWU to NED to continue with calculations
-    // NWUtoNED(base_link_states.x, base_link_states.y, base_link_states.z);
-    // NWUtoNED(base_link_states.roll, base_link_states.pitch, base_link_states.yaw);
-    // NWUtoNED(base_link_states.u, base_link_states.v, base_link_states.w);
-    // NWUtoNED(base_link_states.p, base_link_states.q, base_link_states.r);
-    // // printf("x=%f    y=%f    z=%f\n",base_link_states.x, base_link_states.y,base_link_states.z);
+    //so convert gazebo data from FLU to FRD to continue with calculations
+    FLUtoFRD(model_states.base_link_states.x, model_states.base_link_states.y, model_states.base_link_states.z);
+    FLUtoFRD(model_states.base_link_states.roll, model_states.base_link_states.pitch, model_states.base_link_states.yaw);
+    FLUtoFRD(model_states.base_link_states.u, model_states.base_link_states.v, model_states.base_link_states.w);
+    FLUtoFRD(model_states.base_link_states.p, model_states.base_link_states.q, model_states.base_link_states.r);
+    
+    for (i = 0; i < num_wings; i++)
+    {
+        FLUtoFRD(model_states.airfoil_states[i].x, model_states.airfoil_states[i].y, model_states.airfoil_states[i].z);
+        FLUtoFRD(model_states.airfoil_states[i].roll, model_states.airfoil_states[i].pitch, model_states.airfoil_states[i].yaw);
+        FLUtoFRD(model_states.airfoil_states[i].u, model_states.airfoil_states[i].v, model_states.airfoil_states[i].w);
+        FLUtoFRD(model_states.airfoil_states[i].p, model_states.airfoil_states[i].q, model_states.airfoil_states[i].r);
+    }
+
+    for (i = 0; i < num_motors; i++)
+    {
+        FLUtoFRD(model_states.motor_states[i].x, model_states.motor_states[i].y, model_states.motor_states[i].z);
+        FLUtoFRD(model_states.motor_states[i].roll, model_states.motor_states[i].pitch, model_states.motor_states[i].yaw);
+        FLUtoFRD(model_states.motor_states[i].u, model_states.motor_states[i].v, model_states.motor_states[i].w);
+        FLUtoFRD(model_states.motor_states[i].p, model_states.motor_states[i].q, model_states.motor_states[i].r);
+    }
     modelStep();
 }
 
 void Model::modelStep()
 {
-
+    std::cout<<(ros::WallTime::now()-t)<<std::endl;
+    t=ros::WallTime::now();
+    std::cout<<"01=    "<<ros::WallTime::now()<<std::endl;
     getControlInputs();
+    std::cout<<"02=    "<<ros::WallTime::now()<<std::endl;
     getAirdata();
+    std::cout<<"03=    "<<ros::WallTime::now()<<std::endl;
     calcDynamics();
+    std::cout<<"04=    "<<ros::WallTime::now()<<std::endl;
     applyWrenches();
+    std::cout<<"05=    "<<ros::WallTime::now()<<std::endl;
 }
 
 // get control inputs for all airfoils and motor from controller node
@@ -73,7 +92,7 @@ void Model::getControlInputs()
     {
         ROS_ERROR("Service apply_wrench down, waiting reconnection...");
         get_control_inputs_client.waitForExistence();
-        //    connectToClient(); //Why this??
+        get_control_inputs_client = nh.serviceClient<last_letter_2_msgs::get_control_inputs_srv>("last_letter_2/get_control_inputs_srv", true);
     }
 
     //store airfoil inputs
@@ -117,15 +136,18 @@ void Model::applyWrenches()
     std::list<Aerodynamics *>::iterator itAero = dynamics.listOfAerodynamics.begin();
     for (itAero = dynamics.listOfAerodynamics.begin(); itAero != dynamics.listOfAerodynamics.end(); ++itAero)
     {
-        apply_wrenches_srv.request.airfoil_forces[i].x = (*itAero)->aero_wrenches.drag;
-        apply_wrenches_srv.request.airfoil_forces[i].y = -(*itAero)->aero_wrenches.fy;
-        apply_wrenches_srv.request.airfoil_forces[i].z = -(*itAero)->aero_wrenches.lift;
-        apply_wrenches_srv.request.airfoil_torques[i].x = (*itAero)->aero_wrenches.l;
-        apply_wrenches_srv.request.airfoil_torques[i].y = -(*itAero)->aero_wrenches.m;
-        apply_wrenches_srv.request.airfoil_torques[i].z = -(*itAero)->aero_wrenches.n;
+        //gazebo default link frames are FLU, but forces and torques are expressed in FRD
+        // so convert wrenches from FRD to FLU before apply them
+        FRDtoFLU((*itAero)->aero_wrenches.drag, (*itAero)->aero_wrenches.fy, (*itAero)->aero_wrenches.lift);
+        FRDtoFLU((*itAero)->aero_wrenches.l, (*itAero)->aero_wrenches.m, (*itAero)->aero_wrenches.n);
 
-        // NEDtoNWU(apply_wrenches_srv.request.airfoil_forces[i].x,apply_wrenches_srv.request.airfoil_forces[i].y,apply_wrenches_srv.request.airfoil_forces[i].z);
-        // NEDtoNWU(apply_wrenches_srv.request.airfoil_torques[i].x,apply_wrenches_srv.request.airfoil_torques[i].y,apply_wrenches_srv.request.airfoil_torques[i].z);
+        apply_wrenches_srv.request.airfoil_forces[i].x = (*itAero)->aero_wrenches.drag;
+        apply_wrenches_srv.request.airfoil_forces[i].y = (*itAero)->aero_wrenches.fy;
+        apply_wrenches_srv.request.airfoil_forces[i].z = (*itAero)->aero_wrenches.lift;
+        apply_wrenches_srv.request.airfoil_torques[i].x = (*itAero)->aero_wrenches.l;
+        apply_wrenches_srv.request.airfoil_torques[i].y = (*itAero)->aero_wrenches.m;
+        apply_wrenches_srv.request.airfoil_torques[i].z = (*itAero)->aero_wrenches.n;
+
         i++;
     }
 
@@ -154,7 +176,7 @@ void Model::applyWrenches()
     {
         ROS_ERROR("Service apply_wrench down, waiting reconnection...");
         apply_wrench_client.waitForExistence();
-        //    connectToClient(); //Why this??
+        apply_wrench_client = nh.serviceClient<last_letter_2_msgs::apply_model_wrenches_srv>("last_letter_2/apply_model_wrenches_srv", true);
     }
 
 }
