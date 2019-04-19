@@ -23,7 +23,6 @@ Model::Model() : environment(this), dynamics(this)
     pauseGazebo = nh.serviceClient<std_srvs::Empty>("/gazebo/pause_physics");
     std_srvs::Empty emptySrv;
     pauseGazebo.call(emptySrv);
-    t=ros::WallTime::now();
 }
 
 void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr& msg)
@@ -60,17 +59,10 @@ void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr& ms
 
 void Model::modelStep()
 {
-    std::cout<<(ros::WallTime::now()-t)<<std::endl;
-    t=ros::WallTime::now();
-    std::cout<<"01=    "<<ros::WallTime::now()<<std::endl;
     getControlInputs();
-    std::cout<<"02=    "<<ros::WallTime::now()<<std::endl;
     getAirdata();
-    std::cout<<"03=    "<<ros::WallTime::now()<<std::endl;
     calcDynamics();
-    std::cout<<"04=    "<<ros::WallTime::now()<<std::endl;
     applyWrenches();
-    std::cout<<"05=    "<<ros::WallTime::now()<<std::endl;
 }
 
 // get control inputs for all airfoils and motor from controller node
@@ -90,8 +82,8 @@ void Model::getControlInputs()
     }
     else
     {
-        ROS_ERROR("Service apply_wrench down, waiting reconnection...");
-        get_control_inputs_client.waitForExistence();
+        ROS_ERROR("Service get_control_inputs down, waiting reconnection...");
+        ros::service::waitForService("last_letter_2/get_control_inputs_srv");
         get_control_inputs_client = nh.serviceClient<last_letter_2_msgs::get_control_inputs_srv>("last_letter_2/get_control_inputs_srv", true);
     }
 
@@ -175,7 +167,8 @@ void Model::applyWrenches()
     else
     {
         ROS_ERROR("Service apply_wrench down, waiting reconnection...");
-        apply_wrench_client.waitForExistence();
+        // apply_wrench_client.waitForExistence();
+        ros::service::waitForService("last_letter_2/apply_model_wrenches_srv");
         apply_wrench_client = nh.serviceClient<last_letter_2_msgs::apply_model_wrenches_srv>("last_letter_2/apply_model_wrenches_srv", true);
     }
 

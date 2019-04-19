@@ -37,10 +37,14 @@ last_letter_2_msgs::joystick_input mixer(double *input, int mixerid)
         channels.value[10] = (unsigned int)(input[10] * 500 + 1500);	 // Generic channel
         return channels;
     case 2: // Quadrotor mixing
-        channels.value[0] = (unsigned int)(500 * ((input[2] + 1) - 0.11 * input[0] + 0.11 * input[1] - 0.11 * input[3]) + 1000);
-        channels.value[1] = (unsigned int)(500 * ((input[2] + 1) + 0.11 * input[0] + 0.11 * input[1] + 0.11 * input[3]) + 1000);
-        channels.value[2] = (unsigned int)(500 * ((input[2] + 1) - 0.11 * input[0] - 0.11 * input[1] + 0.11 * input[3]) + 1000);
-        channels.value[3] = (unsigned int)(500 * ((input[2] + 1) + 0.11 * input[0] - 0.11 * input[1] - 0.11 * input[3]) + 1000);
+        // channels.value[0] = (unsigned int)(500 * ((input[2] + 1) - 0.11 * input[0] + 0.11 * input[1] - 0.11 * input[3]) + 1000);
+        // channels.value[1] = (unsigned int)(500 * ((input[2] + 1) + 0.11 * input[0] + 0.11 * input[1] + 0.11 * input[3]) + 1000);
+        // channels.value[2] = (unsigned int)(500 * ((input[2] + 1) - 0.11 * input[0] - 0.11 * input[1] + 0.11 * input[3]) + 1000);
+        // channels.value[3] = (unsigned int)(500 * ((input[2] + 1) + 0.11 * input[0] - 0.11 * input[1] - 0.11 * input[3]) + 1000);
+        channels.value[0] = (unsigned int)(500 * ((input[2] + 1) - 0.11 * input[0] + 0.11 * input[1] + 0.11 * input[3]) + 1000);
+        channels.value[1] = (unsigned int)(500 * ((input[2] + 1) - 0.11 * input[0] - 0.11 * input[1] - 0.11 * input[3]) + 1000);
+        channels.value[2] = (unsigned int)(500 * ((input[2] + 1) + 0.11 * input[0] - 0.11 * input[1] + 0.11 * input[3]) + 1000);
+        channels.value[3] = (unsigned int)(500 * ((input[2] + 1) + 0.11 * input[0] + 0.11 * input[1] - 0.11 * input[3]) + 1000);
         channels.value[4] = (unsigned int)(input[4] * 500 + 1500);	// Generic channel
         channels.value[5] = (unsigned int)(input[5] * 500 + 1500);	// Generic channel
         channels.value[6] = (unsigned int)(input[6] * 500 + 1500);	// Generic channel

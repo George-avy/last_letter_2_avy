@@ -6,13 +6,15 @@
 #include <cstdlib>
 #include <last_letter_2_msgs/joystick_input.h>
 #include <last_letter_2_msgs/model_inputs.h>
+#include <last_letter_2_msgs/model_states.h>
 #include <last_letter_2_msgs/get_control_inputs_srv.h>
 
 class Controller
 {
 private:
   ros::Publisher pub;
-  ros::Subscriber sub;
+  ros::Subscriber sub_chan;
+  ros::Subscriber sub_mod_st;
   ros::NodeHandle n;
 
   ros::ServiceServer get_control_inputs_service;
@@ -23,6 +25,7 @@ private:
   int i;
   last_letter_2_msgs::joystick_input channels;
   last_letter_2_msgs::model_inputs model_inputs;
+  last_letter_2_msgs::model_states model_states;
 
 
   //Create essencial variables, based on param server values.
@@ -35,7 +38,9 @@ public:
   Controller()
   {
       //Subscribtions
-      sub = n.subscribe("last_letter_2/rawPWM", 1, &Controller::chan2signal, this, ros::TransportHints().tcpNoDelay());
+      sub_chan = n.subscribe("last_letter_2/rawPWM", 1, &Controller::chan2signal, this, ros::TransportHints().tcpNoDelay());
+      sub_mod_st = n.subscribe("last_letter_2/gazebo/model_states", 1, &Controller::storeStates, this, ros::TransportHints().tcpNoDelay());
+
       pub = n.advertise<last_letter_2_msgs::model_inputs>("last_letter_2/model_inputs", 1);
 
       //Servers
@@ -121,22 +126,40 @@ public:
         model_inputs.header.stamp = ros::Time::now();
     }
 
+    void storeStates(const last_letter_2_msgs::model_states::ConstPtr& msg)
+    {
+        model_states.base_link_states = msg->base_link_states;
+        model_states.airfoil_states = msg->airfoil_states;
+        model_states.motor_states = msg->motor_states;
+    }
+
     bool return_control_inputs(last_letter_2_msgs::get_control_inputs_srv::Request &req,
                                last_letter_2_msgs::get_control_inputs_srv::Response &res)
     {
-        for (i = 0; i < num_wings; i++)
+        std::cout << model_states.base_link_states.roll << "   " << model_states.base_link_states.pitch << "   " << model_states.base_link_states.yaw << std::endl;
+        std::cout << channels.value[0] << "   " << channels.value[1] << "   " << channels.value[3] << std::endl;
+        if (channels.value[0] == 1500 && channels.value[1] == 1500 && channels.value[3] == 1500)
         {
-            res.airfoil_inputs[i].x = model_inputs.wing_input_x[i];
-            res.airfoil_inputs[i].y = model_inputs.wing_input_y[i];
-            res.airfoil_inputs[i].z = model_inputs.wing_input_z[i];
+            res.airfoil_inputs[0].x = -1* model_states.base_link_states.roll;
+            res.airfoil_inputs[0].y = 5* model_states.base_link_states.pitch;
+            res.airfoil_inputs[0].z = model_inputs.wing_input_z[0];
         }
+        else
+        {
+            for (i = 0; i < num_wings; i++)
+            {
+                res.airfoil_inputs[i].x = model_inputs.wing_input_x[i];
+                res.airfoil_inputs[i].y = model_inputs.wing_input_y[i];
+                res.airfoil_inputs[i].z = model_inputs.wing_input_z[i];
+            }
+        }
+
         // Motor inputs
         for (i = 0; i < num_motors; i++)
         {
             res.motor_input[i] = model_inputs.motor_input[i];
         }
         return true;
-
     }
 };
 
@@ -150,6 +173,5 @@ int main(int argc, char **argv)
     ros::AsyncSpinner spinner(1); // Use 1 threads
     spinner.start();
     ros::waitForShutdown();
-
     return 0;
 }

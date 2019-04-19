@@ -72,8 +72,9 @@ class model_plugin : public ModelPlugin
     int i;
     std::string link_name;
     char link_name_temp[20];
+    ros::WallTime t;
 
-    int queue_loop;
+    int thread_rate;
 
     int loop_number;
 
@@ -94,6 +95,7 @@ class model_plugin : public ModelPlugin
         {
             ROS_INFO("Waiting for node to rise");
         }
+        if (!ros::param::getCached("simulation/thread_rate", thread_rate)) { ROS_FATAL("Invalid parameters for thread_rate in param server!"); ros::shutdown(); }
 
         // Spin up the queue helper thread.
         this->rosQueueThread1 =
@@ -117,6 +119,8 @@ class model_plugin : public ModelPlugin
         if (!ros::param::getCached("motor/nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
         wrenches_applied=false;
         loop_number=0;
+    t=ros::WallTime::now();
+
         modelStateInit();
     }
 
@@ -167,13 +171,10 @@ class model_plugin : public ModelPlugin
     {
         ROS_INFO(" i am in QueueThread1 now\n");
         // the sleep rate, increase dramaticaly the preformance
-        ros::WallRate r(100000);
+        ros::WallRate r(thread_rate);
         while (this->rosNode->ok())
         {
-            // std::cout << "cal1Av=" << ros::WallTime::now() << std::endl;
-
-                this->wrenches_rosQueue.callAvailable();
-            // std::cout << "cal2Av=" << ros::WallTime::now() << std::endl;
+            this->wrenches_rosQueue.callAvailable();
             r.sleep();
         }
     }
@@ -182,8 +183,6 @@ class model_plugin : public ModelPlugin
     bool applyWrenchOnModel(last_letter_2_msgs::apply_model_wrenches_srv::Request &req,
                             last_letter_2_msgs::apply_model_wrenches_srv::Response &res)
     {
-    std::cout<<"04.1=  "<<ros::WallTime::now()<<std::endl;
-
         std::lock_guard<std::mutex> lk(m);
         //apply wrenches to each airfoil and motor
          for (i = 0; i < num_wings; i++)
@@ -202,8 +201,6 @@ class model_plugin : public ModelPlugin
             torque[2]=req.airfoil_torques[i].z;
             model->GetLink(link_name)->AddRelativeTorque(torque);
         }
-    std::cout<<"04.2=  "<<ros::WallTime::now()<<std::endl;
-
         for (i = 0; i < num_motors; i++)
         {
             ignition::math::Vector3d force, torque;
@@ -220,34 +217,22 @@ class model_plugin : public ModelPlugin
             torque[2] = 0;
             model->GetLink(link_name)->AddRelativeTorque(torque);
         }
-    std::cout<<"04.3=  "<<ros::WallTime::now()<<std::endl;
-
         //unlock gazebo step
         wrenches_applied=true;
-    std::cout<<"04.4=  "<<ros::WallTime::now()<<std::endl;
-
         cv.notify_one();
-    std::cout<<"04.5=  "<<ros::WallTime::now()<<std::endl;
-
         return true;
     }
 
     void BeforeUpdate()
     {
         std::unique_lock<std::mutex> lk(m);
-        // std::cout << "bfWait=" << ros::WallTime::now() << std::endl;
-        // printf("model_states.seq=%i\n",model_states.header.seq);
-        // std::cout<< "seq=" << model_states.header.stamp << std::endl;
         // //wait until wrenches are ready
         if (loop_number>24)
         {
             cv.wait(lk, [] { return wrenches_applied == true; });
         }
-
         //lock gazebo's next step
         wrenches_applied=false;
-        // std::cout << "bfGzSt=" << ros::WallTime::now() << std::endl;
-
     }
 
     void OnUpdate()
@@ -286,8 +271,6 @@ class model_plugin : public ModelPlugin
         transformStamped_.transform.rotation.w = quat_.w();
 
         broadcaster_.sendTransform(transformStamped_);
-        // std::cout << "afTfpb=" << ros::WallTime::now() << std::endl;
-
         
         relLinVel = model->GetLink("body_FLU")->RelativeLinearVel();
         rotation = model->GetLink("body_FLU")->WorldPose().Rot().Euler();
@@ -369,10 +352,8 @@ class model_plugin : public ModelPlugin
         model_states.loop_number.data=loop_number;
         //publish model states, ros starts calculation step
         model_states.header.stamp=ros::Time::now();
-        // std::cout << "befpub=" << ros::WallTime::now() << std::endl;
 
         this->states_pub.publish(model_states);
-        // std::cout << "aftpub=" << ros::WallTime::now() << std::endl;
     }
 
 };
