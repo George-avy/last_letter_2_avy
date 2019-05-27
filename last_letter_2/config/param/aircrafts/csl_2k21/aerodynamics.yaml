@@ -65,24 +65,21 @@ airfoil1/chanThrottle: 2
 # airfoil 2
 airfoil2/aileron: 0   #1 if airfoil2 affects roll, otherwise 0
 airfoil2/elevator: 1  #1 if airfoil2 affects pitch, otherwise 0
-airfoil2/rudder: 0 
+airfoil2/rudder: 0    #1 if airfoil2 affects yaw, otherwise 0
+
+airfoil2/chanGimbal: -1
+airfoil2/gimbalAngle_max: 0.0
+
+airfoil2/CGOffset: [-0.02, 0.00, -0.05] # vector from CG to CoL
+airfoil2/mountOrientation: [0.0, 0.0, 0.0] # Euler rotations from body axes to propeller normal plane. Gimbal rotation axis should be in z-axis.
+airfoil2/gimbalAxis: 0
 airfoil2/aerodynamicsType: 1
-
-airfoil2/chanAileron: 0
-airfoil2/chanElevator: 1
-airfoil2/chanRudder: 3
-airfoil2/chanThrottle: 2
-
-airfoil2/deltax_max: 0.3491
-airfoil2/deltay_max: 0.3491
-airfoil2/deltaz_max: 0.3491
-
-airfoil2/s: 0.45   #wing surface = b*c
-airfoil2/b: 1.88   #wingspan
+airfoil2/s: 0.12   #wing surface = b*c
+airfoil2/b: 0.5   #wingspan
 airfoil2/c: 0.24   #wing mean cord
 
-airfoil2/c_lift_0: 0.56
-airfoil2/c_lift_deltae: 0.0
+airfoil2/c_lift_0: 0.56 #0.56
+airfoil2/c_lift_deltae: -1.0
 airfoil2/c_lift_a: 6.9
 airfoil2/c_lift_q: 0
 airfoil2/mcoeff: 50
@@ -98,7 +95,7 @@ airfoil2/c_y_b: -0.98
 airfoil2/c_y_p: 0
 airfoil2/c_y_r: 0
 airfoil2/c_y_deltaa: 0
-airfoil2/c_y_deltar: -0.2 #opposite sign than c_n_deltar
+airfoil2/c_y_deltar: 0 #opposite sign than c_n_deltar
 
 airfoil2/c_l_0: 0
 airfoil2/c_l_p: -1.0
@@ -126,27 +123,25 @@ airfoil2/chanElevator: 1
 airfoil2/chanRudder: 3
 airfoil2/chanThrottle: 2
 
+
 # airfoil 3
-airfoil3/aileron: 0   #1 if airfoil3 affects roll, otherwise 0
+airfoil3/aileron: 0  #1 if airfoil3 affects roll, otherwise 0
 airfoil3/elevator: 1  #1 if airfoil3 affects pitch, otherwise 0
-airfoil3/rudder: 0 
+airfoil3/rudder:  0   #1 if airfoil3 affects yaw, otherwise 0
+
+airfoil3/chanGimbal: -1
+airfoil3/gimbalAngle_max: 0.0
+
+airfoil3/CGOffset: [-0.02, 0.00, -0.05] # vector from CG to CoL
+airfoil3/mountOrientation: [0.0, 0.0, 0.0] # Euler rotations from body axes to propeller normal plane. Gimbal rotation axis should be in z-axis.
+airfoil3/gimbalAxis: 0
 airfoil3/aerodynamicsType: 1
-
-airfoil3/chanAileron: 0
-airfoil3/chanElevator: 1
-airfoil3/chanRudder: 3
-airfoil3/chanThrottle: 2
-
-airfoil3/deltax_max: 0.3491
-airfoil3/deltay_max: 0.3491
-airfoil3/deltaz_max: 0.3491
-
-airfoil3/s: 0.45   #wing surface = b*c
-airfoil3/b: 1.88   #wingspan
+airfoil3/s: 0.48   #wing surface = b*c
+airfoil3/b: 2   #wingspan
 airfoil3/c: 0.24   #wing mean cord
 
-airfoil3/c_lift_0: 0.56
-airfoil3/c_lift_deltae: 0.0
+airfoil3/c_lift_0: 0
+airfoil3/c_lift_deltae: -2.0
 airfoil3/c_lift_a: 6.9
 airfoil3/c_lift_q: 0
 airfoil3/mcoeff: 50
@@ -158,30 +153,34 @@ airfoil3/c_drag_p: 0.0437
 airfoil3/c_drag_0: 0.03
 airfoil3/c_drag_a: 0.3
 airfoil3/c_y_0: 0
-airfoil3/c_y_b: -0.98
+airfoil3/c_y_b: 0
 airfoil3/c_y_p: 0
 airfoil3/c_y_r: 0
 airfoil3/c_y_deltaa: 0
 airfoil3/c_y_deltar: -0.2 #opposite sign than c_n_deltar
 
 airfoil3/c_l_0: 0
-airfoil3/c_l_p: -1.0
-airfoil3/c_l_b: -0.12
-airfoil3/c_l_r: 0.14
-airfoil3/c_l_deltaa: 0.25
-airfoil3/c_l_deltar: -0.037
-airfoil3/c_m_0: 0.045
-airfoil3/c_m_a: -0.7
-airfoil3/c_m_q: -20
-airfoil3/c_m_deltae: 1.0
+airfoil3/c_l_p: 0
+airfoil3/c_l_b: 0
+airfoil3/c_l_r: 0
+airfoil3/c_l_deltaa: 0
+airfoil3/c_l_deltar: 0
+airfoil3/c_m_0: 0
+airfoil3/c_m_a: 0
+airfoil3/c_m_q: 0
+airfoil3/c_m_deltae: 0
 airfoil3/c_n_0: 0
-airfoil3/c_n_b: 0.25
-airfoil3/c_n_p: 0.022
-airfoil3/c_n_r: -1
+airfoil3/c_n_b: 0
+airfoil3/c_n_p: 0
+airfoil3/c_n_r: 0
 airfoil3/c_n_deltaa: 0.00
-airfoil3/c_n_deltar: 0.1 #opposite sign than c_y_deltar
+airfoil3/c_n_deltar: 0 #opposite sign than c_y_deltar
+
+airfoil3/deltax_max: 0.3491
+airfoil3/deltay_max: 0.3491
+airfoil3/deltaz_max: 0.3491
 
 airfoil3/chanAileron: 0
-airfoil3/chanElevator: 1
-airfoil3/chanRudder: 3
-airfoil3/chanThrottle: 2
+airfoil3/chanElevator: 3
+airfoil3/chanRudder: 0
+airfoil3/chanThrottle: 0
