@@ -2,9 +2,9 @@
 #aerodynamicsType: 0:NoAerodynamics, 1:StdLinearAero 2:HCUAVAero
 airfoil/nWings: 1
 
-airfoil1/aileron: 1   #1 if airfoil1 affects roll, otherwise 0
-airfoil1/elevator: 1  #1 if airfoil1 affects pitch, otherwise 0
-airfoil1/rudder: 1    #1 if airfoil1 affects yaw, otherwise 0
+airfoil1/roll_enable: 1   #1 if airfoil1 affects roll of wing, otherwise 0
+airfoil1/pitch_enable: 1  #1 if airfoil1 affects pitch of wing, otherwise 0
+airfoil1/yaw_enable: 1    #1 if airfoil1 affects yaw of wing, otherwise 0
 
 airfoil1/chanGimbal: -1
 airfoil1/gimbalAngle_max: 0.0
@@ -53,41 +53,10 @@ airfoil1/c_n_r: -1
 airfoil1/c_n_deltaa: 0.00
 airfoil1/c_n_deltar: 0.1 #opposite sign than c_y_deltar
 
-airfoil1/deltax_max: 0.3491
+airfoil1/deltax_max: 0.3491  #max deflections in radians
 airfoil1/deltay_max: 0.3491
 airfoil1/deltaz_max: 0.3491
 
-airfoil1/chanAileron: 0
-airfoil1/chanElevator: 1
-airfoil1/chanRudder: 3
-airfoil1/chanThrottle: 2
-
-# airfoil 2
-airfoil2/aileron: 1   #1 if airfoil2 affects roll, otherwise 0
-airfoil2/elevator: 1  #1 if airfoil2 affects pitch, otherwise 0
-airfoil2/rudder: 1 
-airfoil2/aerodynamicsType: 0
-
-airfoil2/chanAileron: 0
-airfoil2/chanElevator: 1
-airfoil2/chanRudder: 3
-airfoil2/chanThrottle: 2
-
-airfoil2/deltax_max: 0.3491
-airfoil2/deltay_max: 0.3491
-airfoil2/deltaz_max: 0.3491
-
-# airfoil 3
-airfoil3/aileron: 1   #1 if airfoil3 affects roll, otherwise 0
-airfoil3/elevator: 1  #1 if airfoil3 affects pitch, otherwise 0
-airfoil3/rudder: 1 
-airfoil3/aerodynamicsType: 2
-
-airfoil3/chanAileron: 0
-airfoil3/chanElevator: 1
-airfoil3/chanRudder: 3
-airfoil3/chanThrottle: 2
-
-airfoil3/deltax_max: 0.3491
-airfoil3/deltay_max: 0.3491
-airfoil3/deltaz_max: 0.3491
+airfoil1/chan_in_x: 0  #Num. of channels to read the signal value
+airfoil1/chan_in_y: 1
+airfoil1/chan_in_z: 3

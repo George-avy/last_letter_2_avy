@@ -12,11 +12,9 @@ int main(int argc, char **argv)
     //Create a Model object
     Model model;
     //Start spin
-    while (ros::ok())
-    {
-        ros::AsyncSpinner spinner(1); // Use 1 threads
-        spinner.start();
-        ros::waitForShutdown();
-    }
+    ros::AsyncSpinner spinner(1); // Use 1 threads
+    spinner.start();
+    ros::waitForShutdown();
+    
     ros::shutdown();
 }

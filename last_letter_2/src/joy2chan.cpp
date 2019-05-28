@@ -37,21 +37,17 @@ last_letter_2_msgs::joystick_input mixer(double *input, int mixerid)
         channels.value[10] = (unsigned int)(input[10] * 500 + 1500);	 // Generic channel
         return channels;
     case 2: // Quadrotor mixing
-        // channels.value[0] = (unsigned int)(500 * ((input[2] + 1) - 0.11 * input[0] + 0.11 * input[1] - 0.11 * input[3]) + 1000);
-        // channels.value[1] = (unsigned int)(500 * ((input[2] + 1) + 0.11 * input[0] + 0.11 * input[1] + 0.11 * input[3]) + 1000);
-        // channels.value[2] = (unsigned int)(500 * ((input[2] + 1) - 0.11 * input[0] - 0.11 * input[1] + 0.11 * input[3]) + 1000);
-        // channels.value[3] = (unsigned int)(500 * ((input[2] + 1) + 0.11 * input[0] - 0.11 * input[1] - 0.11 * input[3]) + 1000);
-        channels.value[0] = (unsigned int)(500 * ((input[2] + 1) - 0.11 * input[0] + 0.11 * input[1] + 0.11 * input[3]) + 1000);
-        channels.value[1] = (unsigned int)(500 * ((input[2] + 1) - 0.11 * input[0] - 0.11 * input[1] - 0.11 * input[3]) + 1000);
-        channels.value[2] = (unsigned int)(500 * ((input[2] + 1) + 0.11 * input[0] - 0.11 * input[1] + 0.11 * input[3]) + 1000);
-        channels.value[3] = (unsigned int)(500 * ((input[2] + 1) + 0.11 * input[0] + 0.11 * input[1] - 0.11 * input[3]) + 1000);
-        channels.value[4] = (unsigned int)(input[4] * 500 + 1500);	// Generic channel
-        channels.value[5] = (unsigned int)(input[5] * 500 + 1500);	// Generic channel
-        channels.value[6] = (unsigned int)(input[6] * 500 + 1500);	// Generic channel
-        channels.value[7] = (unsigned int)(input[7] * 500 + 1500);	// Generic channel
-        channels.value[8] = (unsigned int)(input[8] * 500 + 1500);	// Generic channel
-        channels.value[9] = (unsigned int)(input[9] * 1000 + 1000);   // Reset channel
-        channels.value[10] = (unsigned int)(input[10] * 1000 + 1000); // Generic channel
+        channels.value[0] = (unsigned int)(input[0] * 500 + 1500);          // Roll anlge channel
+        channels.value[1] = (unsigned int)(input[1] * 500 + 1500);          // Pitch angle channel
+        channels.value[2] = (unsigned int)((input[2] + 1) * 500 + 1000);    // Thrust channel
+        channels.value[3] = (unsigned int)(input[3] * 500 + 1500);          // Yaw angle channel
+        channels.value[4] = (unsigned int)(input[4] * 500 + 1500);          // Generic channel
+        channels.value[5] = (unsigned int)(input[5] * 500 + 1500);          // Generic channel
+        channels.value[6] = (unsigned int)(input[6] * 500 + 1500);          // Generic channel
+        channels.value[7] = (unsigned int)(input[7] * 500 + 1500);          // Generic channel
+        channels.value[8] = (unsigned int)(input[8] * 500 + 1500);          // Generic channel
+        channels.value[9] = (unsigned int)(input[9] * 1000 + 1000);         // Reset channel
+        channels.value[10] = (unsigned int)(input[10] * 1000 + 1000);       // Generic channel
         return channels;
     case 3: // Firefly Y6 mixing
         channels.value[0] = (unsigned int)(500 * ((input[2] + 1) - 0.11 * input[0] + 0.11 * input[1] - 0.11 * input[3]) + 1000); // top-right motor channel
@@ -98,8 +94,8 @@ void joy2chan(sensor_msgs::Joy joyMsg)
     {
         if (channels.value[i] < 1000)
             channels.value[i] = 1000;
-        if (channels.value[i] > 2100)
-            channels.value[i] = 2100;
+        if (channels.value[i] > 2000)
+            channels.value[i] = 2000;
     }
 
     channels.header.stamp = ros::Time::now();
