@@ -1,10 +1,11 @@
 #airfoil Aerodynamic Parameters
 #aerodynamicsType: 0:NoAerodynamics, 1:StdLinearAero 2:HCUAVAero
-airfoil/nWings: 3
+nWings: 3
 
-airfoil1/roll_enable: 1   #1 if airfoil1 affects roll of wing, otherwise 0
-airfoil1/pitch_enable: 0  #1 if airfoil1 affects pitch of wing, otherwise 0
-airfoil1/yaw_enable: 0    #1 if airfoil1 affects yaw of wing, otherwise 0
+aileron: 0  #Number of relative channel from joystick
+elevator: 1
+rudder: 3
+thrust: 2
 
 airfoil1/chanGimbal: -1
 airfoil1/gimbalAngle_max: 0.0
@@ -17,7 +18,7 @@ airfoil1/s: 0.45   #wing surface = b*c
 airfoil1/b: 1.88   #wingspan
 airfoil1/c: 0.24   #wing mean cord
 
-airfoil1/c_lift_0: 0.56
+airfoil1/c_lift_0: 0.56 
 airfoil1/c_lift_deltae: 0.0
 airfoil1/c_lift_a: 6.9
 airfoil1/c_lift_q: 0
@@ -40,7 +41,7 @@ airfoil1/c_l_0: 0
 airfoil1/c_l_p: -1.0
 airfoil1/c_l_b: -0.12
 airfoil1/c_l_r: 0.14
-airfoil1/c_l_deltaa: 0.25
+airfoil1/c_l_deltaa: 0.05 #0.25
 airfoil1/c_l_deltar: -0.037
 airfoil1/c_m_0: 0.045
 airfoil1/c_m_a: -0.7
@@ -57,15 +58,13 @@ airfoil1/deltax_max: 0.3491  #max deflections in radians
 airfoil1/deltay_max: 0
 airfoil1/deltaz_max: 0
 
-airfoil1/chan_in_x: 0  #Num. of channels to read the signal value
-airfoil1/chan_in_y: 1
-airfoil1/chan_in_z: 3
+#0 if airfoil is not affect for move (relative to airfoil), else 1,2,3 for which of the input signals the airfoil listens to
+#0-nothing, 1-aileron, 2-elevator, 3-rudder  (input signals)
+airfoil1/roll_move: 1     #airfoil1 affects only roll and listens to aileron signal
+airfoil1/pitch_move: 0    #airfoil1 not affects pitch move
+airfoil1/yaw_move: 0      #airfoil1 not affects yaw move
 
 # airfoil 2
-airfoil2/roll_enable: 0   #1 if airfoil2 affects roll of wing, otherwise 0
-airfoil2/pitch_enable: 1  #1 if airfoil2 affects pitch of wing, otherwise 0
-airfoil2/yaw_enable: 0    #1 if airfoil2 affects yaw of wing, otherwise 0
-
 airfoil2/chanGimbal: -1
 airfoil2/gimbalAngle_max: 0.0
 
@@ -117,15 +116,12 @@ airfoil2/deltax_max: 0       #max deflections in radians
 airfoil2/deltay_max: 0.3491
 airfoil2/deltaz_max: 0
 
-airfoil2/chan_in_x: 0    #Num. of channels to read the signal value
-airfoil2/chan_in_y: 1
-airfoil2/chan_in_z: 3
+#0 if airfoil is not affect for move (relative to airfoil), else 1,2,3 for which of the input signals the airfoil listens to
+airfoil2/roll_move: 0   #0-nothing, 1-aileron, 2-elevator, 3-rudder  (input signals)
+airfoil2/pitch_move: 2
+airfoil2/yaw_move: 0
 
 # airfoil 3
-airfoil3/roll_enable: 0  #1 if airfoil3 affects roll of wing, otherwise 0
-airfoil3/pitch_enable: 1  #1 if airfoil3 affects pitch of wing, otherwise 0
-airfoil3/yaw_enable:  0   #1 if airfoil3 affects yaw of wing, otherwise 0
-
 airfoil3/chanGimbal: -1
 airfoil3/gimbalAngle_max: 0.0
 
@@ -177,6 +173,7 @@ airfoil3/deltax_max: 0       #max deflections in radians
 airfoil3/deltay_max: 0.3491
 airfoil3/deltaz_max: 0
 
-airfoil3/chan_in_x: 0  #Num. of channels to read the signal value
-airfoil3/chan_in_y: 3
-airfoil3/chan_in_z: 0
+#0 if airfoil is not affect the move (relative to airfoil), else 1,2,3 for which of the input signals the airfoil listens to
+airfoil3/roll_move: 0   #0-nothing, 1-aileron, 2-elevator, 3-rudder  (input signals)
+airfoil3/pitch_move: 3
+airfoil3/yaw_move: 0

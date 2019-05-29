@@ -3,10 +3,27 @@
 Model::Model() : environment(this), dynamics(this)
 {
     //Read the number of airfoils
-    if (!ros::param::getCached("airfoil/nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown(); }
+    if (!ros::param::getCached("nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown(); }
     //Read the number of motors
     if (!ros::param::getCached("motor/nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
-
+    
+    char paramMsg[50];
+    //Load basic characteristics for each airfoil
+    for (i = 0; i < num_wings; ++i)
+    {
+        sprintf(paramMsg, "airfoil%i/roll_move", i + 1);
+        if (!ros::param::getCached(paramMsg, roll_move[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+        sprintf(paramMsg, "airfoil%i/pitch_move", i + 1);
+        if (!ros::param::getCached(paramMsg, pitch_move[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+        sprintf(paramMsg, "airfoil%i/yaw_move", i + 1);
+        if (!ros::param::getCached(paramMsg, yaw_move[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+        sprintf(paramMsg, "airfoil%i/deltax_max", i + 1);
+        if (!ros::param::getCached(paramMsg, deltax_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+        sprintf(paramMsg, "airfoil%i/deltay_max", i + 1);
+        if (!ros::param::getCached(paramMsg, deltay_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+        sprintf(paramMsg, "airfoil%i/deltaz_max", i + 1);
+        if (!ros::param::getCached(paramMsg, deltaz_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+    }
     //Subscriber that gets model states from gazebo after physics step
     gazebo_sub = nh.subscribe("last_letter_2/gazebo/model_states", 1, &Model::gazeboStatesClb, this,ros::TransportHints().tcpNoDelay());
 
@@ -65,7 +82,7 @@ void Model::modelStep()
     applyWrenches();
 }
 
-// get control inputs for all airfoils and motor from controller node
+// get control inputs for the model from controller node
 void Model::getControlInputs()
 {
     // call get_contol_inputs_srv
@@ -90,16 +107,17 @@ void Model::getControlInputs()
     //store airfoil inputs
     for (i = 0; i < num_wings; i++)
     {
-        airfoil_inputs[i].x=control_inputs_msg.response.airfoil_inputs[i].x;
-        airfoil_inputs[i].y=control_inputs_msg.response.airfoil_inputs[i].y;
-        airfoil_inputs[i].z=control_inputs_msg.response.airfoil_inputs[i].z;
+        airfoil_inputs[i].x = deltax_max[i] * control_inputs_msg.response.input_signals[roll_move[i]];
+        airfoil_inputs[i].y = deltay_max[i] * control_inputs_msg.response.input_signals[pitch_move[i]];
+        airfoil_inputs[i].z = deltaz_max[i] * control_inputs_msg.response.input_signals[yaw_move[i]];
     }
 
     //store motor inputs
     for (i = 0; i < num_motors; i++)
     {
-        motor_input[i]=control_inputs_msg.response.motor_input[i];
+        motor_input[i]=control_inputs_msg.response.input_signals[4];
     }
+    
 
 }
 
@@ -139,7 +157,6 @@ void Model::applyWrenches()
         apply_wrenches_srv.request.airfoil_torques[i].x = (*itAero)->aero_wrenches.l;
         apply_wrenches_srv.request.airfoil_torques[i].y = (*itAero)->aero_wrenches.m;
         apply_wrenches_srv.request.airfoil_torques[i].z = (*itAero)->aero_wrenches.n;
-
         i++;
     }
 
@@ -171,5 +188,4 @@ void Model::applyWrenches()
         ros::service::waitForService("last_letter_2/apply_model_wrenches_srv");
         apply_wrench_client = nh.serviceClient<last_letter_2_msgs::apply_model_wrenches_srv>("last_letter_2/apply_model_wrenches_srv", true);
     }
-
 }

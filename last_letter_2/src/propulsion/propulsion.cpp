@@ -5,22 +5,16 @@
 Propulsion::Propulsion(Model *parent, int id) :tfListener(tfBuffer)
 {
     model = parent;
-    //Motor ID number
-    motor_number = id;
+    motor_number = id; //Motor ID number
 }
 
 //calculation steps
 void Propulsion::calculationCycle()
 {
-    // std::cout<< "03.2.1="<< ros::WallTime::now()<<std::endl;
     getStates();
-    // std::cout<< "03.2.2="<< ros::WallTime::now()<<std::endl;
     getInputSignals();
-    // std::cout<< "03.2.3="<< ros::WallTime::now()<<std::endl;
     rotateWind();
-    // std::cout<< "03.2.4="<< ros::WallTime::now()<<std::endl;
     calcAirspeed();
-    // std::cout<< "03.2.5="<< ros::WallTime::now()<<std::endl;
     calcWrench();
 }
 
@@ -36,7 +30,7 @@ void Propulsion::getInputSignals()
     motor_input=model->motor_input[motor_number-1];
 }
 
-// rotate wind vector from body to airfoil Link
+// rotate wind vector from body to motor Links
 void Propulsion::rotateWind()
 {
     char name_temp[20];
@@ -59,6 +53,7 @@ void Propulsion::rotateWind()
         ROS_WARN("Could NOT transform body_FLU to motor: %s", ex.what());
     }
 
+    //wind expressed on motor frame
     relative_wind.x=v_out.vector.x;
     relative_wind.y=v_out.vector.y;
     relative_wind.z=v_out.vector.z;
@@ -67,7 +62,7 @@ void Propulsion::rotateWind()
 //calculate relative airspeed
 void Propulsion::calcAirspeed()
 {
-    // airspeed, alpha, beta relative to airfoil
+    // airspeed relative to motor
     float u_r = motor_states.u - relative_wind.x;
     float v_r = motor_states.v - relative_wind.y;
     float w_r = motor_states.w - relative_wind.z;

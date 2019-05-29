@@ -3,5 +3,5 @@
 int16 airfoil_number
 int16 motor_number
 ---
-geometry_msgs/Vector3[3] airfoil_inputs
+float32[5] input_signals
 float32[4] motor_input

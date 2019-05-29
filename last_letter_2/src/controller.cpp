@@ -30,11 +30,11 @@ private:
   last_letter_2_msgs::model_states model_states;
 
 
-  //Create essencial variables, based on param server values.
-  int roll_enable[4], pitch_enable[4], yaw_enable[4], motor_enable[4];
-  int chan_in_x[4], chan_in_y[4], chan_in_z[4], chanMotor[4];
-  float wing_input_x[4], wing_input_y[4], wing_input_z[4], motor_input[4];
-  float deltax_max[4], deltay_max[4], deltaz_max[4];
+  //Create essencial variables, based on parameter server values.
+  int aileron, elevator, rudder, thrust;
+  float input_signals[5];
+
+  float delta_a, delta_e, delta_r, delta_t;
 
 public:
   Controller()
@@ -43,49 +43,31 @@ public:
       sub_chan = n.subscribe("last_letter_2/rawPWM", 1, &Controller::chan2signal, this, ros::TransportHints().tcpNoDelay());
       sub_mod_st = n.subscribe("last_letter_2/gazebo/model_states", 1, &Controller::storeStates, this, ros::TransportHints().tcpNoDelay());
 
-      //Servers
+      //Service server
       get_control_inputs_service = n.advertiseService("last_letter_2/get_control_inputs_srv", &Controller::return_control_inputs, this);
 
       // Read the mixer type
       if (!ros::param::getCached("HID/mixerid", mixerid)) { ROS_INFO("No mixing function selected"); mixerid = 0;}
       //Read the number of airfoils
-      if (!ros::param::getCached("airfoil/nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown();}
+      if (!ros::param::getCached("nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown();}
       //Read the number of motors
       if (!ros::param::getCached("motor/nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown();}
 
       char paramMsg[50];
 
-      //Load basic characteristics for each airfoil
-      for (i = 0; i < num_wings; ++i)
-      {
-          sprintf(paramMsg, "airfoil%i/roll_enable", i + 1);
-          if (!ros::param::getCached(paramMsg, roll_enable[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-          sprintf(paramMsg, "airfoil%i/pitch_enable", i + 1);
-          if (!ros::param::getCached(paramMsg, pitch_enable[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-          sprintf(paramMsg, "airfoil%i/yaw_enable", i + 1);
-          if (!ros::param::getCached(paramMsg, yaw_enable[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-          sprintf(paramMsg, "airfoil%i/chan_in_x", i + 1);
-          if (!ros::param::getCached(paramMsg, chan_in_x[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-          sprintf(paramMsg, "airfoil%i/chan_in_y", i + 1);
-          if (!ros::param::getCached(paramMsg, chan_in_y[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-          sprintf(paramMsg, "airfoil%i/chan_in_z", i + 1);
-          if (!ros::param::getCached(paramMsg, chan_in_z[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-          sprintf(paramMsg, "airfoil%i/deltax_max", i + 1);
-          if (!ros::param::getCached(paramMsg, deltax_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-          sprintf(paramMsg, "airfoil%i/deltay_max", i + 1);
-          if (!ros::param::getCached(paramMsg, deltay_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-          sprintf(paramMsg, "airfoil%i/deltaz_max", i + 1);
-          if (!ros::param::getCached(paramMsg, deltaz_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-      }
+      sprintf(paramMsg, "aileron");
+      if (!ros::param::getCached(paramMsg, aileron))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+      sprintf(paramMsg, "elevator");
+      if (!ros::param::getCached(paramMsg, elevator))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+      sprintf(paramMsg, "rudder");
+      if (!ros::param::getCached(paramMsg, rudder))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+      sprintf(paramMsg, "thrust");
+      if (!ros::param::getCached(paramMsg, thrust))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
 
-      //load basic characteristics for each motor
-      for (i = 0; i < num_motors; ++i)
-      {
-          sprintf(paramMsg, "motor%i/enable", i + 1);
-          if (!ros::param::getCached(paramMsg, motor_enable[i])) {ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-          sprintf(paramMsg, "motor%i/chanMotor", i + 1);
-          if (!ros::param::getCached(paramMsg, chanMotor[i])) {ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-      }
+      delta_a = 0;
+      delta_e = 0;
+      delta_r = 0;
+      delta_t = 0;
     }
 
     //Store new joystick changes
@@ -98,25 +80,20 @@ public:
         case 0: // No mixing applied
             break;
         case 1: // Airplane mixing
-            // Airfoil inputs
-            for (i = 0; i < num_wings; i++)
-            {
-                model_inputs.wing_input_x[i] = roll_enable[i] * (deltax_max[i] * (channels.value[chan_in_x[i]] - 1500) / 500);
-                model_inputs.wing_input_y[i] = pitch_enable[i] * (deltay_max[i] * (channels.value[chan_in_y[i]] - 1500) / 500);
-                model_inputs.wing_input_z[i] = yaw_enable[i] * (deltaz_max[i] * (channels.value[chan_in_z[i]] - 1500) / 500);
-            }
-            // Motor inputs
-            for (i = 0; i < num_motors; i++)
-            {
-                model_inputs.motor_input[i] = motor_enable[i] * ((float)(channels.value[chanMotor[i]] - 1000) / 1000);
-            }
+            // Airplane inputs
+            delta_a = (float) (channels.value[aileron] - 1500) / 500;   // aileron signal
+            delta_e = (float) (channels.value[elevator] - 1500) / 500;  // elevator signal
+            delta_r = (float) (channels.value[rudder] - 1500) / 500;    // rudder signal
+            delta_t = (float) (channels.value[thrust] - 1000) / 1000;   // thrust signal
+
             break;
-        case 2: // Quadrotor mixing
-            // Motor inputs
-            for (i = 0; i < num_motors; i++)
-            {
-                model_inputs.motor_input[i] = motor_enable[i] * ((float)(channels.value[chanMotor[i]] - 1000) / 1000);
-            }
+        case 2: // Mulrtirotor mixing
+            // Multirotor inputs
+            delta_a = (float) (channels.value[aileron] - 1500) / 500;   // roll angle signal
+            delta_e = (float) (channels.value[elevator] - 1500) / 500;  // pitch angle signal
+            delta_r = (float) (channels.value[rudder] - 1500) / 500;    // yaw angle signal
+            delta_t = (float) (channels.value[thrust] - 1000) / 1000;   //  thrust signal
+            
             break;
         default:
             ROS_FATAL("Invalid parameter for -/HID/mixerid- in param server!");
@@ -126,6 +103,7 @@ public:
         model_inputs.header.stamp = ros::Time::now();
     }
 
+    // store the model_states published by gazebo
     void storeStates(const last_letter_2_msgs::model_states::ConstPtr& msg)
     {
         model_states.base_link_states = msg->base_link_states;
@@ -137,19 +115,13 @@ public:
                                last_letter_2_msgs::get_control_inputs_srv::Response &res)
     {
         // PD(model_states);
-        // Airfoil inputs
-        for (i = 0; i < num_wings; i++)
-        {
-            res.airfoil_inputs[i].x = model_inputs.wing_input_x[i];
-            res.airfoil_inputs[i].y = model_inputs.wing_input_y[i];
-            res.airfoil_inputs[i].z = model_inputs.wing_input_z[i];
-        }
+        // Model inputs
+        res.input_signals[0] = 0;           
+        res.input_signals[1] = delta_a ;  // aileron signal
+        res.input_signals[2] = delta_e ;  // elevator signal
+        res.input_signals[3] = delta_r ;  // rudder signal
+        res.input_signals[4] = delta_t ;  // thrust signal
 
-        // Motor inputs
-        for (i = 0; i < num_motors; i++)
-        {
-            res.motor_input[i] = model_inputs.motor_input[i];
-        }
         return true;
     }
 };

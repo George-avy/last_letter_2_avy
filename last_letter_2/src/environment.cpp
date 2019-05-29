@@ -50,7 +50,7 @@ void Environment::calculateAirdata()
 //Calculate temperature
 void Environment::calcTemp()
 {
-    double altitude = -states.z;
+    double altitude = -states.z;   // z-axis down
     airdata.temperature = T0 + altitude / 1000.0 * L0;
 }
 
@@ -69,7 +69,6 @@ void Environment::calcWind()
     if (isnan(wind.x) || isnan(wind.y) || isnan(wind.z))
     {
         ROS_FATAL("earth wind NAN in environmentNode!");
-        // std::cout << wind.x << " " << wind.y << " " << wind.z << std::endl;
         ros::shutdown();
     }
 
@@ -123,7 +122,7 @@ void Environment::calcWind()
 
 void Environment::calcDens()
 {
-    double altitude = -states.z;
+    double altitude = -states.z;  // z-axis down
     double Hb = 0, Tb = T0, Pb = P0, L = L0;
     double alt2pressRatio = (Pb / P0) * pow(1 - (L / Tb) * (altitude / 1000.0 - Hb), ((1000.0 * grav0) / (Rd * L))); //Corrected to 1 - (L/...)
     double alt2tempRatio = airdata.temperature / T0;
@@ -135,7 +134,7 @@ void Environment::calcDens()
 //Calculate barometric pressure
 void Environment::calcPres()
 {
-    double altitude = -states.z;
+    double altitude = -states.z;  // z-axis down
     double pressure;
     double Hb = 0, Tb = T0, Pb = P0, L = L0;
     pressure = Pb * pow(1 - (L / Tb) * (altitude / 1000.0 - Hb), ((1000.0 * grav0) / (Rd * L))); //Corrected to 1 - (L/...)

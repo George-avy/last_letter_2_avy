@@ -1,10 +1,11 @@
 #airfoil Aerodynamic Parameters
 #aerodynamicsType: 0:NoAerodynamics, 1:StdLinearAero 2:HCUAVAero
-airfoil/nWings: 1
+nWings: 1
 
-airfoil1/roll_enable: 1   #1 if airfoil1 affects roll of wing, otherwise 0
-airfoil1/pitch_enable: 1  #1 if airfoil1 affects pitch of wing, otherwise 0
-airfoil1/yaw_enable: 1    #1 if airfoil1 affects yaw of wing, otherwise 0
+aileron: 0  #Number of relative channel from joystick
+elevator: 1
+rudder: 3
+thrust: 2
 
 airfoil1/chanGimbal: -1
 airfoil1/gimbalAngle_max: 0.0
@@ -57,6 +58,6 @@ airfoil1/deltax_max: 0.3491  #max deflections in radians
 airfoil1/deltay_max: 0.3491
 airfoil1/deltaz_max: 0.3491
 
-airfoil1/chan_in_x: 0  #Num. of channels to read the signal value
-airfoil1/chan_in_y: 1
-airfoil1/chan_in_z: 3
+airfoil1/roll_move: 1 #0-no input, 1-aileron, 2-elevator, 3-rudder
+airfoil1/pitch_move: 2
+airfoil1/yaw_move: 3

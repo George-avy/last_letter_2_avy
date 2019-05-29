@@ -83,7 +83,6 @@ class model_plugin : public ModelPlugin
     {
     }
 
-        
     void Load(physics::ModelPtr _model, sdf::ElementPtr _sdf) //Called when a Plugin is first created,
     {                                                                       //and after the World has been loaded.Νot be blocking.
         this->model = _model;
@@ -113,14 +112,12 @@ class model_plugin : public ModelPlugin
         this->states_pub = this->rosNode->advertise<last_letter_2_msgs::model_states>("last_letter_2/gazebo/model_states", 1,true);
 
         //Read the number of airfoils
-        if (!ros::param::getCached("airfoil/nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown(); }
+        if (!ros::param::getCached("nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown(); }
         //Read the number of motors
-       
         if (!ros::param::getCached("motor/nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
-        wrenches_applied=false;
-        loop_number=0;
-    t=ros::WallTime::now();
 
+        wrenches_applied = false;
+        loop_number = 0;
         modelStateInit();
     }
 
@@ -144,18 +141,18 @@ class model_plugin : public ModelPlugin
         init_pose.Set(xyz_pose, rpy_pose);
         this->model->SetWorldPose(init_pose);
 
-        // Tranform linear and angular velocity from body frame to world frame for initialized launching
-        KDL::Frame tranformation_matrix;
+        // Transform linear and angular velocity from body frame to world frame for initialized launching
+        KDL::Frame transformation_matrix;
         tf2::Stamped<KDL::Vector> v_out;
 
-        tranformation_matrix = KDL::Frame(KDL::Rotation::EulerZYX(-rpy_pose[2], -rpy_pose[1], rpy_pose[0]), KDL::Vector(0, 0, 0));
-        v_out = tf2::Stamped<KDL::Vector>(tranformation_matrix.Inverse() * KDL::Vector(velLin[0], velLin[1], velLin[2]), ros::Time::now(), "airfoil");
+        transformation_matrix = KDL::Frame(KDL::Rotation::EulerZYX(-rpy_pose[2], -rpy_pose[1], rpy_pose[0]), KDL::Vector(0, 0, 0));
+        v_out = tf2::Stamped<KDL::Vector>(transformation_matrix.Inverse() * KDL::Vector(velLin[0], velLin[1], velLin[2]), ros::Time::now(), "airfoil");
 
         velLin[0] = v_out[0];
         velLin[1] = v_out[1];
         velLin[2] = v_out[2];
 
-        v_out = tf2::Stamped<KDL::Vector>(tranformation_matrix.Inverse() * KDL::Vector(velAng[0], velAng[1], velAng[2]), ros::Time::now(), "airfoil");
+        v_out = tf2::Stamped<KDL::Vector>(transformation_matrix.Inverse() * KDL::Vector(velAng[0], velAng[1], velAng[2]), ros::Time::now(), "airfoil");
 
         velAng[0] = v_out[0];
         velAng[1] = v_out[1];
@@ -237,7 +234,7 @@ class model_plugin : public ModelPlugin
 
     void OnUpdate()
     {
-        //publish tranform between gazebo inertia NWU and body frame FLU
+        //publish transform between gazebo inertia NWU and body frame FLU
         //if declaration is placed in data area of class, causes problems. So it is placed here.
         static tf2_ros::TransformBroadcaster broadcaster_;
         geometry_msgs::TransformStamped transformStamped_;
@@ -257,7 +254,7 @@ class model_plugin : public ModelPlugin
 
         broadcaster_.sendTransform(transformStamped_);
         
-        //publish body static tranformations between body_FLU and body_FRD
+        //publish body static transformations between body_FLU and body_FRD
         transformStamped_.header.stamp = ros::Time::now();
         transformStamped_.header.frame_id = "body_FLU";
         transformStamped_.child_frame_id = "body_FRD";

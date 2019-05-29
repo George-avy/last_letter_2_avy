@@ -1,7 +1,7 @@
 #include <last_letter_2_headers.hpp>
 #include "environment.hpp" 
 #include "dynamics.hpp"
-#include "aerodynamics.hpp"
+#include "aerodynamics/aerodynamics.hpp"
 #include "propulsion/propulsion.hpp"
 #include "factory.hpp"
   
@@ -36,6 +36,8 @@
     int i;
     int num_wings, num_motors;
     std_msgs::Int32 loop_num;
+    int roll_move[4], pitch_move[4], yaw_move[4];
+    float deltax_max[4], deltay_max[4], deltaz_max[4];
 
     //Class methods
     Model();

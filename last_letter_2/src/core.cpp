@@ -2,7 +2,7 @@
 #include "model.cpp"
 #include "environment.cpp"
 #include "dynamics.cpp"
-#include "aerodynamics.cpp"
+#include "aerodynamics/aerodynamics.cpp"
 #include "propulsion/propulsion.cpp"
 #include "factory.cpp"
 
