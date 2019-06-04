@@ -2,7 +2,12 @@
 # Motor types: 0 No motor, 1 Beard Engine, 2 Piston engine, 3 Electric Engine
 # Polynomial types: 0 1D, 1 2D, 2 cubic spline
 
-motor/nMotors: 4
+roll_angle: 0
+pitch_angle: 1
+yaw_angle: 3
+thrust: 2
+
+nMotors: 4
 
 motor1/enable: 1  #1 if motor is in use, 0 if out of use
 motor1/chanMotor: 0

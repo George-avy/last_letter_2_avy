@@ -34,11 +34,18 @@
     float motor_input[4];
     ros::WallTime t;
     int i;
-    int num_wings, num_motors;
+    int mixerid, num_wings, num_motors;
+    float roll, pitch, yaw, thrust;
     std_msgs::Int32 loop_num;
     int roll_move[4], pitch_move[4], yaw_move[4];
     float deltax_max[4], deltay_max[4], deltaz_max[4];
 
+    float k1 = 0.25;
+    float l = 10;
+    float k2 = 0.2;
+    float M[16] = {k1, k1, k1, k1, 0, -l *k1, 0, l *k1, l *k1, 0, -l *k1, 0, -k2, k2, -k2, k2};
+    float invM[16];
+    
     //Class methods
     Model();
     void gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr&);
@@ -47,5 +54,6 @@
     void getAirdata();
     void calcDynamics();
     void applyWrenches();
+    bool gluInvertMatrix(float *m, float *invOut);
 };
 

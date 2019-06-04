@@ -32,9 +32,12 @@ private:
 
   //Create essencial variables, based on parameter server values.
   int aileron, elevator, rudder, thrust;
+  int roll_angle, pitch_angle, yaw_angle;
   float input_signals[5];
 
   float delta_a, delta_e, delta_r, delta_t;
+  float prev_roll_error, prev_pitch_error, prev_error;
+  float dis_alt;
 
 public:
   Controller()
@@ -51,23 +54,49 @@ public:
       //Read the number of airfoils
       if (!ros::param::getCached("nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown();}
       //Read the number of motors
-      if (!ros::param::getCached("motor/nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown();}
+      if (!ros::param::getCached("nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown();}
 
       char paramMsg[50];
 
-      sprintf(paramMsg, "aileron");
-      if (!ros::param::getCached(paramMsg, aileron))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-      sprintf(paramMsg, "elevator");
-      if (!ros::param::getCached(paramMsg, elevator))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-      sprintf(paramMsg, "rudder");
-      if (!ros::param::getCached(paramMsg, rudder))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-      sprintf(paramMsg, "thrust");
-      if (!ros::param::getCached(paramMsg, thrust))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-
+      
+      switch (mixerid)
+        {
+        case 0: // No mixing applied
+            break;
+        case 1: // Airplane mixing
+            sprintf(paramMsg, "aileron");
+            if (!ros::param::getCached(paramMsg, aileron))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            sprintf(paramMsg, "elevator");
+            if (!ros::param::getCached(paramMsg, elevator))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            sprintf(paramMsg, "rudder");
+            if (!ros::param::getCached(paramMsg, rudder))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            sprintf(paramMsg, "thrust");
+            if (!ros::param::getCached(paramMsg, thrust))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            break;
+        case 2: // Mulrtirotor mixing
+            // Multirotor inputs
+            sprintf(paramMsg, "roll_angle");
+            if (!ros::param::getCached(paramMsg, roll_angle))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            sprintf(paramMsg, "pitch_angle");
+            if (!ros::param::getCached(paramMsg, pitch_angle))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            sprintf(paramMsg, "yaw_angle");
+            if (!ros::param::getCached(paramMsg, yaw_angle))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            sprintf(paramMsg, "thrust");
+            if (!ros::param::getCached(paramMsg, thrust))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            break;
+        default:
+            ROS_FATAL("Invalid parameter for -/HID/mixerid- in param server!");
+            ros::shutdown();
+            break;
+        }
       delta_a = 0;
       delta_e = 0;
       delta_r = 0;
       delta_t = 0;
+      dis_alt = 0;
+      prev_roll_error = 0;
+      prev_pitch_error = 0;
+      prev_error = 0;
     }
 
     //Store new joystick changes
@@ -89,11 +118,10 @@ public:
             break;
         case 2: // Mulrtirotor mixing
             // Multirotor inputs
-            delta_a = (float) (channels.value[aileron] - 1500) / 500;   // roll angle signal
-            delta_e = (float) (channels.value[elevator] - 1500) / 500;  // pitch angle signal
-            delta_r = (float) (channels.value[rudder] - 1500) / 500;    // yaw angle signal
+            delta_a = (float) (channels.value[roll_angle] - 1500) / 500;   // roll angle signal
+            delta_e = (float) (channels.value[pitch_angle] - 1500) / 500;  // pitch angle signal
+            delta_r = (float) (channels.value[yaw_angle] - 1500) / 500;    // yaw angle signal
             delta_t = (float) (channels.value[thrust] - 1000) / 1000;   //  thrust signal
-            
             break;
         default:
             ROS_FATAL("Invalid parameter for -/HID/mixerid- in param server!");
@@ -114,13 +142,24 @@ public:
     bool return_control_inputs(last_letter_2_msgs::get_control_inputs_srv::Request &req,
                                last_letter_2_msgs::get_control_inputs_srv::Response &res)
     {
-        // PD(model_states);
-        // Model inputs
-        res.input_signals[0] = 0;           
-        res.input_signals[1] = delta_a ;  // aileron signal
-        res.input_signals[2] = delta_e ;  // elevator signal
-        res.input_signals[3] = delta_r ;  // rudder signal
-        res.input_signals[4] = delta_t ;  // thrust signal
+        float temp_delta_a, temp_delta_e, temp_delta_t;
+        temp_delta_a=delta_a;
+        temp_delta_e = delta_e;
+        temp_delta_t = delta_t;
+        dis_alt = 50 * delta_t;
+
+        PD(model_states, channels, model_inputs, temp_delta_a, temp_delta_e, temp_delta_t, prev_roll_error, prev_pitch_error, prev_error, dis_alt);
+
+        res.input_signals[0] = 0;
+        res.input_signals[1] = temp_delta_a; // aileron signal
+        res.input_signals[2] = temp_delta_e; // elevator signal
+        res.input_signals[3] = delta_r; // rudder signal
+        res.input_signals[4] = temp_delta_t; // thrust signal
+        
+        // Keep current data for next step
+        prev_roll_error=delta_a-model_states.base_link_states.roll;
+        prev_pitch_error=delta_e-model_states.base_link_states.pitch;
+        prev_error = dis_alt - model_states.base_link_states.z;
 
         return true;
     }

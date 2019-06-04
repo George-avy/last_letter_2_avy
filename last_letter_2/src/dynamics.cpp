@@ -7,7 +7,7 @@ Dynamics::Dynamics(Model *parent)
     //Read the number of airfoils
     if (!ros::param::getCached("nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown(); }
     //Read the number of motors
-    if (!ros::param::getCached("motor/nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
+    if (!ros::param::getCached("nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
 
     //Create a list with Airfoils and Motors
     for (i = 0; i < num_wings; i++)

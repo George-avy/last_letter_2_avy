@@ -16,18 +16,21 @@
 
     <link name="body_FLU">
         <visual>
+        <origin rpy="0 0 0.785"/>
             <geometry>
                <box size="${body_x} ${body_y} ${body_z}" />
             </geometry>
         </visual>
 
         <collision>
+        <origin rpy="0 0 0.785"/>
             <geometry>
                <box size="${body_x} ${body_y} ${body_z}" />
             </geometry>
         </collision>
         
         <inertial>
+        <origin rpy="0 0 0.785"/>
             <mass value="${body_m}" />
              <inertia   ixx="${1/12*body_m*(body_y*body_y+body_z*body_z)}" ixy="0" ixz="0" iyz="0"
                         iyy="${1/12*body_m*(body_x*body_x+body_z*body_z)}" 
@@ -67,7 +70,7 @@
     </link>
 
     <joint name="body_FLU_to_arm1" type="fixed">
-        <origin xyz="${0.9*body_x/2} -${0.9*body_y/2} 0" rpy="0 0 ${7/4*pi}"/>
+        <origin xyz="${0.9*body_x/2} 0 0" rpy="0 0 0"/>
         <parent link="body_FLU" />
         <child link="arm1" />
     </joint>
@@ -97,7 +100,7 @@
     </link>
 
     <joint name="body_FLU_to_arm2" type="fixed">
-        <origin xyz="-${0.9*body_x/2} -${0.9*body_y/2} 0" rpy="0 0 ${5/4*pi}"/>
+        <origin xyz="0 -${0.9*body_y/2} 0" rpy="0 0 ${3/2*pi}"/>
         <parent link="body_FLU" />
         <child link="arm2" />
     </joint>
@@ -127,7 +130,7 @@
     </link>
 
     <joint name="body_FLU_to_arm3" type="fixed">
-        <origin xyz="-${0.9*body_x/2} ${0.9*body_y/2} 0" rpy="0 0 ${3/4*pi}"/>
+        <origin xyz="-${0.9*body_x/2} 0 0" rpy="0 0 ${pi}"/>
         <parent link="body_FLU" />
         <child link="arm3" />
     </joint>
@@ -157,7 +160,7 @@
     </link>
 
     <joint name="body_FLU_to_arm4" type="fixed">
-        <origin xyz="${0.9*body_x/2} ${0.9*body_y/2} 0" rpy="0 0 ${1/4*pi}"/>
+        <origin xyz="0 ${0.9*body_y/2} 0" rpy="0 0 ${1/2*pi}"/>
         <parent link="body_FLU" />
         <child link="arm4" />
     </joint>

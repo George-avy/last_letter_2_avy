@@ -5,9 +5,9 @@
   <arg name="use_sim_time" default="false"/>
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
-  <!-- <arg name="uav_name" default="quadrotor"/> -->
+  <arg name="uav_name" default="quadrotor"/>
   <!-- <arg name="uav_name" default="csl_2k19"/> -->
-  <arg name="uav_name" default="csl_2k21"/>
+  <!-- <arg name="uav_name" default="csl_2k21"/> -->
 
   <arg name="model" default="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/urdf/model.urdf.xacro"/>
 

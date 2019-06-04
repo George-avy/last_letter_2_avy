@@ -2,28 +2,46 @@
 
 Model::Model() : environment(this), dynamics(this)
 {
+    // Read the mixer type
+      if (!ros::param::getCached("HID/mixerid", mixerid)) { ROS_INFO("No mixing function selected"); mixerid = 0;}
     //Read the number of airfoils
     if (!ros::param::getCached("nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown(); }
     //Read the number of motors
-    if (!ros::param::getCached("motor/nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
+    if (!ros::param::getCached("nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
     
     char paramMsg[50];
-    //Load basic characteristics for each airfoil
-    for (i = 0; i < num_wings; ++i)
+
+    switch (mixerid)
     {
-        sprintf(paramMsg, "airfoil%i/roll_move", i + 1);
-        if (!ros::param::getCached(paramMsg, roll_move[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-        sprintf(paramMsg, "airfoil%i/pitch_move", i + 1);
-        if (!ros::param::getCached(paramMsg, pitch_move[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-        sprintf(paramMsg, "airfoil%i/yaw_move", i + 1);
-        if (!ros::param::getCached(paramMsg, yaw_move[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-        sprintf(paramMsg, "airfoil%i/deltax_max", i + 1);
-        if (!ros::param::getCached(paramMsg, deltax_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-        sprintf(paramMsg, "airfoil%i/deltay_max", i + 1);
-        if (!ros::param::getCached(paramMsg, deltay_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-        sprintf(paramMsg, "airfoil%i/deltaz_max", i + 1);
-        if (!ros::param::getCached(paramMsg, deltaz_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+    case 0: // No mixing applied
+        break;
+    case 1: // Airplane mixing
+
+        //Load basic characteristics for each airfoil
+        for (i = 0; i < num_wings; ++i)
+        {
+            sprintf(paramMsg, "airfoil%i/roll_move", i + 1);
+            if (!ros::param::getCached(paramMsg, roll_move[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            sprintf(paramMsg, "airfoil%i/pitch_move", i + 1);
+            if (!ros::param::getCached(paramMsg, pitch_move[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            sprintf(paramMsg, "airfoil%i/yaw_move", i + 1);
+            if (!ros::param::getCached(paramMsg, yaw_move[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            sprintf(paramMsg, "airfoil%i/deltax_max", i + 1);
+            if (!ros::param::getCached(paramMsg, deltax_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            sprintf(paramMsg, "airfoil%i/deltay_max", i + 1);
+            if (!ros::param::getCached(paramMsg, deltay_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            sprintf(paramMsg, "airfoil%i/deltaz_max", i + 1);
+            if (!ros::param::getCached(paramMsg, deltaz_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+        }
+        break;
+    case 2:
+        break;
+    default:
+        ROS_FATAL("Invalid parameter for -/HID/mixerid- in param server!");
+        ros::shutdown();
+        break;
     }
+
     //Subscriber that gets model states from gazebo after physics step
     gazebo_sub = nh.subscribe("last_letter_2/gazebo/model_states", 1, &Model::gazeboStatesClb, this,ros::TransportHints().tcpNoDelay());
 
@@ -104,21 +122,45 @@ void Model::getControlInputs()
         get_control_inputs_client = nh.serviceClient<last_letter_2_msgs::get_control_inputs_srv>("last_letter_2/get_control_inputs_srv", true);
     }
 
-    //store airfoil inputs
-    for (i = 0; i < num_wings; i++)
+    switch (mixerid)
     {
-        airfoil_inputs[i].x = deltax_max[i] * control_inputs_msg.response.input_signals[roll_move[i]];
-        airfoil_inputs[i].y = deltay_max[i] * control_inputs_msg.response.input_signals[pitch_move[i]];
-        airfoil_inputs[i].z = deltaz_max[i] * control_inputs_msg.response.input_signals[yaw_move[i]];
-    }
+    case 0: // No mixing applied
+        break;
+    case 1: // Airplane mixing
+        //store airfoil inputs
+        for (i = 0; i < num_wings; i++)
+        {
+            airfoil_inputs[i].x = deltax_max[i] * control_inputs_msg.response.input_signals[roll_move[i]];
+            airfoil_inputs[i].y = deltay_max[i] * control_inputs_msg.response.input_signals[pitch_move[i]];
+            airfoil_inputs[i].z = deltaz_max[i] * control_inputs_msg.response.input_signals[yaw_move[i]];
+        }
 
-    //store motor inputs
-    for (i = 0; i < num_motors; i++)
-    {
-        motor_input[i]=control_inputs_msg.response.input_signals[4];
-    }
-    
+        //store motor inputs
+        for (i = 0; i < num_motors; i++)
+        {
+            motor_input[i] = control_inputs_msg.response.input_signals[4];
+        }
+        break;
+    case 2: // Multirotor mixing
 
+        roll = control_inputs_msg.response.input_signals[1];
+        pitch = control_inputs_msg.response.input_signals[2];
+        yaw = control_inputs_msg.response.input_signals[3];
+        thrust = control_inputs_msg.response.input_signals[4];
+       
+        gluInvertMatrix(M, invM);
+
+        for (i = 0; i < num_motors; i++)
+        {
+            motor_input[i] = invM[i * 4] * thrust + invM[i * 4 + 1] * roll + invM[i * 4 + 2] * pitch + invM[i * 4 + 3] * yaw;
+        }
+        break;
+
+    default:
+        ROS_FATAL("Invalid parameter for -/HID/mixerid- in param server!");
+        ros::shutdown();
+        break;
+    }
 }
 
 void Model::getAirdata()
@@ -166,6 +208,7 @@ void Model::applyWrenches()
     {
         apply_wrenches_srv.request.motor_thrust[i] = (*itProp)->prop_wrenches.thrust;
         apply_wrenches_srv.request.motor_torque[i] = (*itProp)->prop_wrenches.torque;
+        apply_wrenches_srv.request.motor_omega[i] = (*itProp)->prop_wrenches.omega;
         i++;
     }
 
@@ -188,4 +231,40 @@ void Model::applyWrenches()
         ros::service::waitForService("last_letter_2/apply_model_wrenches_srv");
         apply_wrench_client = nh.serviceClient<last_letter_2_msgs::apply_model_wrenches_srv>("last_letter_2/apply_model_wrenches_srv", true);
     }
+}
+
+// invert 4x4 matrix function
+bool Model::gluInvertMatrix(float *m, float *invOut)
+{
+    float inv[16], det;
+    int i;
+
+    inv[0] = m[5] * m[10] * m[15] - m[5] * m[11] * m[14] - m[9] * m[6] * m[15] + m[9] * m[7] * m[14] + m[13] * m[6] * m[11] - m[13] * m[7] * m[10];
+    inv[4] = -m[4] * m[10] * m[15] + m[4] * m[11] * m[14] + m[8] * m[6] * m[15] - m[8] * m[7] * m[14] - m[12] * m[6] * m[11] + m[12] * m[7] * m[10];
+    inv[8] = m[4] * m[9] * m[15] - m[4] * m[11] * m[13] - m[8] * m[5] * m[15] + m[8] * m[7] * m[13] + m[12] * m[5] * m[11] - m[12] * m[7] * m[9];
+    inv[12] = -m[4] * m[9] * m[14] + m[4] * m[10] * m[13] + m[8] * m[5] * m[14] - m[8] * m[6] * m[13] - m[12] * m[5] * m[10] + m[12] * m[6] * m[9];
+    inv[1] = -m[1] * m[10] * m[15] + m[1] * m[11] * m[14] + m[9] * m[2] * m[15] - m[9] * m[3] * m[14] - m[13] * m[2] * m[11] + m[13] * m[3] * m[10];
+    inv[5] = m[0] * m[10] * m[15] - m[0] * m[11] * m[14] - m[8] * m[2] * m[15] + m[8] * m[3] * m[14] + m[12] * m[2] * m[11] - m[12] * m[3] * m[10];
+    inv[9] = -m[0] * m[9] * m[15] + m[0] * m[11] * m[13] + m[8] * m[1] * m[15] - m[8] * m[3] * m[13] - m[12] * m[1] * m[11] + m[12] * m[3] * m[9];
+    inv[13] = m[0] * m[9] * m[14] - m[0] * m[10] * m[13] - m[8] * m[1] * m[14] + m[8] * m[2] * m[13] + m[12] * m[1] * m[10] - m[12] * m[2] * m[9];
+    inv[2] = m[1] * m[6] * m[15] - m[1] * m[7] * m[14] - m[5] * m[2] * m[15] + m[5] * m[3] * m[14] + m[13] * m[2] * m[7] - m[13] * m[3] * m[6];
+    inv[6] = -m[0] * m[6] * m[15] + m[0] * m[7] * m[14] + m[4] * m[2] * m[15] - m[4] * m[3] * m[14] - m[12] * m[2] * m[7] + m[12] * m[3] * m[6];
+    inv[10] = m[0] * m[5] * m[15] - m[0] * m[7] * m[13] - m[4] * m[1] * m[15] + m[4] * m[3] * m[13] + m[12] * m[1] * m[7] - m[12] * m[3] * m[5];
+    inv[14] = -m[0] * m[5] * m[14] + m[0] * m[6] * m[13] + m[4] * m[1] * m[14] - m[4] * m[2] * m[13] - m[12] * m[1] * m[6] + m[12] * m[2] * m[5];
+    inv[3] = -m[1] * m[6] * m[11] + m[1] * m[7] * m[10] + m[5] * m[2] * m[11] - m[5] * m[3] * m[10] - m[9] * m[2] * m[7] + m[9] * m[3] * m[6];
+    inv[7] = m[0] * m[6] * m[11] - m[0] * m[7] * m[10] - m[4] * m[2] * m[11] + m[4] * m[3] * m[10] + m[8] * m[2] * m[7] - m[8] * m[3] * m[6];
+    inv[11] = -m[0] * m[5] * m[11] + m[0] * m[7] * m[9] + m[4] * m[1] * m[11] - m[4] * m[3] * m[9] - m[8] * m[1] * m[7] + m[8] * m[3] * m[5];
+    inv[15] = m[0] * m[5] * m[10] - m[0] * m[6] * m[9] - m[4] * m[1] * m[10] + m[4] * m[2] * m[9] + m[8] * m[1] * m[6] - m[8] * m[2] * m[5];
+
+    det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
+
+    if (det == 0)
+        return false;
+
+    det = 1.0 / det;
+
+    for (i = 0; i < 16; i++)
+        invOut[i] = inv[i] * det;
+
+    return true;
 }

@@ -114,7 +114,7 @@ class model_plugin : public ModelPlugin
         //Read the number of airfoils
         if (!ros::param::getCached("nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown(); }
         //Read the number of motors
-        if (!ros::param::getCached("motor/nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
+        if (!ros::param::getCached("nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
 
         wrenches_applied = false;
         loop_number = 0;
@@ -182,7 +182,7 @@ class model_plugin : public ModelPlugin
     {
         std::lock_guard<std::mutex> lk(m);
         //apply wrenches to each airfoil and motor
-         for (i = 0; i < num_wings; i++)
+        for (i = 0; i < num_wings; i++)
         {
             ignition::math::Vector3d force, torque;
 
