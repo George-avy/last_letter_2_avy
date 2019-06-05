@@ -69,6 +69,8 @@ class model_plugin : public ModelPlugin
     ignition::math::Vector3d rotation;
     ignition::math::Vector3d relAngVel;
     ignition::math::Vector3d position;
+    ignition::math::Vector3d force, torque;
+
     int i;
     std::string link_name;
     char link_name_temp[20];
@@ -77,7 +79,7 @@ class model_plugin : public ModelPlugin
     int thread_rate;
 
     int loop_number;
-
+    double omega;
   public:
     model_plugin() : ModelPlugin() //constructor
     {
@@ -118,6 +120,7 @@ class model_plugin : public ModelPlugin
 
         wrenches_applied = false;
         loop_number = 0;
+        omega=0;
         modelStateInit();
     }
 
@@ -181,10 +184,10 @@ class model_plugin : public ModelPlugin
                             last_letter_2_msgs::apply_model_wrenches_srv::Response &res)
     {
         std::lock_guard<std::mutex> lk(m);
+
         //apply wrenches to each airfoil and motor
         for (i = 0; i < num_wings; i++)
         {
-            ignition::math::Vector3d force, torque;
 
             force[0]=req.airfoil_forces[i].x;
             force[1]=req.airfoil_forces[i].y;
@@ -200,7 +203,6 @@ class model_plugin : public ModelPlugin
         }
         for (i = 0; i < num_motors; i++)
         {
-            ignition::math::Vector3d force, torque;
 
             force[0] = req.motor_thrust[i];
             force[1] = 0;
@@ -213,7 +215,18 @@ class model_plugin : public ModelPlugin
             torque[1] = 0;
             torque[2] = 0;
             model->GetLink(link_name)->AddRelativeTorque(torque);
+
+            omega = req.motor_omega[i];
+            sprintf(link_name_temp, "motor%i_to_axle%i", i + 1, i + 1); // joint name need fix
+            link_name.assign(link_name_temp);
+            std::cout <<link_name<<std::endl;
+            // model->GetJoint("motor1_to_axle1")->SetVelocity(0,omega);
         }
+            model->GetJoint("motor1_to_axle1")->SetVelocity(0,omega);
+            model->GetJoint("motor2_to_axle2")->SetVelocity(0,omega);
+            model->GetJoint("motor3_to_axle3")->SetVelocity(0,omega);
+            model->GetJoint("motor4_to_axle4")->SetVelocity(0,omega);
+
         //unlock gazebo step
         wrenches_applied=true;
         cv.notify_one();

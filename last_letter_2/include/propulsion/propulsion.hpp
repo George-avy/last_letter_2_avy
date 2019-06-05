@@ -31,6 +31,7 @@ public:
   void calcWrench();
   virtual void calcThrust() = 0;
   virtual void calcTorque() = 0;
+  virtual void calcOmega()  = 0;
 };
 
 #include "noEngine.hpp"

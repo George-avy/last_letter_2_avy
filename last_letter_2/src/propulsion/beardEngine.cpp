@@ -16,6 +16,11 @@ void BeardEngine::calcTorque()
     prop_wrenches.torque = -k_t_p * pow((k_omega * motor_input), 2);
 }
 
+void BeardEngine::calcOmega()
+{
+    prop_wrenches.omega = k_omega * motor_input;
+}
+
 void BeardEngine::initParam(int id)
 {
     char paramMsg[50];

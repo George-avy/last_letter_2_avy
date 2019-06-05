@@ -108,3 +108,8 @@ void ElectricEng::calcTorque()
         ros::shutdown();
     }
 }
+
+void ElectricEng::calcOmega()
+{
+    prop_wrenches.omega = omega;
+}

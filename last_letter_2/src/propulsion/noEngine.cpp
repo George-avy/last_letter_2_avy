@@ -12,3 +12,8 @@ void NoEngine::calcTorque()
 {
     prop_wrenches.torque = 0;
 }
+
+void NoEngine::calcOmega()
+{
+    prop_wrenches.omega = 0;
+}

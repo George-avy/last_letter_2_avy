@@ -220,10 +220,9 @@ void Model::applyWrenches()
     {
         apply_wrenches_srv.request.motor_thrust[i] = (*itProp)->prop_wrenches.thrust;
         apply_wrenches_srv.request.motor_torque[i] = (*itProp)->prop_wrenches.torque;
-        // apply_wrenches_srv.request.motor_omega[i] = (*itProp)->prop_wrenches.omega;
+        apply_wrenches_srv.request.motor_omega[i] = (*itProp)->prop_wrenches.omega;
         i++;
     }
-
     // call apply_model_wrenches_srv
     if (apply_wrench_client.isValid())
     {

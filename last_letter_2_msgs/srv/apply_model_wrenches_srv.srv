@@ -4,5 +4,6 @@ geometry_msgs/Vector3[3] airfoil_forces
 geometry_msgs/Vector3[3] airfoil_torques
 float32[4] motor_thrust
 float32[4] motor_torque
+float32[4] motor_omega
 ---
 std_msgs/Bool success

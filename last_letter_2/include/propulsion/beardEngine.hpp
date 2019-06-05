@@ -6,4 +6,5 @@
    void initParam(int id);
    void calcThrust();
    void calcTorque();
+   void calcOmega();
  };

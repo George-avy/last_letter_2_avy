@@ -16,6 +16,7 @@ void Propulsion::calculationCycle()
     rotateWind();
     calcAirspeed();
     calcWrench();
+    calcOmega();
 }
 
 //get Link States from model plugin
@@ -73,4 +74,5 @@ void Propulsion::calcWrench()
 {
     calcThrust();
     calcTorque();
+    calcOmega();
 }

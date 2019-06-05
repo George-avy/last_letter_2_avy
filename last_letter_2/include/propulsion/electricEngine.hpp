@@ -33,4 +33,5 @@ class ElectricEng : public Propulsion
     void updateRadPS();
     void calcThrust();
     void calcTorque();
+    void calcOmega();
 };
