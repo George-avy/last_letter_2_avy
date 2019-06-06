@@ -34,8 +34,8 @@ private:
   float input_signals[5];
 
   float delta_a, delta_e, delta_r, delta_t;
-  float prev_roll_error, prev_pitch_error, prev_error;
-  float altitude;
+  float prev_roll_error, prev_pitch_error, prev_error, prev_yaw_error;
+  float altitude, yaw_direction;
   float new_delta_a, new_delta_e, new_delta_r, new_delta_t;
   float dt;
 
@@ -90,14 +90,16 @@ private:
             ros::shutdown();
             break;
         }
-      delta_a = 0;
-      delta_e = 0;
-      delta_r = 0;
-      delta_t = 0;
-      altitude = 0;
-      prev_roll_error = 0;
-      prev_pitch_error = 0;
-      prev_error = 0;
+        delta_a = 0;
+        delta_e = 0;
+        delta_r = 0;
+        delta_t = 0;
+        altitude = 0;
+        yaw_direction = 0;
+        prev_roll_error = 0;
+        prev_pitch_error = 0;
+        prev_yaw_error = 0;
+        prev_error = 0;
     }
 
     //Store new joystick changes
@@ -148,7 +150,6 @@ private:
         new_delta_e = delta_e;
         new_delta_r = delta_r;
         new_delta_t = delta_t;
-        std::cout<< delta_e<<std::endl;
 
         switch (mixerid)
         {
@@ -207,11 +208,26 @@ private:
         if (new_delta_e > 1)
             new_delta_e = 1;
 
+        //yaw direction control
+        kp = 1;
+        kd = 1;
+        yaw_direction+=delta_r*0.01;
+        if (yaw_direction<=-3.14) yaw_direction=3.13;
+        if (yaw_direction>3.14) yaw_direction=-3.14;
+        // std::cout<<"yaw_dir="<<yaw_direction<<" delta_r="<< delta_r*0.01<<std::endl;
+        error = yaw_direction - model_states.base_link_states.yaw;
+        d_error = (error - prev_yaw_error) / dt;
+        prev_yaw_error = yaw_direction - model_states.base_link_states.yaw; // Keep current data for next step
+        new_delta_r = kp * error + kd * d_error;
+        if (new_delta_r < -1)
+            new_delta_r = -1;
+        if (new_delta_r > 1)
+            new_delta_r = 1;
+
         //altitude control
         kp = 1;
         kd = 0.8;
         altitude = 50 * delta_t;
-        std::cout<<altitude<<std::endl;
         error = altitude - model_states.base_link_states.z;
         d_error = (error - prev_error) / dt;
         prev_error = altitude - model_states.base_link_states.z;        // Keep current data for next step

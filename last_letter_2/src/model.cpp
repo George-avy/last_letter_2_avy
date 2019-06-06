@@ -96,7 +96,7 @@ void Model::initMultirotorMatrix()
 {
     float k1 = 0.25;
     float l = 10;
-    float k2 = 0.2;
+    float k2 = 0.6;
     //init forcesToCommands multirotor matrix
     multirotor_matrix << k1, k1, k1, k1,
         0, -l * k1, 0, l * k1,

@@ -13,7 +13,7 @@ void BeardEngine::calcThrust()
 void BeardEngine::calcTorque()
 {
     float rho=model->airdata.density;
-    prop_wrenches.torque = -k_t_p * pow((k_omega * motor_input), 2);
+    prop_wrenches.torque = -k_t_p * pow((k_omega * motor_input), 2) * rotationDir;
 }
 
 void BeardEngine::calcOmega()
@@ -34,4 +34,6 @@ void BeardEngine::initParam(int id)
     if (!ros::param::getCached(paramMsg, k_omega)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "motor%i/k_t_p", id);
     if (!ros::param::getCached(paramMsg, k_t_p)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+    sprintf(paramMsg, "motor%i/rotationDir", id);
+    if (!ros::param::getCached(paramMsg, rotationDir)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
 }

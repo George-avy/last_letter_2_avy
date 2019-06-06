@@ -72,7 +72,7 @@ class model_plugin : public ModelPlugin
     int i ,thread_rate, loop_number;
     std::string link_name, joint_name;
     char name_temp[30];
-    double omega;
+    double omega,rotationDir[4];
 
   public:
     model_plugin() : ModelPlugin() //constructor
@@ -112,6 +112,13 @@ class model_plugin : public ModelPlugin
         //Read the number of motors
         if (!ros::param::getCached("nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
 
+        char paramMsg[50];
+        for (i=0; i< num_motors; i++)
+        {
+            sprintf(paramMsg, "motor%i/rotationDir", i+1);
+            if (!ros::param::getCached(paramMsg, rotationDir[i])) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+        }
+        
         wrenches_applied = false;
         loop_number = 0;
         omega=0;
@@ -211,7 +218,7 @@ class model_plugin : public ModelPlugin
             omega = req.motor_omega[i];
             sprintf(name_temp, "motor%i_to_axle%i", i + 1, i + 1); // joint name need fix
             joint_name.assign(name_temp);
-            model->GetJoint(joint_name)->SetVelocity(0,omega);
+            model->GetJoint(joint_name)->SetVelocity(0,rotationDir[i]*omega);
         }
 
         //unlock gazebo step
