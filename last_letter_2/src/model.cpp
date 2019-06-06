@@ -1,5 +1,4 @@
 
-
 Model::Model() : environment(this), dynamics(this)
 {
     // Read the mixer type
@@ -35,6 +34,7 @@ Model::Model() : environment(this), dynamics(this)
         }
         break;
     case 2:
+        initMultirotorMatrix();
         break;
     default:
         ROS_FATAL("Invalid parameter for -/HID/mixerid- in param server!");
@@ -92,6 +92,19 @@ void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr& ms
     modelStep();
 }
 
+void Model::initMultirotorMatrix()
+{
+    float k1 = 0.25;
+    float l = 10;
+    float k2 = 0.2;
+    //init forcesToCommands multirotor matrix
+    multirotor_matrix << k1, k1, k1, k1,
+        0, -l * k1, 0, l * k1,
+        l * k1, 0, -l * k1, 0,
+        -k2, k2, -k2, k2;
+    multirotor_matrix_inverse = multirotor_matrix.inverse();
+}
+
 void Model::modelStep()
 {
     getControlInputs();
@@ -142,17 +155,16 @@ void Model::getControlInputs()
         }
         break;
     case 2: // Multirotor mixing
+        commands(0) = control_inputs_msg.response.input_signals[4]; //thrust
+        commands(1) = control_inputs_msg.response.input_signals[1]; //roll
+        commands(2) = control_inputs_msg.response.input_signals[2]; //pitch
+        commands(3) = control_inputs_msg.response.input_signals[3]; //yaw
 
-        roll = control_inputs_msg.response.input_signals[1];
-        pitch = control_inputs_msg.response.input_signals[2];
-        yaw = control_inputs_msg.response.input_signals[3];
-        thrust = control_inputs_msg.response.input_signals[4];
-       
-        gluInvertMatrix(M, invM);
-
+        input_signal_vector = multirotor_matrix_inverse * commands;
         for (i = 0; i < num_motors; i++)
         {
-            motor_input[i] = invM[i * 4] * thrust + invM[i * 4 + 1] * roll + invM[i * 4 + 2] * pitch + invM[i * 4 + 3] * yaw;
+            motor_input[i] = input_signal_vector(i);
+            if (motor_input[i]<0) motor_input[i]=0;
         }
         break;
 
@@ -231,40 +243,4 @@ void Model::applyWrenches()
         ros::service::waitForService("last_letter_2/apply_model_wrenches_srv");
         apply_wrench_client = nh.serviceClient<last_letter_2_msgs::apply_model_wrenches_srv>("last_letter_2/apply_model_wrenches_srv", true);
     }
-}
-
-// invert 4x4 matrix function
-bool Model::gluInvertMatrix(float *m, float *invOut)
-{
-    float inv[16], det;
-    int i;
-
-    inv[0] = m[5] * m[10] * m[15] - m[5] * m[11] * m[14] - m[9] * m[6] * m[15] + m[9] * m[7] * m[14] + m[13] * m[6] * m[11] - m[13] * m[7] * m[10];
-    inv[4] = -m[4] * m[10] * m[15] + m[4] * m[11] * m[14] + m[8] * m[6] * m[15] - m[8] * m[7] * m[14] - m[12] * m[6] * m[11] + m[12] * m[7] * m[10];
-    inv[8] = m[4] * m[9] * m[15] - m[4] * m[11] * m[13] - m[8] * m[5] * m[15] + m[8] * m[7] * m[13] + m[12] * m[5] * m[11] - m[12] * m[7] * m[9];
-    inv[12] = -m[4] * m[9] * m[14] + m[4] * m[10] * m[13] + m[8] * m[5] * m[14] - m[8] * m[6] * m[13] - m[12] * m[5] * m[10] + m[12] * m[6] * m[9];
-    inv[1] = -m[1] * m[10] * m[15] + m[1] * m[11] * m[14] + m[9] * m[2] * m[15] - m[9] * m[3] * m[14] - m[13] * m[2] * m[11] + m[13] * m[3] * m[10];
-    inv[5] = m[0] * m[10] * m[15] - m[0] * m[11] * m[14] - m[8] * m[2] * m[15] + m[8] * m[3] * m[14] + m[12] * m[2] * m[11] - m[12] * m[3] * m[10];
-    inv[9] = -m[0] * m[9] * m[15] + m[0] * m[11] * m[13] + m[8] * m[1] * m[15] - m[8] * m[3] * m[13] - m[12] * m[1] * m[11] + m[12] * m[3] * m[9];
-    inv[13] = m[0] * m[9] * m[14] - m[0] * m[10] * m[13] - m[8] * m[1] * m[14] + m[8] * m[2] * m[13] + m[12] * m[1] * m[10] - m[12] * m[2] * m[9];
-    inv[2] = m[1] * m[6] * m[15] - m[1] * m[7] * m[14] - m[5] * m[2] * m[15] + m[5] * m[3] * m[14] + m[13] * m[2] * m[7] - m[13] * m[3] * m[6];
-    inv[6] = -m[0] * m[6] * m[15] + m[0] * m[7] * m[14] + m[4] * m[2] * m[15] - m[4] * m[3] * m[14] - m[12] * m[2] * m[7] + m[12] * m[3] * m[6];
-    inv[10] = m[0] * m[5] * m[15] - m[0] * m[7] * m[13] - m[4] * m[1] * m[15] + m[4] * m[3] * m[13] + m[12] * m[1] * m[7] - m[12] * m[3] * m[5];
-    inv[14] = -m[0] * m[5] * m[14] + m[0] * m[6] * m[13] + m[4] * m[1] * m[14] - m[4] * m[2] * m[13] - m[12] * m[1] * m[6] + m[12] * m[2] * m[5];
-    inv[3] = -m[1] * m[6] * m[11] + m[1] * m[7] * m[10] + m[5] * m[2] * m[11] - m[5] * m[3] * m[10] - m[9] * m[2] * m[7] + m[9] * m[3] * m[6];
-    inv[7] = m[0] * m[6] * m[11] - m[0] * m[7] * m[10] - m[4] * m[2] * m[11] + m[4] * m[3] * m[10] + m[8] * m[2] * m[7] - m[8] * m[3] * m[6];
-    inv[11] = -m[0] * m[5] * m[11] + m[0] * m[7] * m[9] + m[4] * m[1] * m[11] - m[4] * m[3] * m[9] - m[8] * m[1] * m[7] + m[8] * m[3] * m[5];
-    inv[15] = m[0] * m[5] * m[10] - m[0] * m[6] * m[9] - m[4] * m[1] * m[10] + m[4] * m[2] * m[9] + m[8] * m[1] * m[6] - m[8] * m[2] * m[5];
-
-    det = m[0] * inv[0] + m[1] * inv[4] + m[2] * inv[8] + m[3] * inv[12];
-
-    if (det == 0)
-        return false;
-
-    det = 1.0 / det;
-
-    for (i = 0; i < 16; i++)
-        invOut[i] = inv[i] * det;
-
-    return true;
 }

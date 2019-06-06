@@ -5,6 +5,9 @@
 #include "propulsion/propulsion.hpp"
 #include "factory.hpp"
   
+#include <iostream>
+#include <Eigen/Dense>
+using namespace Eigen;
  // The model object
  // A class that cordinates all processes for a model step
  
@@ -32,28 +35,25 @@
     last_letter_2_msgs::model_states model_states;
     geometry_msgs::Vector3 airfoil_inputs[3];
     float motor_input[4];
-    ros::WallTime t;
     int i;
     int mixerid, num_wings, num_motors;
-    float roll, pitch, yaw, thrust;
     std_msgs::Int32 loop_num;
     int roll_move[4], pitch_move[4], yaw_move[4];
     float deltax_max[4], deltay_max[4], deltaz_max[4];
 
-    float k1 = 0.25;
-    float l = 10;
-    float k2 = 0.2;
-    float M[16] = {k1, k1, k1, k1, 0, -l *k1, 0, l *k1, l *k1, 0, -l *k1, 0, -k2, k2, -k2, k2};
-    float invM[16];
-    
+    Matrix4f multirotor_matrix;
+    Matrix4f multirotor_matrix_inverse;
+    Vector4f commands;
+    Vector4f input_signal_vector;
+
     //Class methods
     Model();
     void gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr&);
+    void initMultirotorMatrix();
     void modelStep();
     void getControlInputs();
     void getAirdata();
     void calcDynamics();
     void applyWrenches();
-    bool gluInvertMatrix(float *m, float *invOut);
 };
 

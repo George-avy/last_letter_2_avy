@@ -8,9 +8,7 @@
 #include <last_letter_2_msgs/model_inputs.h>
 #include <last_letter_2_msgs/model_states.h>
 #include <last_letter_2_msgs/get_control_inputs_srv.h>
-
-#include "control_types.cpp"
-
+#include "last_letter_2_libs/math_lib.hpp"
 
 class Controller
 {
@@ -37,9 +35,11 @@ private:
 
   float delta_a, delta_e, delta_r, delta_t;
   float prev_roll_error, prev_pitch_error, prev_error;
-  float dis_alt;
+  float altitude;
+  float new_delta_a, new_delta_e, new_delta_r, new_delta_t;
+  float dt;
 
-public:
+  public:
   Controller()
   {
       //Subscribtions
@@ -55,9 +55,10 @@ public:
       if (!ros::param::getCached("nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown();}
       //Read the number of motors
       if (!ros::param::getCached("nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown();}
+      //Read the update rate 
+      if (!ros::param::getCached("world/deltaT", dt)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown();}
 
       char paramMsg[50];
-
       
       switch (mixerid)
         {
@@ -93,7 +94,7 @@ public:
       delta_e = 0;
       delta_r = 0;
       delta_t = 0;
-      dis_alt = 0;
+      altitude = 0;
       prev_roll_error = 0;
       prev_pitch_error = 0;
       prev_error = 0;
@@ -114,7 +115,7 @@ public:
             delta_e = (float) (channels.value[elevator] - 1500) / 500;  // elevator signal
             delta_r = (float) (channels.value[rudder] - 1500) / 500;    // rudder signal
             delta_t = (float) (channels.value[thrust] - 1000) / 1000;   // thrust signal
-
+            FLUtoFRD(delta_a,delta_e,delta_r);
             break;
         case 2: // Mulrtirotor mixing
             // Multirotor inputs
@@ -122,6 +123,7 @@ public:
             delta_e = (float) (channels.value[pitch_angle] - 1500) / 500;  // pitch angle signal
             delta_r = (float) (channels.value[yaw_angle] - 1500) / 500;    // yaw angle signal
             delta_t = (float) (channels.value[thrust] - 1000) / 1000;   //  thrust signal
+            FLUtoFRD(delta_a,delta_e,delta_r);
             break;
         default:
             ROS_FATAL("Invalid parameter for -/HID/mixerid- in param server!");
@@ -142,26 +144,82 @@ public:
     bool return_control_inputs(last_letter_2_msgs::get_control_inputs_srv::Request &req,
                                last_letter_2_msgs::get_control_inputs_srv::Response &res)
     {
-        float temp_delta_a, temp_delta_e, temp_delta_t;
-        temp_delta_a=delta_a;
-        temp_delta_e = delta_e;
-        temp_delta_t = delta_t;
-        dis_alt = 50 * delta_t;
+        new_delta_a = delta_a;
+        new_delta_e = delta_e;
+        new_delta_r = delta_r;
+        new_delta_t = delta_t;
+        std::cout<< delta_e<<std::endl;
 
-        PD(model_states, channels, model_inputs, temp_delta_a, temp_delta_e, temp_delta_t, prev_roll_error, prev_pitch_error, prev_error, dis_alt);
+        switch (mixerid)
+        {
+        case 0: // No mixing applied
+            break;
+        case 1: // Airplane Controllers
 
+            break;
+        case 2: // Multirotor Controllers
+            PD();
+            break;
+        default:
+            ROS_FATAL("Invalid parameter for -/HID/mixerid- in param server!");
+            ros::shutdown();
+            break;
+        }
+
+        FRDtoFLU(new_delta_a, new_delta_e, new_delta_r); 
         res.input_signals[0] = 0;
-        res.input_signals[1] = temp_delta_a; // aileron signal
-        res.input_signals[2] = temp_delta_e; // elevator signal
-        res.input_signals[3] = delta_r; // rudder signal
-        res.input_signals[4] = temp_delta_t; // thrust signal
+        res.input_signals[1] = new_delta_a; // roll signal
+        res.input_signals[2] = new_delta_e; // pitch signal
+        res.input_signals[3] = new_delta_r; // yaw signal
+        res.input_signals[4] = new_delta_t; // thrust signal
         
-        // Keep current data for next step
-        prev_roll_error=delta_a-model_states.base_link_states.roll;
-        prev_pitch_error=delta_e-model_states.base_link_states.pitch;
-        prev_error = dis_alt - model_states.base_link_states.z;
-
         return true;
+    }
+    
+    //Controller functions
+    //PD controller 
+    void PD()
+    {
+        float error, d_error;
+        float kp,kd;
+
+        //stabilize roll
+        kp=3;
+        kd=0.5;
+        error = delta_a - model_states.base_link_states.roll;
+        d_error = (error - prev_roll_error) / dt;
+        prev_roll_error = delta_a - model_states.base_link_states.roll; // Keep current data for next step
+        new_delta_a = kp * error + kd * d_error;
+        if (new_delta_a < -1)
+            new_delta_a = -1;
+        if (new_delta_a > 1)
+            new_delta_a = 1;
+
+        //stabilize pitch
+        kp = 3;
+        kd = 0.5;
+        error = delta_e - model_states.base_link_states.pitch;
+        d_error = (error - prev_pitch_error) / dt;
+        prev_pitch_error = delta_e - model_states.base_link_states.pitch;   // Keep current data for next step
+        new_delta_e = kp * error + kd * d_error;
+        if (new_delta_e < -1)
+            new_delta_e = -1;
+        if (new_delta_e > 1)
+            new_delta_e = 1;
+
+        //altitude control
+        kp = 1;
+        kd = 0.8;
+        altitude = 50 * delta_t;
+        std::cout<<altitude<<std::endl;
+        error = altitude - model_states.base_link_states.z;
+        d_error = (error - prev_error) / dt;
+        prev_error = altitude - model_states.base_link_states.z;        // Keep current data for next step
+        new_delta_t = kp * error + kd * d_error;
+        if (new_delta_t < 0)
+            new_delta_t = 0;
+        if (new_delta_t > 1)
+            new_delta_t = 1;
     }
 };
 
