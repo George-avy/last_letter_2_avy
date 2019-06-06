@@ -61,25 +61,19 @@ class model_plugin : public ModelPlugin
     last_letter_2_msgs::link_states base_link_states;
     last_letter_2_msgs::link_states airfoil_states[3];
     last_letter_2_msgs::link_states motor_states[4];
-
     last_letter_2_msgs::model_states model_states;
-
-    int num_wings, num_motors;
     ignition::math::Vector3d relLinVel;
     ignition::math::Vector3d rotation;
     ignition::math::Vector3d relAngVel;
     ignition::math::Vector3d position;
     ignition::math::Vector3d force, torque;
-
-    int i;
-    std::string link_name;
-    char link_name_temp[20];
-    ros::WallTime t;
-
-    int thread_rate;
-
-    int loop_number;
+   
+    int num_wings, num_motors;
+    int i ,thread_rate, loop_number;
+    std::string link_name, joint_name;
+    char name_temp[30];
     double omega;
+
   public:
     model_plugin() : ModelPlugin() //constructor
     {
@@ -188,12 +182,11 @@ class model_plugin : public ModelPlugin
         //apply wrenches to each airfoil and motor
         for (i = 0; i < num_wings; i++)
         {
-
             force[0]=req.airfoil_forces[i].x;
             force[1]=req.airfoil_forces[i].y;
             force[2]=req.airfoil_forces[i].z;
-            sprintf(link_name_temp, "airfoil%i", i + 1);
-            link_name.assign(link_name_temp);
+            sprintf(name_temp, "airfoil%i", i + 1);
+            link_name.assign(name_temp);
             model->GetLink(link_name)->AddLinkForce(force);
 
             torque[0]=req.airfoil_torques[i].x;
@@ -203,12 +196,11 @@ class model_plugin : public ModelPlugin
         }
         for (i = 0; i < num_motors; i++)
         {
-
             force[0] = req.motor_thrust[i];
             force[1] = 0;
             force[2] = 0;
-            sprintf(link_name_temp, "motor%i", i + 1);
-            link_name.assign(link_name_temp);
+            sprintf(name_temp, "motor%i", i + 1);
+            link_name.assign(name_temp);
             model->GetLink(link_name)->AddLinkForce(force);
 
             torque[0] = req.motor_torque[i];
@@ -217,15 +209,10 @@ class model_plugin : public ModelPlugin
             model->GetLink(link_name)->AddRelativeTorque(torque);
 
             omega = req.motor_omega[i];
-            sprintf(link_name_temp, "motor%i_to_axle%i", i + 1, i + 1); // joint name need fix
-            link_name.assign(link_name_temp);
-            std::cout <<link_name<<std::endl;
-            // model->GetJoint("motor1_to_axle1")->SetVelocity(0,omega);
+            sprintf(name_temp, "motor%i_to_axle%i", i + 1, i + 1); // joint name need fix
+            joint_name.assign(name_temp);
+            model->GetJoint(joint_name)->SetVelocity(0,omega);
         }
-            model->GetJoint("motor1_to_axle1")->SetVelocity(0,omega);
-            model->GetJoint("motor2_to_axle2")->SetVelocity(0,omega);
-            model->GetJoint("motor3_to_axle3")->SetVelocity(0,omega);
-            model->GetJoint("motor4_to_axle4")->SetVelocity(0,omega);
 
         //unlock gazebo step
         wrenches_applied=true;
@@ -306,8 +293,8 @@ class model_plugin : public ModelPlugin
 
         for (i = 0; i < num_wings; i++)
         {
-            sprintf(link_name_temp, "airfoil%i", i + 1);
-            link_name.assign(link_name_temp);
+            sprintf(name_temp, "airfoil%i", i + 1);
+            link_name.assign(name_temp);
             relLinVel = model->GetLink(link_name)->RelativeLinearVel();
             rotation = model->GetLink(link_name)->WorldPose().Rot().Euler();
             relAngVel = model->GetLink(link_name)->RelativeAngularVel();
@@ -333,8 +320,8 @@ class model_plugin : public ModelPlugin
 
         for (i = 0; i < num_motors; i++)
         {
-            sprintf(link_name_temp, "motor%i", i + 1);
-            link_name.assign(link_name_temp);
+            sprintf(name_temp, "motor%i", i + 1);
+            link_name.assign(name_temp);
             relLinVel = model->GetLink(link_name)->RelativeLinearVel();
             rotation = model->GetLink(link_name)->WorldPose().Rot().Euler();
             relAngVel = model->GetLink(link_name)->RelativeAngularVel();
