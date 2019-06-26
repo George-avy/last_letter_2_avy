@@ -1,57 +1,71 @@
-
+// A node to serve some of the button functions, that use gazebo services (eg. reset_simulation, spawn_model, delete_model).
+// It's neccessary to call gazebo services from a node that runs continues and do not wait gazebo.
+// In other case, it stucks
 
 #include <ros/ros.h>
 #include <last_letter_2_msgs/joystick_input.h>
-#include <std_srvs/Empty.h>
 #include <gazebo_msgs/SpawnModel.h>
 #include <gazebo_msgs/DeleteModel.h>
-#include<fstream> 
+#include <std_srvs/Empty.h>
 
 ros::ServiceClient pauseGazebo;
 ros::ServiceClient resetSimulation;
 ros::ServiceClient spawnModel;
 ros::ServiceClient deleteModel;
-std_srvs::Empty emptySrv;
 gazebo_msgs::SpawnModel spawn_model;
 gazebo_msgs::DeleteModel delete_model;
-char name_temp[30];
+
+std_srvs::Empty emptySrv;
 std::string spawn_model_name;
-int i,j,prev_j;
+char name_temp[30];
+int i, j, prev_j;
 
 void srvServer(last_letter_2_msgs::joystick_input channels)
 {
-    if (channels.value[17] == 2000)
+    int button_num;
+
+    //reset simulation
+    button_num = 12;
+    if (channels.value[5 + button_num] == 2000)
     {
         resetSimulation.call(emptySrv);
     }
-    if (channels.value[6] == 2000)
+
+    //spawn a small cube under the multirotor
+    button_num = 1;
+    if (channels.value[5 + button_num] == 2000)
     {
         sprintf(name_temp, "can%i", i++);
         spawn_model_name.assign(name_temp);
         spawn_model.request.model_name = spawn_model_name;
-        spawn_model.request.initial_pose.position.z=-0.2;
-        spawn_model.request.reference_frame="plane";
+        spawn_model.request.initial_pose.position.z = -0.2;
+        spawn_model.request.reference_frame = "plane";
         spawnModel.call(spawn_model);
     }
-    if (channels.value[7] == 2000)
+
+    //delete all cubes from world
+    button_num = 2;
+    if (channels.value[5 + button_num] == 2000)
     {
         for (j = prev_j; j < i; j++)
         {
             sprintf(name_temp, "can%i", j);
             spawn_model_name.assign(name_temp);
             delete_model.request.model_name = spawn_model_name;
-            std::cout<<delete_model.request.model_name <<std::endl;
+            std::cout << delete_model.request.model_name << std::endl;
             deleteModel.call(delete_model);
         }
-        prev_j=j;
+        prev_j = j; //keep the number of the last cube
     }
 }
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "buttonFuncions_node");
+    ros::init(argc, argv, "buttonFunctions_node");
 
     ros::NodeHandle n;
+
+    //Init Subscriber
     ros::Subscriber sub = n.subscribe("last_letter_2/rawPWM", 1, srvServer, ros::TransportHints().tcpNoDelay());
 
     //Init Services
@@ -64,14 +78,16 @@ int main(int argc, char **argv)
     ros::service::waitForService("/gazebo/delete_model"); //delete a model from gazebo world
     deleteModel = n.serviceClient<gazebo_msgs::DeleteModel>("/gazebo/delete_model");
 
+    //get can model (urdf) from parameter server
     if (!ros::param::getCached("can", spawn_model.request.model_xml))
     {
         ROS_INFO("No model for spawning selected");
     }
 
-    i=0;
-    j=0;
-    prev_j=0;
+    i = 0;
+    j = 0;
+    prev_j = 0;
+    
     // Enter spin
     while (ros::ok())
     {

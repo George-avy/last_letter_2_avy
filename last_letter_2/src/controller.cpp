@@ -1,9 +1,7 @@
-// A node that convert channels signals, to input signals for the model,
-// based on what kind of model is loaded (plane, multirotor etc)
+// A node that converts channels signals, to input signals for the model,
+// based on the kind of model is loaded (plane, multirotor etc)
 
 #include <ros/ros.h>
-#include <sensor_msgs/Joy.h>
-#include <cstdlib>
 #include <last_letter_2_msgs/joystick_input.h>
 #include <last_letter_2_msgs/model_inputs.h>
 #include <last_letter_2_msgs/model_states.h>
@@ -13,50 +11,54 @@
 class Controller
 {
 private:
-  ros::Subscriber sub_chan;
-  ros::Subscriber sub_mod_st;
-  ros::NodeHandle n;
+    ros::NodeHandle n;
 
-  ros::ServiceServer get_control_inputs_service;
+    //Subscribers
+    ros::Subscriber sub_chan;
+    ros::Subscriber sub_mod_st;
 
-  int mixerid;
-  int num_wings;
-  int num_motors;
-  int i;
-  last_letter_2_msgs::joystick_input channels;
-  last_letter_2_msgs::model_inputs model_inputs;
-  last_letter_2_msgs::model_states model_states;
+    //Service
+    ros::ServiceServer get_control_inputs_service;
 
+    last_letter_2_msgs::joystick_input channels;
+    last_letter_2_msgs::model_inputs model_inputs;
+    last_letter_2_msgs::model_states model_states;
+    int mixerid, i;
+    int num_wings, num_motors;
+    
+    //Create essencial variables, based on parameter server values.
+    int aileron, elevator, rudder, thrust;  // for plane mixing
+    int roll_angle, pitch_angle, yaw_angle; // for multiroto mixing
+    float input_signals[5];
 
-  //Create essencial variables, based on parameter server values.
-  int aileron, elevator, rudder, thrust;
-  int roll_angle, pitch_angle, yaw_angle;
-  float input_signals[5];
+    float delta_a, delta_e, delta_r, delta_t;
+    float prev_roll_error, prev_pitch_error, prev_yaw_error, prev_alt_error;
+    float altitude, yaw_direction;
+    float new_delta_a, new_delta_e, new_delta_r, new_delta_t;
+    float buttons[20];
+    float dt;
 
-  float delta_a, delta_e, delta_r, delta_t;
-  float prev_roll_error, prev_pitch_error, prev_error, prev_yaw_error;
-  float altitude, yaw_direction;
-  float new_delta_a, new_delta_e, new_delta_r, new_delta_t;
-  float dt;
-  float buttons[20];
+public:
+    Controller();
+    void chan2signal(last_letter_2_msgs::joystick_input msg);
+    void storeStates(const last_letter_2_msgs::model_states msg);
+    bool returnControlInputs(last_letter_2_msgs::get_control_inputs_srv::Request &req,
+                               last_letter_2_msgs::get_control_inputs_srv::Response &res);
+    void initVariables();
+    void buttonFunctions();
 
-  public:
-      Controller();
-      void chan2signal(last_letter_2_msgs::joystick_input msg);
-      void storeStates(const last_letter_2_msgs::model_states::ConstPtr &msg);
-      bool return_control_inputs(last_letter_2_msgs::get_control_inputs_srv::Request &req,
-                                 last_letter_2_msgs::get_control_inputs_srv::Response &res);
-      void PD();
+    //control functions
+    void PD();
 };
 
 Controller::Controller()
 {
-    //Subscribtions
+    //Init Subscribers
     sub_chan = n.subscribe("last_letter_2/rawPWM", 1, &Controller::chan2signal, this, ros::TransportHints().tcpNoDelay());
     sub_mod_st = n.subscribe("last_letter_2/gazebo/model_states", 1, &Controller::storeStates, this, ros::TransportHints().tcpNoDelay());
 
-    //Service server
-    get_control_inputs_service = n.advertiseService("last_letter_2/get_control_inputs_srv", &Controller::return_control_inputs, this);
+    //Init service
+    get_control_inputs_service = n.advertiseService("last_letter_2/get_control_inputs_srv", &Controller::returnControlInputs, this);
 
     // Read the mixer type
     if (!ros::param::getCached("HID/mixerid", mixerid)) { ROS_INFO("No mixing function selected"); mixerid = 0;}
@@ -84,7 +86,6 @@ Controller::Controller()
         if (!ros::param::getCached(paramMsg, thrust)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
         break;
     case 2: // Mulrtirotor mixing
-        // Multirotor inputs
         sprintf(paramMsg, "roll_angle");
         if (!ros::param::getCached(paramMsg, roll_angle)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
         sprintf(paramMsg, "pitch_angle");
@@ -99,23 +100,14 @@ Controller::Controller()
         ros::shutdown();
         break;
     }
-    delta_a = 0;
-    delta_e = 0;
-    delta_r = 0;
-    delta_t = 0;
-    altitude = 0;
-    yaw_direction = 0;
-    prev_roll_error = 0;
-    prev_pitch_error = 0;
-    prev_yaw_error = 0;
-    prev_error = 0;
+    initVariables();
 }
 
-//Store new joystick changes
+//Store new joystick values
 void Controller::chan2signal(last_letter_2_msgs::joystick_input msg)
 {
     channels = msg;
-    //Choose which channel covnertion, based on model type
+    //Choose which channel convertion, based on model type
     switch (mixerid)
     {
     case 0: // No mixing applied
@@ -126,19 +118,21 @@ void Controller::chan2signal(last_letter_2_msgs::joystick_input msg)
         delta_e = (float)(channels.value[elevator] - 1500) / 500; // elevator signal
         delta_r = (float)(channels.value[rudder] - 1500) / 500;   // rudder signal
         delta_t = (float)(channels.value[thrust] - 1000) / 1000;  // thrust signal
-        for (i = 4; i < 20; i++)    //store the rest button singals
+        for (i = 4; i < 20; i++)                                  //store the rest button singals
             buttons[i] = (channels.value[i] - 1500) / 500;
-        FLUtoFRD(delta_a, delta_e, delta_r);
+        FRDtoFLU(delta_a, delta_e, delta_r); //convert channels from FRD to FLU frame, that states from gazebo are expressed
+                                             //now all data are expressed in FLU frame
         break;
     case 2: // Mulrtirotor mixing
         // Multirotor inputs
         delta_a = (float)(channels.value[roll_angle] - 1500) / 500;  // roll angle signal
         delta_e = (float)(channels.value[pitch_angle] - 1500) / 500; // pitch angle signal
         delta_r = (float)(channels.value[yaw_angle] - 1500) / 500;   // yaw angle signal
-        delta_t = (float)(channels.value[thrust] - 1000) / 1000;     //  thrust signal
-        for (i = 4; i < 20; i++)    //store the rest button singals
+        delta_t = (float)(channels.value[thrust] - 1000) / 1000;     // thrust signal
+        for (i = 4; i < 20; i++)                                     //store the rest button singals
             buttons[i] = (channels.value[i] - 1500) / 500;
-        FLUtoFRD(delta_a, delta_e, delta_r);
+        FRDtoFLU(delta_a, delta_e, delta_r); //convert channels from FRD to FLU frame, that states from gazebo are expressed
+                                             //now all data are expressed in FLU frame
         break;
     default:
         ROS_FATAL("Invalid parameter for -/HID/mixerid- in param server!");
@@ -146,29 +140,28 @@ void Controller::chan2signal(last_letter_2_msgs::joystick_input msg)
         break;
     }
     model_inputs.header.stamp = ros::Time::now();
+    buttonFunctions();
 }
 
 // store the model_states published by gazebo
-void Controller::storeStates(const last_letter_2_msgs::model_states::ConstPtr &msg)
+void Controller::storeStates(const last_letter_2_msgs::model_states msg)
 {
-    model_states.header=msg->header;
-    model_states.base_link_states = msg->base_link_states;
-    model_states.airfoil_states = msg->airfoil_states;
-    model_states.motor_states = msg->motor_states;
+    model_states = msg;
 }
 
-bool Controller::return_control_inputs(last_letter_2_msgs::get_control_inputs_srv::Request &req,
+bool Controller::returnControlInputs(last_letter_2_msgs::get_control_inputs_srv::Request &req,
                                        last_letter_2_msgs::get_control_inputs_srv::Response &res)
 {
     //check for model_states update. If previous model_states, call storeState clb for new onces and then continue
-    if (req.header.seq != model_states.header.seq) 
-        ros::spinOnce(); 
+    if (req.header.seq != model_states.header.seq)
+        ros::spinOnce();
 
     new_delta_a = delta_a;
     new_delta_e = delta_e;
     new_delta_r = delta_r;
     new_delta_t = delta_t;
 
+    // call controller
     switch (mixerid)
     {
     case 0: // No mixing applied
@@ -185,21 +178,36 @@ bool Controller::return_control_inputs(last_letter_2_msgs::get_control_inputs_sr
         break;
     }
 
-    FRDtoFLU(new_delta_a, new_delta_e, new_delta_r);
+    FLUtoFRD(new_delta_a, new_delta_e, new_delta_r); //convert signals back to FRD frame, the default model frame
     res.input_signals[0] = 0;
     res.input_signals[1] = new_delta_a; // roll signal
     res.input_signals[2] = new_delta_e; // pitch signal
     res.input_signals[3] = new_delta_r; // yaw signal
     res.input_signals[4] = new_delta_t; // thrust signal
-    for (i=4; i<20; i++)
+    for (i = 4; i < 20; i++)
     {
-        res.button_signals[i] = buttons[i];       //buttons
+        res.button_signals[i] = buttons[i]; //button signals
     }
-
     return true;
 }
 
 //Controller functions
+
+//initialize variables used in control
+void Controller::initVariables()
+{
+    delta_a = 0;
+    delta_e = 0;
+    delta_r = 0;
+    delta_t = 0;
+    altitude = 0;
+    yaw_direction = 0;
+    prev_roll_error = 0;
+    prev_pitch_error = 0;
+    prev_yaw_error = 0;
+    prev_alt_error = 0;
+}
+
 //PD controller
 void Controller::PD()
 {
@@ -211,7 +219,7 @@ void Controller::PD()
     kd = 0.5;
     error = delta_a - model_states.base_link_states.roll;
     d_error = (error - prev_roll_error) / dt;
-    prev_roll_error = delta_a - model_states.base_link_states.roll; // Keep current data for next step
+    prev_roll_error = error; // Keep current data for next step
     new_delta_a = kp * error + kd * d_error;
     if (new_delta_a < -1)
         new_delta_a = -1;
@@ -223,7 +231,7 @@ void Controller::PD()
     kd = 0.5;
     error = delta_e - model_states.base_link_states.pitch;
     d_error = (error - prev_pitch_error) / dt;
-    prev_pitch_error = delta_e - model_states.base_link_states.pitch; // Keep current data for next step
+    prev_pitch_error = error; // Keep current data for next step
     new_delta_e = kp * error + kd * d_error;
     if (new_delta_e < -1)
         new_delta_e = -1;
@@ -244,7 +252,7 @@ void Controller::PD()
     else if (error < -3.14)
         error = -0.1;
     d_error = (error - prev_yaw_error) / dt;
-    prev_yaw_error = yaw_direction - model_states.base_link_states.yaw; // Keep current data for next step
+    prev_yaw_error = error; // Keep current data for next step
     new_delta_r = kp * error + kd * d_error;
     if (new_delta_r < -1)
         new_delta_r = -1;
@@ -254,10 +262,10 @@ void Controller::PD()
     //altitude control
     kp = 1;
     kd = 0.8;
-    altitude = 50 * delta_t;
+    altitude = 50 * delta_t; //control altitude from thrust signal
     error = altitude - model_states.base_link_states.z;
-    d_error = (error - prev_error) / dt;
-    prev_error = altitude - model_states.base_link_states.z; // Keep current data for next step
+    d_error = (error - prev_alt_error) / dt;
+    prev_alt_error = error; // Keep current data for next step
     new_delta_t = kp * error + kd * d_error;
     if (new_delta_t < 0)
         new_delta_t = 0;
@@ -265,10 +273,27 @@ void Controller::PD()
         new_delta_t = 1;
 }
 
+// do the button functions
+void Controller::buttonFunctions()
+{
+    int button_num;
+    button_num=3;
+    if (buttons[5 + button_num] == 1)
+    {
+        std::cout << "function: button No" <<button_num << std::endl;
+    }
+    button_num=4;
+    if (buttons[5 + button_num] == 1)
+    {
+        std::cout << "function: button No" <<button_num << std::endl;
+    }
+}
+
 int main(int argc, char **argv)
 {
     ros::init(argc, argv, "controller_node");
 
+    //create the controller
     Controller controller;
 
     //Build a thread to spin for callbacks

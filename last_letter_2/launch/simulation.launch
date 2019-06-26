@@ -46,7 +46,7 @@
   <node pkg="last_letter_2" name="joy2chan" type="joy2chan" output="screen" />
   <node pkg="last_letter_2" name="controller" type="controller" output="screen" />
   <node pkg="last_letter_2" name="core" type="core" output="screen" />
-  <node pkg="last_letter_2" name="srv_client" type="srv_client" output="screen" />
+  <node pkg="last_letter_2" name="buttonFunctions" type="buttonFunctions" output="screen" />
 
   <node pkg="robot_state_publisher" name="robot_state_publisher" type="robot_state_publisher">
     <remap from="robot_description" to="robot_description"/>
