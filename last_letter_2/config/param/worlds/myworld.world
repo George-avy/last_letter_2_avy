@@ -2,7 +2,7 @@
 <sdf version="1.4">
   <world name="default">
     <include>
-      <uri>model://ground_plane</uri>
+      <uri>model://my_ground_plane</uri>
     </include>
 
     <include>
@@ -19,7 +19,8 @@
       <camera name="user_camera">
          <track_visual>
           <name>plane</name>
-          <static>false</static>
+          <static>true</static>
+          <xyz>-20 0 3</xyz>
           <inherit_yaw>true</inherit_yaw>
           <min_dist>15</min_dist>
           <max_dist>30</max_dist>

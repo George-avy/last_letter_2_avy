@@ -40,6 +40,7 @@ using namespace Eigen;
     std_msgs::Int32 loop_num;
     int roll_move[4], pitch_move[4], yaw_move[4];
     float deltax_max[4], deltay_max[4], deltaz_max[4];
+    float button_input[20];
 
     Matrix4f multirotor_matrix;
     Matrix4f multirotor_matrix_inverse;

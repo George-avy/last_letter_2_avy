@@ -63,10 +63,11 @@ Model::Model() : environment(this), dynamics(this)
 void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr& msg)
 {
     //Get/store model states from gazebo and do the calculation step
+    model_states.header=msg->header;
     model_states.base_link_states=msg->base_link_states;
     model_states.airfoil_states=msg->airfoil_states;
     model_states.motor_states=msg->motor_states;
-
+    
     loop_num.data = msg->loop_number.data;
     //so convert gazebo data from FLU to FRD to continue with calculations
     FLUtoFRD(model_states.base_link_states.x, model_states.base_link_states.y, model_states.base_link_states.z);
@@ -116,6 +117,7 @@ void Model::modelStep()
 // get control inputs for the model from controller node
 void Model::getControlInputs()
 {
+    control_inputs_msg.request.header=model_states.header;
     // call get_contol_inputs_srv
     if (get_control_inputs_client.isValid())
     {
@@ -153,6 +155,12 @@ void Model::getControlInputs()
         {
             motor_input[i] = control_inputs_msg.response.input_signals[4];
         }
+
+        //store button inputs
+        for (i = 4; i < 20; i++)
+        {
+            button_input[i - 4] = control_inputs_msg.response.button_signals[i];
+        }
         break;
     case 2: // Multirotor mixing
         commands(0) = control_inputs_msg.response.input_signals[4]; //thrust
@@ -164,7 +172,14 @@ void Model::getControlInputs()
         for (i = 0; i < num_motors; i++)
         {
             motor_input[i] = input_signal_vector(i);
-            if (motor_input[i]<0) motor_input[i]=0;
+            if (motor_input[i] < 0)
+                motor_input[i] = 0;
+        }
+
+        //store button inputs
+        for (i = 4; i < 20; i++)
+        {
+            button_input[i] = control_inputs_msg.response.button_signals[i];
         }
         break;
 

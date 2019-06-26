@@ -30,14 +30,17 @@ include_directories(
 add_executable(joy2chan src/joy2chan.cpp) 
 add_executable(controller src/controller.cpp) 
 add_executable(core src/core.cpp)
+add_executable(buttonFuncions src/buttonFuncions.cpp)
 
 add_dependencies(joy2chan ${catkin_EXPORTED_TARGETS})
 add_dependencies(controller ${catkin_EXPORTED_TARGETS})
 add_dependencies(core ${catkin_EXPORTED_TARGETS})
+add_dependencies(buttonFuncions ${catkin_EXPORTED_TARGETS})
 
 target_link_libraries(joy2chan ${catkin_LIBRARIES})
 target_link_libraries(controller ${catkin_LIBRARIES})
 target_link_libraries(core ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
+target_link_libraries(buttonFuncions ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
 
 
 

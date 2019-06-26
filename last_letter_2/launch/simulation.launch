@@ -10,6 +10,7 @@
   <!-- <arg name="uav_name" default="csl_2k21"/> -->
 
   <arg name="model" default="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/urdf/model.urdf.xacro"/>
+  <arg name="can_model" default="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/urdf/can_model.urdf.xacro"/>
 
   <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch" >
@@ -22,6 +23,7 @@
   </include>
 
   <param name="robot_description" command="$(find xacro)/xacro '$(arg model)'"/>
+  <param name="can" command="$(find xacro)/xacro '$(arg can_model)'"/>
   <param name="use_gui" value="$(arg gui)"/>
 
   <rosparam command="load" file="$(find last_letter_2)/config/param/HID.yaml" />
@@ -35,7 +37,7 @@
 
    <!-- push robot_description to factory and spawn robot in gazebo -->
   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
-         args="-z 1 -urdf -model plane -param robot_description" respawn="false" output="screen" >
+         args="-z 1 -urdf -model plane -param robot_description" respawn="false" output="screen">
   </node> 
   <node pkg="joy" type="joy_node" name="joystick" output="screen" >
     <param name="dev" value="/dev/input/js0" />
@@ -44,6 +46,7 @@
   <node pkg="last_letter_2" name="joy2chan" type="joy2chan" output="screen" />
   <node pkg="last_letter_2" name="controller" type="controller" output="screen" />
   <node pkg="last_letter_2" name="core" type="core" output="screen" />
+  <node pkg="last_letter_2" name="srv_client" type="srv_client" output="screen" />
 
   <node pkg="robot_state_publisher" name="robot_state_publisher" type="robot_state_publisher">
     <remap from="robot_description" to="robot_description"/>

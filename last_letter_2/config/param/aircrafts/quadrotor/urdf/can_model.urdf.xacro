@@ -1,0 +1,37 @@
+<?xml version="1.0"?>
+<robot name="can" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<!-- body, airfoil sizes -->
+<xacro:property name="body_s" value="0.1" />   
+
+<!-- body link parameters x, y, z, mass-->
+<xacro:property name="body_x" value="${body_s}" />
+<xacro:property name="body_y" value="${body_s}" />
+<xacro:property name="body_z" value="${body_s}" />
+<xacro:property name="body_m" value="1" />
+
+    <link name="base_link">
+        <visual>
+        <origin rpy="0 0 0"/>
+            <geometry>
+               <box size="${body_x} ${body_y} ${body_z}" />
+            </geometry>
+        </visual>
+
+        <collision>
+        <origin rpy="0 0 0"/>
+            <geometry>
+               <box size="${body_x} ${body_y} ${body_z}" />
+            </geometry>
+        </collision>
+        
+        <inertial>
+        <origin rpy="0 0 0"/>
+            <mass value="${body_m}" />
+             <inertia   ixx="${1/12*body_m*(body_y*body_y+body_z*body_z)}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*body_m*(body_x*body_x+body_z*body_z)}" 
+                        izz="${1/12*body_m*(body_x*body_x+body_y*body_y)}" />
+        </inertial> 
+
+    </link>
+</robot>
