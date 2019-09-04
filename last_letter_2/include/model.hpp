@@ -42,8 +42,8 @@ using namespace Eigen;
     float deltax_max[4], deltay_max[4], deltaz_max[4];
     float button_input[20];
 
-    Matrix4f multirotor_matrix;
-    Matrix4f multirotor_matrix_inverse;
+    MatrixXf multirotor_matrix;
+    MatrixXf multirotor_matrix_inverse;
     Vector4f commands;
     Vector4f input_signal_vector;
 

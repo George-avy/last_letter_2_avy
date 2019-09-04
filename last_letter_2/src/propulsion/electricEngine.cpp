@@ -43,12 +43,12 @@ ElectricEng::ElectricEng(Model *parent, int id) : Propulsion(parent,id)
     sprintf(s, "motor%i/propPowerPoly", id);
     propPowerPoly = factory.buildPolynomial(s);
 
-    omega = omegaMin; // Initialize engine rotational speed
-
+    // Initialize engine rotational speed, thrust, torque
+    omega = omegaMin;
     prop_wrenches.thrust = 0.0;
     prop_wrenches.torque = 0.0;
 
-    sprintf(paramMsg, "propulsion%i", id);
+    // sprintf(paramMsg, "propulsion%i", id);
     ros::NodeHandle n;
 }
 
@@ -100,6 +100,7 @@ void ElectricEng::calcThrust()
      // model->states.rotorspeed[0]=std::fabs(omega); // Write engine speed to states message
 }
 
+// Calculate motor Torque
 void ElectricEng::calcTorque()
 {
     if (!std::isfinite(prop_wrenches.torque))

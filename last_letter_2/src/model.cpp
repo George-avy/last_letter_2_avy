@@ -1,6 +1,15 @@
 
 Model::Model() : environment(this), dynamics(this)
 {
+    //set dynamic matrices dimensions based on simulated multirotor
+    //if a plane is simulated, skip this.
+    //matrices for quadrotor:(4,4), hexarotor:(4,6)
+    multirotor_matrix.resize(4, 4);
+    multirotor_matrix_inverse.resize(4, 4);
+    // Vectors for quadrotor (4), hexarotor (6)
+    commands.resize(4);
+    input_signal_vector.resize(4);
+
     // Read the mixer type
     if (!ros::param::getCached("HID/mixerid", mixerid)) { ROS_INFO("No mixing function selected"); mixerid = 0;}
     //Read the number of airfoils
@@ -95,15 +104,16 @@ void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr& ms
 
 void Model::initMultirotorMatrix()
 {
+    //init multirotor matrix, that finds roll, pitch, yaw, thrust, based on motor inputs
     float k1 = 0.25;
     float l = 10;
     float k2 = 0.6;
-    //init forcesToCommands multirotor matrix
     multirotor_matrix << k1, k1, k1, k1,
-        0, -l * k1, 0, l * k1,
-        l * k1, 0, -l * k1, 0,
-        -k2, k2, -k2, k2;
-    multirotor_matrix_inverse = multirotor_matrix.inverse();
+                        0, -l * k1, 0, l * k1,
+                        l * k1, 0, -l * k1, 0,
+                        -k2, k2, -k2, k2;
+     //calculate inverse of multirotor matrix. Usefull for future calculations
+     multirotor_matrix_inverse = multirotor_matrix.completeOrthogonalDecomposition().pseudoInverse();
 }
 
 void Model::modelStep()
