@@ -2,7 +2,7 @@
 Model::Model() : environment(this), dynamics(this)
 {
     // Read the mixer type
-      if (!ros::param::getCached("HID/mixerid", mixerid)) { ROS_INFO("No mixing function selected"); mixerid = 0;}
+    if (!ros::param::getCached("HID/mixerid", mixerid)) { ROS_INFO("No mixing function selected"); mixerid = 0;}
     //Read the number of airfoils
     if (!ros::param::getCached("nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown(); }
     //Read the number of motors
@@ -19,12 +19,12 @@ Model::Model() : environment(this), dynamics(this)
         //Load basic characteristics for each airfoil
         for (i = 0; i < num_wings; ++i)
         {
-            sprintf(paramMsg, "airfoil%i/roll_move", i + 1);
-            if (!ros::param::getCached(paramMsg, roll_move[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-            sprintf(paramMsg, "airfoil%i/pitch_move", i + 1);
-            if (!ros::param::getCached(paramMsg, pitch_move[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-            sprintf(paramMsg, "airfoil%i/yaw_move", i + 1);
-            if (!ros::param::getCached(paramMsg, yaw_move[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            sprintf(paramMsg, "airfoil%i/x_axis_turn_chan", i + 1);
+            if (!ros::param::getCached(paramMsg, x_axis_turn_chan[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            sprintf(paramMsg, "airfoil%i/y_axis_turn_chan", i + 1);
+            if (!ros::param::getCached(paramMsg, y_axis_turn_chan[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            sprintf(paramMsg, "airfoil%i/z_axis_turn_chan", i + 1);
+            if (!ros::param::getCached(paramMsg, z_axis_turn_chan[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
             sprintf(paramMsg, "airfoil%i/deltax_max", i + 1);
             if (!ros::param::getCached(paramMsg, deltax_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
             sprintf(paramMsg, "airfoil%i/deltay_max", i + 1);
@@ -137,29 +137,23 @@ void Model::getControlInputs()
         get_control_inputs_client = nh.serviceClient<last_letter_2_msgs::get_control_inputs_srv>("last_letter_2/get_control_inputs_srv", true);
     }
 
+    //store airfoil inputs
+    for (i = 0; i < num_wings; i++)
+    {
+        airfoil_inputs[i].x = deltax_max[i] * control_inputs_msg.response.input_signals[x_axis_turn_chan[i]];
+        airfoil_inputs[i].y = deltay_max[i] * control_inputs_msg.response.input_signals[y_axis_turn_chan[i]];
+        airfoil_inputs[i].z = deltaz_max[i] * control_inputs_msg.response.input_signals[z_axis_turn_chan[i]];
+    }
+
     switch (mixerid)
     {
     case 0: // No mixing applied
         break;
     case 1: // Airplane mixing
-        //store airfoil inputs
-        for (i = 0; i < num_wings; i++)
-        {
-            airfoil_inputs[i].x = deltax_max[i] * control_inputs_msg.response.input_signals[roll_move[i]];
-            airfoil_inputs[i].y = deltay_max[i] * control_inputs_msg.response.input_signals[pitch_move[i]];
-            airfoil_inputs[i].z = deltaz_max[i] * control_inputs_msg.response.input_signals[yaw_move[i]];
-        }
-
         //store motor inputs
         for (i = 0; i < num_motors; i++)
         {
             motor_input[i] = control_inputs_msg.response.input_signals[4];
-        }
-
-        //store button inputs
-        for (i = 4; i < 20; i++)
-        {
-            button_input[i - 4] = control_inputs_msg.response.button_signals[i];
         }
         break;
     case 2: // Multirotor mixing
@@ -167,7 +161,6 @@ void Model::getControlInputs()
         commands(1) = control_inputs_msg.response.input_signals[1]; //roll
         commands(2) = control_inputs_msg.response.input_signals[2]; //pitch
         commands(3) = control_inputs_msg.response.input_signals[3]; //yaw
-
         input_signal_vector = multirotor_matrix_inverse * commands;
         for (i = 0; i < num_motors; i++)
         {
@@ -175,18 +168,17 @@ void Model::getControlInputs()
             if (motor_input[i] < 0)
                 motor_input[i] = 0;
         }
-
-        //store button inputs
-        for (i = 4; i < 20; i++)
-        {
-            button_input[i] = control_inputs_msg.response.button_signals[i];
-        }
         break;
-
     default:
         ROS_FATAL("Invalid parameter for -/HID/mixerid- in param server!");
         ros::shutdown();
         break;
+    }
+
+    //store button inputs
+    for (i = 4; i < 20; i++)
+    {
+        button_input[i - 4] = control_inputs_msg.response.button_signals[i];
     }
 }
 

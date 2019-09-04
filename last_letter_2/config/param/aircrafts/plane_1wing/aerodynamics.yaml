@@ -2,11 +2,6 @@
 #aerodynamicsType: 0:NoAerodynamics, 1:StdLinearAero 2:HCUAVAero
 nWings: 1
 
-aileron: 0  #Number of relative channel from joystick
-elevator: 1
-rudder: 3
-thrust: 2
-
 airfoil1/chanGimbal: -1
 airfoil1/gimbalAngle_max: 0.0
 
@@ -58,6 +53,6 @@ airfoil1/deltax_max: 0.3491  #max deflections in radians
 airfoil1/deltay_max: 0.3491
 airfoil1/deltaz_max: 0.3491
 
-airfoil1/roll_move: 1 #0-no input, 1-aileron, 2-elevator, 3-rudder
-airfoil1/pitch_move: 2
-airfoil1/yaw_move: 3
+airfoil1/x_axis_turn_chan: 1 #0-no input, 1-aileron, 2-elevator, 3-rudder
+airfoil1/y_axis_turn_chan: 2
+airfoil1/z_axis_turn_chan: 3

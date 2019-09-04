@@ -38,7 +38,7 @@ using namespace Eigen;
     int i;
     int mixerid, num_wings, num_motors;
     std_msgs::Int32 loop_num;
-    int roll_move[4], pitch_move[4], yaw_move[4];
+    int x_axis_turn_chan[4], y_axis_turn_chan[4], z_axis_turn_chan[4];
     float deltax_max[4], deltay_max[4], deltaz_max[4];
     float button_input[20];
 

@@ -6,8 +6,8 @@
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
   <arg name="uav_name" default="quadrotor"/>
-  <!-- <arg name="uav_name" default="csl_2k19"/> -->
-  <!-- <arg name="uav_name" default="csl_2k21"/> -->
+  <!-- <arg name="uav_name" default="plane_1wing"/> -->
+  <!-- <arg name="uav_name" default="plane_3wing"/> -->
 
   <arg name="model" default="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/urdf/model.urdf.xacro"/>
   <arg name="can_model" default="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/urdf/can_model.urdf.xacro"/>
@@ -31,6 +31,7 @@
   <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/propulsion.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/rigidBody.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/init.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/channel_mix.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/environment.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/world.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/simulation.yaml" />

@@ -1,0 +1,6 @@
+# choose the channels for the basic moves
+
+roll_angle: 0
+pitch_angle: 1
+yaw_angle: 3
+thrust: 2

@@ -27,8 +27,7 @@ private:
     int num_wings, num_motors;
     
     //Create essencial variables, based on parameter server values.
-    int aileron, elevator, rudder, thrust;  // for plane mixing
-    int roll_angle, pitch_angle, yaw_angle; // for multiroto mixing
+    int roll_angle, pitch_angle, yaw_angle, thrust; // for mixing
     float input_signals[5];
 
     float delta_a, delta_e, delta_r, delta_t;
@@ -47,7 +46,7 @@ public:
     void initVariables();
     void buttonFunctions();
 
-    //control functions
+    //control functions are declared here
     void PD();
 };
 
@@ -71,35 +70,14 @@ Controller::Controller()
 
     char paramMsg[50];
 
-    switch (mixerid)
-    {
-    case 0: // No mixing applied
-        break;
-    case 1: // Airplane mixing
-        sprintf(paramMsg, "aileron");
-        if (!ros::param::getCached(paramMsg, aileron)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-        sprintf(paramMsg, "elevator");
-        if (!ros::param::getCached(paramMsg, elevator)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-        sprintf(paramMsg, "rudder");
-        if (!ros::param::getCached(paramMsg, rudder)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-        sprintf(paramMsg, "thrust");
-        if (!ros::param::getCached(paramMsg, thrust)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-        break;
-    case 2: // Mulrtirotor mixing
-        sprintf(paramMsg, "roll_angle");
-        if (!ros::param::getCached(paramMsg, roll_angle)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-        sprintf(paramMsg, "pitch_angle");
-        if (!ros::param::getCached(paramMsg, pitch_angle)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-        sprintf(paramMsg, "yaw_angle");
-        if (!ros::param::getCached(paramMsg, yaw_angle)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-        sprintf(paramMsg, "thrust");
-        if (!ros::param::getCached(paramMsg, thrust)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-        break;
-    default:
-        ROS_FATAL("Invalid parameter for -/HID/mixerid- in param server!");
-        ros::shutdown();
-        break;
-    }
+    sprintf(paramMsg, "roll_angle");
+    if (!ros::param::getCached(paramMsg, roll_angle)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
+    sprintf(paramMsg, "pitch_angle");
+    if (!ros::param::getCached(paramMsg, pitch_angle)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
+    sprintf(paramMsg, "yaw_angle");
+    if (!ros::param::getCached(paramMsg, yaw_angle)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
+    sprintf(paramMsg, "thrust");
+    if (!ros::param::getCached(paramMsg, thrust)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
     initVariables();
 }
 
@@ -107,38 +85,16 @@ Controller::Controller()
 void Controller::chan2signal(last_letter_2_msgs::joystick_input msg)
 {
     channels = msg;
-    //Choose which channel convertion, based on model type
-    switch (mixerid)
-    {
-    case 0: // No mixing applied
-        break;
-    case 1: // Airplane mixing
-        // Airplane inputs
-        delta_a = (float)(channels.value[aileron] - 1500) / 500;  // aileron signal
-        delta_e = (float)(channels.value[elevator] - 1500) / 500; // elevator signal
-        delta_r = (float)(channels.value[rudder] - 1500) / 500;   // rudder signal
-        delta_t = (float)(channels.value[thrust] - 1000) / 1000;  // thrust signal
-        for (i = 4; i < 20; i++)                                  //store the rest button singals
-            buttons[i] = (channels.value[i] - 1500) / 500;
-        FRDtoFLU(delta_a, delta_e, delta_r); //convert channels from FRD to FLU frame, that states from gazebo are expressed
-                                             //now all data are expressed in FLU frame
-        break;
-    case 2: // Mulrtirotor mixing
-        // Multirotor inputs
-        delta_a = (float)(channels.value[roll_angle] - 1500) / 500;  // roll angle signal
-        delta_e = (float)(channels.value[pitch_angle] - 1500) / 500; // pitch angle signal
-        delta_r = (float)(channels.value[yaw_angle] - 1500) / 500;   // yaw angle signal
-        delta_t = (float)(channels.value[thrust] - 1000) / 1000;     // thrust signal
-        for (i = 4; i < 20; i++)                                     //store the rest button singals
-            buttons[i] = (channels.value[i] - 1500) / 500;
-        FRDtoFLU(delta_a, delta_e, delta_r); //convert channels from FRD to FLU frame, that states from gazebo are expressed
-                                             //now all data are expressed in FLU frame
-        break;
-    default:
-        ROS_FATAL("Invalid parameter for -/HID/mixerid- in param server!");
-        ros::shutdown();
-        break;
-    }
+
+    //Channel mixing
+    delta_a = (float)(channels.value[roll_angle] - 1500) / 500;  // roll angle signal
+    delta_e = (float)(channels.value[pitch_angle] - 1500) / 500; // pitch angle signal
+    delta_r = (float)(channels.value[yaw_angle] - 1500) / 500;   // yaw angle signal
+    delta_t = (float)(channels.value[thrust] - 1000) / 1000;     // thrust signal
+    for (i = 4; i < 20; i++)                                     //store the rest button singals
+        buttons[i] = (channels.value[i] - 1500) / 500;
+    FRDtoFLU(delta_a, delta_e, delta_r); //convert channels from FRD to FLU frame, that states from gazebo are expressed
+                                         //now all data are expressed in FLU frame
     model_inputs.header.stamp = ros::Time::now();
     buttonFunctions();
 }
@@ -161,15 +117,16 @@ bool Controller::returnControlInputs(last_letter_2_msgs::get_control_inputs_srv:
     new_delta_r = delta_r;
     new_delta_t = delta_t;
 
-    // call controller
-    switch (mixerid)
+switch (mixerid)
     {
     case 0: // No mixing applied
         break;
-    case 1: // Airplane Controllers
+    case 1: // Airplane 
+    //choose plane controllers
 
         break;
-    case 2: // Multirotor Controllers
+    case 2:
+    //choose multirotor controllers
         PD();
         break;
     default:

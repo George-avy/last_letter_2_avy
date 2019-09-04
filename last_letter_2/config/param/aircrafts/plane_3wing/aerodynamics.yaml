@@ -2,11 +2,6 @@
 #aerodynamicsType: 0:NoAerodynamics, 1:StdLinearAero 2:HCUAVAero
 nWings: 3
 
-aileron: 0  #Number of relative channel from joystick
-elevator: 1
-rudder: 3
-thrust: 2
-
 airfoil1/chanGimbal: -1
 airfoil1/gimbalAngle_max: 0.0
 
@@ -60,9 +55,9 @@ airfoil1/deltaz_max: 0
 
 #0 if airfoil is not affect for move (relative to airfoil), else 1,2,3 for which of the input signals the airfoil listens to
 #0-nothing, 1-aileron, 2-elevator, 3-rudder  (input signals)
-airfoil1/roll_move: 1     #airfoil1 affects only roll and listens to aileron signal
-airfoil1/pitch_move: 0    #airfoil1 not affects pitch move
-airfoil1/yaw_move: 0      #airfoil1 not affects yaw move
+airfoil1/x_axis_turn_chan: 1     #airfoil1 affects only roll and listens to aileron signal
+airfoil1/y_axis_turn_chan: 0    #airfoil1 not affects pitch move
+airfoil1/z_axis_turn_chan: 0      #airfoil1 not affects yaw move
 
 # airfoil 2
 airfoil2/chanGimbal: -1
@@ -117,9 +112,9 @@ airfoil2/deltay_max: 0.3491
 airfoil2/deltaz_max: 0
 
 #0 if airfoil is not affect for move (relative to airfoil), else 1,2,3 for which of the input signals the airfoil listens to
-airfoil2/roll_move: 0   #0-nothing, 1-aileron, 2-elevator, 3-rudder  (input signals)
-airfoil2/pitch_move: 2
-airfoil2/yaw_move: 0
+airfoil2/x_axis_turn_chan: 0   #0-nothing, 1-aileron, 2-elevator, 3-rudder  (input signals)
+airfoil2/y_axis_turn_chan: 2
+airfoil2/z_axis_turn_chan: 0
 
 # airfoil 3
 airfoil3/chanGimbal: -1
@@ -174,6 +169,6 @@ airfoil3/deltay_max: 0.3491
 airfoil3/deltaz_max: 0
 
 #0 if airfoil is not affect the move (relative to airfoil), else 1,2,3 for which of the input signals the airfoil listens to
-airfoil3/roll_move: 0   #0-nothing, 1-aileron, 2-elevator, 3-rudder  (input signals)
-airfoil3/pitch_move: 3
-airfoil3/yaw_move: 0
+airfoil3/x_axis_turn_chan: 0   #0-nothing, 1-aileron, 2-elevator, 3-rudder  (input signals)
+airfoil3/y_axis_turn_chan: 3
+airfoil3/z_axis_turn_chan: 0
