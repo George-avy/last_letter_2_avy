@@ -1,5 +1,6 @@
 #include <ros/ros.h>
 #include "ros/callback_queue.h"
+#include "ros/subscribe_options.h"
 #include <ros/service.h>
 #include <rosgraph_msgs/Clock.h>
 #include <gazebo/gazebo_client.hh> //gazebo version >6
@@ -8,6 +9,7 @@
 #include <last_letter_2_msgs/model_states.h>
 #include <last_letter_2_msgs/link_states.h>
 #include <last_letter_2_msgs/apply_model_wrenches_srv.h>
+#include <last_letter_2_msgs/joystick_input.h>
 #include <geometry_msgs/Vector3Stamped.h>
 #include <geometry_msgs/TransformStamped.h>
 #include <tf2_ros/static_transform_broadcaster.h>
@@ -45,6 +47,9 @@ class model_plugin : public ModelPlugin
     // ROS publisher
     ros::Publisher states_pub;
 
+    /// ROS subscriber
+    ros::Subscriber channels_sub;
+
     // Ros services
     ros::ServiceServer apply_wrenches_server;
 
@@ -73,8 +78,9 @@ class model_plugin : public ModelPlugin
     std::string link_name, joint_name;
     char name_temp[30];
     double omega,rotationDir[4];
+    double camera_angle, laser_angle;
 
-  public:
+public:
     model_plugin() : ModelPlugin() //constructor
     {
     }
@@ -104,8 +110,12 @@ class model_plugin : public ModelPlugin
                                                                                                                       boost::bind(&model_plugin::applyWrenchOnModel, this, _1, _2), ros::VoidPtr(), &this->wrenches_rosQueue));
         this->apply_wrenches_server = this->rosNode->advertiseService(so);
 
+        //Subscriber
+        ros::SubscribeOptions soo = (ros::SubscribeOptions::create<last_letter_2_msgs::joystick_input>("last_letter_2/rawPWM", 1, boost::bind(&model_plugin::manageChan, this, _1), ros::VoidPtr(), &this->wrenches_rosQueue));
+        this->channels_sub = this->rosNode->subscribe(soo);
+
         // Publish code
-        this->states_pub = this->rosNode->advertise<last_letter_2_msgs::model_states>("last_letter_2/gazebo/model_states", 1,true);
+        this->states_pub = this->rosNode->advertise<last_letter_2_msgs::model_states>("last_letter_2/model_states", 1,true);
 
         //Read the number of airfoils
         if (!ros::param::getCached("nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown(); }
@@ -122,6 +132,8 @@ class model_plugin : public ModelPlugin
         wrenches_applied = false;
         loop_number = 0;
         omega=0;
+        camera_angle=0;
+        laser_angle=0;
         modelStateInit();
     }
 
@@ -221,10 +233,52 @@ class model_plugin : public ModelPlugin
             model->GetJoint(joint_name)->SetVelocity(0,rotationDir[i]*omega);
         }
 
+        //Handle sensors
+
+        //Check if camera_joint exists.
+        // If camera_joitn exists, set the camera_angle, if not skip
+        if (model->GetJoint("camera_joint"))
+        {
+            model->GetJoint("camera_joint")->SetPosition(0, camera_angle);
+        }
+
+        //Check if laser_joint exists.
+        // If laser_joitn exists, set the laser_angle, if not skip
+        if (model->GetJoint("laser_joint"))
+        {
+            model->GetJoint("laser_joint")->SetPosition(0, laser_angle);
+        }
+
         //unlock gazebo step
-        wrenches_applied=true;
+        wrenches_applied = true;
         cv.notify_one();
         return true;
+    }
+
+    //Serve button functions 
+    void manageChan(const last_letter_2_msgs::joystick_input::ConstPtr &channels)
+    {
+        //Handle Camera's angle 
+        //Camera sensor listen to 5th channel
+        if (channels->value[4] == 1000 && camera_angle>=-1.9)
+        {
+            camera_angle-=0.1;
+        }
+        if (channels->value[4] == 2000 && camera_angle<=1.9)
+        {
+            camera_angle+=0.1;
+        }
+
+        //Handle Laser's angle
+        //Laser sensor listen to 6th channel
+        if (channels->value[5] == 2000 && laser_angle>=-0.9)
+        {
+            laser_angle-=0.1;
+        }
+        if (channels->value[5] == 1000 && laser_angle<=0.9)
+        {
+            laser_angle+=0.1;
+        }
     }
 
     void BeforeUpdate()

@@ -52,7 +52,7 @@ Model::Model() : environment(this), dynamics(this)
     }
 
     //Subscriber that gets model states from gazebo after physics step
-    gazebo_sub = nh.subscribe("last_letter_2/gazebo/model_states", 1, &Model::gazeboStatesClb, this,ros::TransportHints().tcpNoDelay());
+    gazebo_sub = nh.subscribe("last_letter_2/model_states", 1, &Model::gazeboStatesClb, this,ros::TransportHints().tcpNoDelay());
 
     //Service to send the calculated wrenches to gazebo
     ros::service::waitForService("last_letter_2/apply_model_wrenches_srv");

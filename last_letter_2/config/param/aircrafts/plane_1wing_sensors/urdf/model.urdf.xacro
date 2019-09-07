@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<robot name="plane" xmlns:xacro="http://www.ros.org/wiki/xacro">
+<robot name="plane_sensors" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-<xacro:property name="source" value="$(find last_letter_2)/config/param/aircrafts/plane_1wing/rigidBody.yaml" />
+<xacro:property name="source" value="$(find last_letter_2)/config/param/aircrafts/plane_1wing_sensors/rigidBody.yaml" />
 <xacro:property name="dictionary" value="${load_yaml(source)}"/>
 <xacro:property name="mass" value="${dictionary['airframe/m']}"/>
     
@@ -188,6 +188,7 @@
         <child link="prop1" />
     </joint>
     
+    
      ---------------------------------------------------------------------------front wheels
      
      <!-- wheel_base_link parameters, x, y, z, mass-->
@@ -328,16 +329,179 @@
         <parent link="body_FLU" />
         <child link="rear_wheel" />
     </joint>
-    
+
+    -----------------------------------------------------------------  sensors
+   
+  <!-- Camera -->
+  <link name="camera_link">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.1 0.1 0.1"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.1 0.1 0.1"/>
+      </geometry>
+    </visual>
+
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+  <joint name="camera_joint" type="revolute">
+    <axis xyz="0 0 1" />
+    <origin xyz="0 ${airfoil_y/2-0.1} -0.1" rpy="0 0 -0.6"/>
+    <parent link="airfoil1"/>
+    <child link="camera_link"/>
+    <limit effort="1000.0" velocity="0.5"  lower="-2" upper="2" />  
+  </joint>
+
+  <!-- Laser scanner -->
+  <link name="laser_link">
+    <collision>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.1 0.1 0.1"/>
+      </geometry>
+    </collision>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <geometry>
+        <box size="0.1 0.1 0.1"/>
+      </geometry>
+    </visual>
+
+    <inertial>
+      <mass value="1e-5" />
+      <origin xyz="0 0 0" rpy="0 0 0"/>
+      <inertia ixx="1e-6" ixy="0" ixz="0" iyy="1e-6" iyz="0" izz="1e-6" />
+    </inertial>
+  </link>
+
+   <joint name="laser_joint" type="revolute">
+    <axis xyz="0 1 0" />
+    <origin xyz="${body_h/2} 0 ${-body_r}" rpy="0 0 0"/>
+    <parent link="body_FLU"/>
+    <child link="laser_link"/>
+    <limit effort="1000.0" velocity="0.5" lower="-1" upper="1" /> 
+  </joint>
 
 <!-- model plugins -->
     <gazebo>
     <plugin name="model_plugin" filename="libmodel_plugin.so"/>
     <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
-        <jointName>body_FLU_to_airfoil1, body_FLU_to_motor1, motor1_to_axle1, wheel_base_to_left_wheel, wheel_base_to_right_wheel, body_FLU_to_rear_wheel </jointName>
+        <jointName>body_FLU_to_airfoil1, body_FLU_to_motor1, motor1_to_axle1, wheel_base_to_left_wheel, wheel_base_to_right_wheel, body_FLU_to_rear_wheel, camera_joint, laser_joint </jointName>
         <robotNamespace>last_letter_2</robotNamespace>
         <updateRate>0</updateRate>
     </plugin>
+  </gazebo>
+
+  <!-- camera plugin-->
+  <gazebo reference="camera_link">
+    <sensor type="camera" name="camera_sensor">
+      <update_rate>30.0</update_rate>
+      <camera name="head">
+        <horizontal_fov>1.3962634</horizontal_fov>
+        <image>
+          <width>800</width>
+          <height>800</height>
+          <format>R8G8B8</format>
+        </image>
+        <clip>
+          <near>0.02</near>
+          <far>300</far>
+        </clip>
+        <noise>
+          <type>gaussian</type>
+          <!-- Noise is sampled independently per pixel on each frame.
+               That pixel's noise value is added to each of its color
+               channels, which at that point lie in the range [0,1]. -->
+          <mean>0.0</mean>
+          <stddev>0.007</stddev>
+        </noise>
+      </camera>
+      <plugin name="camera_controller" filename="libgazebo_ros_camera.so">
+        <alwaysOn>true</alwaysOn>
+        <updateRate>0.0</updateRate>
+        <cameraName>last_letter_2/sensors/camera</cameraName>
+        <imageTopicName>image</imageTopicName>
+        <cameraInfoTopicName>camera_info</cameraInfoTopicName>
+        <frameName>camera_frame</frameName>
+        <hackBaseline>0.07</hackBaseline>
+        <distortionK1>0.0</distortionK1>
+        <distortionK2>0.0</distortionK2>
+        <distortionK3>0.0</distortionK3>
+        <distortionT1>0.0</distortionT1>
+        <distortionT2>0.0</distortionT2>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+ <!-- Laser scanner -->
+  <gazebo reference="laser_link">
+    <sensor type="ray" name="laser_sensor">
+      <pose>0 0 0 0 0 0</pose>
+      <visualize>true</visualize>
+      <update_rate>40</update_rate>
+      <ray>
+        <scan>
+          <horizontal>
+            <samples>720</samples>
+            <resolution>1</resolution>
+            <min_angle>-1.570796</min_angle>
+            <max_angle>1.570796</max_angle>
+          </horizontal>
+        </scan>
+        <range>
+          <min>0.1</min>
+          <max>30.0</max>
+          <resolution>0.1</resolution>
+        </range>
+        <noise>
+          <type>gaussian</type>
+          <!-- Noise parameters based on published spec for Hokuyo laser
+               achieving "+-30mm" accuracy at range < 10m.  A mean of 0.0m and
+               stddev of 0.01m will put 99.7% of samples within 0.03m of the true
+               reading. -->
+          <mean>0.0</mean>
+          <stddev>0.01</stddev>
+        </noise>
+      </ray>
+      <plugin name="gazebo_ros_laser_scanner_controller" filename="libgazebo_ros_laser.so">
+        <topicName>last_letter_2/sensors/laser</topicName>
+        <frameName>laser_frame</frameName>
+      </plugin>
+    </sensor>
+  </gazebo>
+
+    <!-- IMU Sensor -->
+    <!-- do not create new link for imu sensor. attach with body_FLU link -->
+   <gazebo reference="body_FLU">
+    <gravity>true</gravity>
+    <sensor name="imu_sensor" type="imu">
+      <always_on>true</always_on>
+      <update_rate>100</update_rate>
+      <visualize>true</visualize>
+      <topic>__default_topic__</topic>
+      <plugin filename="libgazebo_ros_imu_sensor.so" name="imu_plugin">
+        <topicName>last_letter_2/sensors/imu</topicName>
+        <bodyName>body_FLU</bodyName>
+        <updateRateHZ>10.0</updateRateHZ>
+        <gaussianNoise>0.0</gaussianNoise>
+        <xyzOffset>0 0 0</xyzOffset>
+        <rpyOffset>0 0 0</rpyOffset>
+        <frameName>body_FLU</frameName>
+      </plugin>
+      <pose>0 0 0 0 0 0</pose>
+    </sensor>
   </gazebo>
 
 </robot>

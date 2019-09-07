@@ -13,5 +13,5 @@
 # 0 for no mixing
 # 1 for airplane mixing
 # 2 for quadrotor mixing
-/HID/mixerid: 2
+/HID/mixerid: 1
 

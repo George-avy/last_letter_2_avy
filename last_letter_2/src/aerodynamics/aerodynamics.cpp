@@ -1,6 +1,6 @@
 #include "noAerodynamics.cpp"
 #include "stdLinearAero.cpp"
-#include "HCUAVAero.cpp"
+#include "polyAero.cpp"
 
 //Constructor
 Aerodynamics::Aerodynamics(Model *parent, int id) :tfListener(tfBuffer)

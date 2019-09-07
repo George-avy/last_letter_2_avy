@@ -38,4 +38,4 @@ class Aerodynamics
 
 #include "noAerodynamics.hpp"
 #include "stdLinearAero.hpp"
-#include "HCUAVAero.hpp"
+#include "polyAero.hpp"

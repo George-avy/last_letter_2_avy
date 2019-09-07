@@ -52,7 +52,7 @@ void srvServer(last_letter_2_msgs::joystick_input channels)
             sprintf(name_temp, "can%i", j);
             spawn_model_name.assign(name_temp);
             delete_model.request.model_name = spawn_model_name;
-            std::cout << delete_model.request.model_name << std::endl;
+            std::cout << delete_model.request.model_name << " despawned" << std::endl;
             deleteModel.call(delete_model);
         }
         prev_j = j; //keep the number of the last cube

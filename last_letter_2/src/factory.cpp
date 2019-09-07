@@ -14,7 +14,7 @@ Aerodynamics *Factory::buildAerodynamics(Model *parent, int id)
     case 1:
         return new StdLinearAero(parent,id+1);
     case 2:
-        return new HCUAVAero(parent,id+1);
+        return new polyAero(parent,id+1);
     }
 }
 
@@ -30,7 +30,7 @@ Propulsion *Factory::buildPropulsion(Model *parent, int id)
     case 0:
         return new NoEngine(parent, id+1);
     case 1:
-        return new BeardEngine(parent, id+1);
+        return new genericEngine(parent, id+1);
     // case 2: return new PistonEngin(parent, id+1);
     case 3:
         return new ElectricEng(parent, id+1);

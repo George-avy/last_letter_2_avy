@@ -1,27 +1,27 @@
-BeardEngine::BeardEngine(Model *parent, int id) : Propulsion(parent, id)
+genericEngine::genericEngine(Model *parent, int id) : Propulsion(parent, id)
 {
     initParam(id);
     printf("motor:%i beard engine built\n",id);
 }
 
-void BeardEngine::calcThrust()
+void genericEngine::calcThrust()
 {
     float rho=model->airdata.density;
     prop_wrenches.thrust = 1.0 / 2.0 * rho * s_prop * c_prop * (pow(motor_input * k_motor, 2) - pow(airspeed, 2));
 }
 
-void BeardEngine::calcTorque()
+void genericEngine::calcTorque()
 {
     float rho=model->airdata.density;
     prop_wrenches.torque = -k_t_p * pow((k_omega * motor_input), 2) * rotationDir;
 }
 
-void BeardEngine::calcOmega()
+void genericEngine::calcOmega()
 {
     prop_wrenches.omega = k_omega * motor_input;
 }
 
-void BeardEngine::initParam(int id)
+void genericEngine::initParam(int id)
 {
     char paramMsg[50];
     sprintf(paramMsg, "motor%i/s_prop", id);

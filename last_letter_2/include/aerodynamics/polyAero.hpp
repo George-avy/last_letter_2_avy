@@ -1,8 +1,8 @@
 
-class HCUAVAero : public StdLinearAero
+class polyAero : public StdLinearAero
 {
   public:
-  HCUAVAero(Model *  parent, int id);
+  polyAero(Model *  parent, int id);
   Polynomial * liftCoeffPoly;
   Polynomial * dragCoeffPoly;
 

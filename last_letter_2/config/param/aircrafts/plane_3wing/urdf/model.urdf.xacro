@@ -233,7 +233,7 @@
 <xacro:property name="propeller_m" value="${0.015*mass}" />
 
     
-    <link name="propeller1">
+    <link name="prop1">
         <visual>
             <geometry>
                 <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
@@ -255,10 +255,10 @@
 
     </link>
 
-    <joint name="axle1_to_propeller1" type="fixed">
+    <joint name="axle1_to_prop1" type="fixed">
         <origin xyz="${axle_h} 0 0" rpy="0 ${pi/2} 0" />
         <parent link="axle1" />
-        <child link="propeller1" />
+        <child link="prop1" />
     </joint>
     
      ---------------------------------------------------------------------------front wheels
