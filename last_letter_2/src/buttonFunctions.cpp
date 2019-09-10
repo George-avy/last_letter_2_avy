@@ -39,7 +39,7 @@ void srvServer(last_letter_2_msgs::joystick_input channels)
         spawn_model_name.assign(name_temp);
         spawn_model.request.model_name = spawn_model_name;
         spawn_model.request.initial_pose.position.z = -0.2;
-        spawn_model.request.reference_frame = "plane";
+        spawn_model.request.reference_frame = "my_model";
         spawnModel.call(spawn_model);
     }
 
@@ -66,7 +66,7 @@ int main(int argc, char **argv)
     ros::NodeHandle n;
 
     //Init Subscriber
-    ros::Subscriber sub = n.subscribe("last_letter_2/rawPWM", 1, srvServer, ros::TransportHints().tcpNoDelay());
+    ros::Subscriber sub = n.subscribe("last_letter_2/channelsPWM", 1, srvServer, ros::TransportHints().tcpNoDelay());
 
     //Init Services
     ros::service::waitForService("/gazebo/pause_physics"); //pause gazebo

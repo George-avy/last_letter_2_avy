@@ -18,7 +18,7 @@
      <gui>
       <camera name="user_camera">
          <track_visual>
-          <name>plane</name>
+          <name>my_model</name>
           <static>true</static>
           <xyz>-20 0 3</xyz>
           <inherit_yaw>true</inherit_yaw>

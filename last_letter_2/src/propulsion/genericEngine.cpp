@@ -1,7 +1,7 @@
 genericEngine::genericEngine(Model *parent, int id) : Propulsion(parent, id)
 {
     initParam(id);
-    printf("motor:%i beard engine built\n",id);
+    printf("motor:%i generic engine built\n",id);
 }
 
 void genericEngine::calcThrust()
@@ -18,7 +18,7 @@ void genericEngine::calcTorque()
 
 void genericEngine::calcOmega()
 {
-    prop_wrenches.omega = k_omega * motor_input;
+    prop_wrenches.omega = 10*k_omega * motor_input;
 }
 
 void genericEngine::initParam(int id)

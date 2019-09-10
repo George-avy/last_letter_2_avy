@@ -5,10 +5,13 @@
   <arg name="use_sim_time" default="false"/>
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
-  <!-- <arg name="uav_name" default="quadrotor"/> -->
+  
+  <!-- choose a model to simulate -->
   <!-- <arg name="uav_name" default="plane_1wing"/> -->
-  <arg name="uav_name" default="plane_1wing_sensors"/>
+  <!-- <arg name="uav_name" default="plane_1wing_sensors"/> -->
   <!-- <arg name="uav_name" default="plane_3wing"/> -->
+  <arg name="uav_name" default="quadcopter"/>
+  <!-- <arg name="uav_name" default="hexacopter"/> -->
 
   <arg name="model" default="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/urdf/model.urdf.xacro"/>
   <arg name="can_model" default="$(find last_letter_2)/config/param/objects/can/urdf/can_model.urdf.xacro"/>
@@ -23,11 +26,10 @@
     <arg name="headless" value="$(arg headless)"/>
   </include>
 
-  <param name="robot_description" command="$(find xacro)/xacro '$(arg model)'"/>
+  <param name="model_description" command="$(find xacro)/xacro '$(arg model)'"/>
   <param name="can" command="$(find xacro)/xacro '$(arg can_model)'"/>
   <param name="use_gui" value="$(arg gui)"/>
 
-  <rosparam command="load" file="$(find last_letter_2)/config/param/HID.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/aerodynamics.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/propulsion.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/rigidBody.yaml" />
@@ -35,11 +37,12 @@
   <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/channel_mix.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/environment.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/world.yaml" />
-  <rosparam command="load" file="$(find last_letter_2)/config/param/simulation.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/HID.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/model.yaml" />
 
-   <!-- push robot_description to factory and spawn robot in gazebo -->
+   <!-- push model_description to factory and spawn model in gazebo -->
   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
-         args="-z 1 -urdf -model plane -param robot_description" respawn="false" output="screen">
+         args="-z 1 -urdf -model my_model -param model_description" respawn="false" output="screen">
   </node> 
   <node pkg="joy" type="joy_node" name="joystick" output="screen" >
     <param name="dev" value="/dev/input/js0" />
@@ -51,7 +54,7 @@
   <node pkg="last_letter_2" name="buttonFunctions" type="buttonFunctions" output="screen" />
 
   <node pkg="robot_state_publisher" name="robot_state_publisher" type="robot_state_publisher">
-    <remap from="robot_description" to="robot_description"/>
+    <remap from="robot_description" to="model_description"/>
     <remap from="joint_states" to="last_letter_2/joint_states"/>
     <param name="ignore_timestamp" value="true"/>
   </node>

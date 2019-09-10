@@ -1,0 +1,16 @@
+#Parameters for quadcopter airframe
+#All units are in S.I. unless otherwise stated
+
+#Initial State
+# init/coordinates: [37.889063, 23.731863, 0.0] #latitude, longitude, altitude coordinates. Altitude for now should be ground elevation
+#Caution. Always in doulbe style (with dot)
+init/position: [0.0, 0.0, 1.0] #NWU frame
+init/orientation:  [0.0, 0.0, 0.0] #NWU frame as RPY
+init/velLin:   [0.0, 0.0, 0.0] #body frame
+init/velAng: [0.0, 0.0, 0.0] #body frame
+# init/aileron: 0.000
+# init/elevator: 0.0
+# init/throttle: 0.0
+# init/rudder: -0.000
+
+# init/chanReset: 9

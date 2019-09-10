@@ -1,0 +1,100 @@
+# Airframe Propulsion Parameters
+# Motor types: 0 No motor, 1 generic Engine, 2 Piston engine, 3 Electric Engine
+# Polynomial types: 0 1D, 1 2D, 2 cubic spline
+
+nMotors: 6
+
+motor1/enable: 1  #1 if motor is in use, 0 if out of use
+
+motor1/mountOrientation: [0.0, 0.0, 0.0] # Euler rotations from body axes to propeller normal plane. Gimbal rotation axis should be in z-axis.
+
+motor1/rotationDir: -1.0
+
+motor1/motorType: 1
+
+#features for generic Engine
+motor1/s_prop: 0.2027
+motor1/k_motor: 80
+motor1/k_t_p: 1.0   #constant determined by experiment
+motor1/k_omega: 20.0
+motor1/c_prop: 1.0
+
+#motor 2 charachteristics
+motor2/enable: 1  #1 if motor is in use, 0 if out of use
+
+motor2/mountOrientation: [0.0, 0.0, 0.0] # Euler rotations from body axes to propeller normal plane. Gimbal rotation axis should be in z-axis.
+
+motor2/rotationDir: 1.0
+
+motor2/motorType: 1
+
+#features for generic Engine
+motor2/s_prop: 0.2027
+motor2/k_motor: 80
+motor2/k_t_p: 1.0
+motor2/k_omega: 20.0
+motor2/c_prop: 1.0
+
+#motor 3 charachteristics
+motor3/enable: 1  #1 if motor is in use, 0 if out of use
+
+motor3/mountOrientation: [0.0, 0.0, 0.0] # Euler rotations from body axes to propeller normal plane. Gimbal rotation axis should be in z-axis.
+
+motor3/rotationDir: -1.0
+
+motor3/motorType: 1
+
+#features for generic Engine
+motor3/s_prop: 0.2027
+motor3/k_motor: 80
+motor3/k_t_p: 1.0
+motor3/k_omega: 20.0
+motor3/c_prop: 1.0
+
+#motor 3 charachteristics
+motor4/enable: 1  #1 if motor is in use, 0 if out of use
+
+motor4/mountOrientation: [0.0, 0.0, 0.0] # Euler rotations from body axes to propeller normal plane. Gimbal rotation axis should be in z-axis.
+
+motor4/rotationDir: 1.0
+
+motor4/motorType: 1
+
+#features for generic Engine
+motor4/s_prop: 0.2027
+motor4/k_motor: 80
+motor4/k_t_p: 1.0
+motor4/k_omega: 20.0
+motor4/c_prop: 1.0
+
+#motor 5 charachteristics
+motor5/enable: 1  #1 if motor is in use, 0 if out of use
+
+motor5/mountOrientation: [0.0, 0.0, 0.0] # Euler rotations from body axes to propeller normal plane. Gimbal rotation axis should be in z-axis.
+
+motor5/rotationDir: -1.0
+
+motor5/motorType: 1
+
+#features for generic Engine
+motor5/s_prop: 0.2027
+motor5/k_motor: 80
+motor5/k_t_p: 1.0
+motor5/k_omega: 20.0
+motor5/c_prop: 1.0
+
+#motor 6 charachteristics
+motor6/enable: 1  #1 if motor is in use, 0 if out of use
+
+motor6/mountOrientation: [0.0, 0.0, 0.0] # Euler rotations from body axes to propeller normal plane. Gimbal rotation axis should be in z-axis.
+
+motor6/rotationDir: 1.0
+
+motor6/motorType: 1
+
+#features for generic Engine
+motor6/s_prop: 0.2027
+motor6/k_motor: 80
+motor6/k_t_p: 1.0
+motor6/k_omega: 20.0
+motor6/c_prop: 1.0

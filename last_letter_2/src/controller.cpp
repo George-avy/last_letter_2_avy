@@ -23,7 +23,7 @@ private:
     last_letter_2_msgs::joystick_input channels;
     last_letter_2_msgs::model_inputs model_inputs;
     last_letter_2_msgs::model_states model_states;
-    int mixerid, i;
+    int handling, model_type, i;
     int num_wings, num_motors;
     
     //Create essencial variables, based on parameter server values.
@@ -43,7 +43,7 @@ public:
     void storeStates(const last_letter_2_msgs::model_states msg);
     bool returnControlInputs(last_letter_2_msgs::get_control_inputs_srv::Request &req,
                                last_letter_2_msgs::get_control_inputs_srv::Response &res);
-    void initVariables();
+    void initControllerVariables();
     void buttonFunctions();
 
     //control functions are declared here
@@ -53,14 +53,16 @@ public:
 Controller::Controller()
 {
     //Init Subscribers
-    sub_chan = n.subscribe("last_letter_2/rawPWM", 1, &Controller::chan2signal, this, ros::TransportHints().tcpNoDelay());
+    sub_chan = n.subscribe("last_letter_2/channelsPWM", 1, &Controller::chan2signal, this, ros::TransportHints().tcpNoDelay());
     sub_mod_st = n.subscribe("last_letter_2/model_states", 1, &Controller::storeStates, this, ros::TransportHints().tcpNoDelay());
 
     //Init service
     get_control_inputs_service = n.advertiseService("last_letter_2/get_control_inputs_srv", &Controller::returnControlInputs, this);
 
-    // Read the mixer type
-    if (!ros::param::getCached("HID/mixerid", mixerid)) { ROS_INFO("No mixing function selected"); mixerid = 0;}
+    // Read the type of model
+    if (!ros::param::getCached("model/type", model_type)) { ROS_INFO("No model type selected"); model_type = 0;}
+    // Read the type of handling 
+    if (!ros::param::getCached("model/handling", handling)) { ROS_INFO("No mixing function selected"); handling = 0;}
     //Read the number of airfoils
     if (!ros::param::getCached("nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown();}
     //Read the number of motors
@@ -70,15 +72,15 @@ Controller::Controller()
 
     char paramMsg[50];
 
-    sprintf(paramMsg, "roll_angle");
+    sprintf(paramMsg, "channels/roll_angle");
     if (!ros::param::getCached(paramMsg, roll_angle)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-    sprintf(paramMsg, "pitch_angle");
+    sprintf(paramMsg, "channels/pitch_angle");
     if (!ros::param::getCached(paramMsg, pitch_angle)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-    sprintf(paramMsg, "yaw_angle");
+    sprintf(paramMsg, "channels/yaw_angle");
     if (!ros::param::getCached(paramMsg, yaw_angle)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-    sprintf(paramMsg, "thrust");
+    sprintf(paramMsg, "channels/thrust");
     if (!ros::param::getCached(paramMsg, thrust)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-    initVariables();
+    initControllerVariables();
 }
 
 //Store new joystick values
@@ -117,20 +119,29 @@ bool Controller::returnControlInputs(last_letter_2_msgs::get_control_inputs_srv:
     new_delta_r = delta_r;
     new_delta_t = delta_t;
 
-switch (mixerid)
+switch (handling)
     {
-    case 0: // No mixing applied
+    case 0: // Manual
         break;
-    case 1: // Airplane 
-    //choose plane controllers
-
-        break;
-    case 2:
-    //choose multirotor controllers
-        PD();
+    case 1: // Controller
+        switch (model_type)
+        {
+        case 1: // Plane
+            break;
+        case 4: // quadcopter
+            PD();
+            break;
+        case 6: // hexacopter
+            PD();
+            break;
+        default:
+            ROS_FATAL("Invalid parameter for -/model/type- in param server!");
+            ros::shutdown();
+            break;
+        }
         break;
     default:
-        ROS_FATAL("Invalid parameter for -/HID/mixerid- in param server!");
+        ROS_FATAL("Invalid parameter for -/model/handling- in param server!");
         ros::shutdown();
         break;
     }
@@ -151,7 +162,7 @@ switch (mixerid)
 //Controller functions
 
 //initialize variables used in control
-void Controller::initVariables()
+void Controller::initControllerVariables()
 {
     delta_a = 0;
     delta_e = 0;

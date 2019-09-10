@@ -1,26 +1,29 @@
-#define Rd 287.05307  //Gas constant for dry air, J/kg K
-#define L0 -6.5  //Temperature lapse rate, at sea level deg K/km
 
 Environment::Environment(Model *parent)
 {
     model=parent;
 
-    grav0 = 9.81; // need fix:  last_letter_msgs::Geoid::EARTH_grav;
+    //Init publisher
+    air_data_pub = n.advertise<last_letter_2_msgs::air_data>("last_letter_2/airData", 1);
+
     if(!ros::param::getCached("/world/deltaT", dt)) {ROS_FATAL("Invalid parameters for -deltaT- in param server!"); ros::shutdown();}
     if(!ros::param::getCached("/environment/Dryden/use", allowTurbulence)) {ROS_FATAL("Invalid parameters for -/environment/Dryden/use- in param server!"); ros::shutdown();}
 
     //initialize atmosphere stuff
     if(!ros::param::getCached("/environment/groundTemp", T0)) {ROS_FATAL("Invalid parameters for -/environment/groundTemp- in param server!"); ros::shutdown();}
-    T0 += 274.15;
+    T0 += 274.15; //convert Celsius to Fahrenheit
     if(!ros::param::getCached("/environment/groundPres", P0)) {ROS_FATAL("Invalid parameters for -/environment/groundPres- in param server!"); ros::shutdown();}
     if(!ros::param::getCached("/environment/rho", rho)) {ROS_FATAL("Invalid parameters for -/environment/rho- in param server!"); ros::shutdown();}
+    if(!ros::param::getCached("/environment/Rd", Rd)) {ROS_FATAL("Invalid parameters for -/environment/Rd- in param server!"); ros::shutdown();}
+    if(!ros::param::getCached("/environment/L0", L0)) {ROS_FATAL("Invalid parameters for -/environment/L0- in param server!"); ros::shutdown();}
+    if(!ros::param::getCached("/environment/gravity", grav0)) {ROS_FATAL("Invalid parameters for -/environment/grav- in param server!"); ros::shutdown();}
 
    //Initialize bias wind engine
     if(!ros::param::getCached("/environment/windRef", windRef)) {ROS_FATAL("Invalid parameters for -/environment/windRef- in param server!"); ros::shutdown();}
     if(!ros::param::getCached("/environment/windRefAlt", windRefAlt)) {ROS_FATAL("Invalid parameters for -/environment/windRefAlt- in param server!"); ros::shutdown();}
     if(!ros::param::getCached("/environment/windDir", windDir)) {ROS_FATAL("Invalid parameters for -/environment/windDir- in param server!"); ros::shutdown();}
     if(!ros::param::getCached("/environment/surfSmooth", surfSmooth)) {ROS_FATAL("Invalid parameters for -/environment/surfSmooth- in param server!"); ros::shutdown();}
-    windDir = windDir*M_PI/180; //convert to rad
+    windDir = windDir*M_PI/180; //convert degrees to rad
     kwind = windRef/pow(windRefAlt,surfSmooth);
 
     //Initialize turbulence engine
@@ -34,7 +37,6 @@ Environment::Environment(Model *parent)
         windDistV[i] = 0;
         windDistW[i] = 0;
     }
-
 }
 
 void Environment::calculateAirdata()
@@ -44,16 +46,17 @@ void Environment::calculateAirdata()
     calcWind();
     calcDens();
     calcPres();
+    air_data_pub.publish(airdata);
 }
 
-///////////////////////
 //Calculate temperature
 void Environment::calcTemp()
 {
-    double altitude = -states.z;   // z-axis down
+    double altitude = abs(states.z);   // z-axis down
     airdata.temperature = T0 + altitude / 1000.0 * L0;
 }
 
+//Calculat Wind Vectors
 void Environment::calcWind()
 {
     //Call functions
@@ -120,9 +123,10 @@ void Environment::calcWind()
     }
 }
 
+//Calculate air Density
 void Environment::calcDens()
 {
-    double altitude = -states.z;  // z-axis down
+    double altitude = abs(states.z);  // z-axis down
     double Hb = 0, Tb = T0, Pb = P0, L = L0;
     double alt2pressRatio = (Pb / P0) * pow(1 - (L / Tb) * (altitude / 1000.0 - Hb), ((1000.0 * grav0) / (Rd * L))); //Corrected to 1 - (L/...)
     double alt2tempRatio = airdata.temperature / T0;
@@ -130,11 +134,10 @@ void Environment::calcDens()
     airdata.density = density;
 }
 
-///////////////////////////////
 //Calculate barometric pressure
 void Environment::calcPres()
 {
-    double altitude = -states.z;  // z-axis down
+    double altitude = abs(states.z);  // z-axis down
     double pressure;
     double Hb = 0, Tb = T0, Pb = P0, L = L0;
     pressure = Pb * pow(1 - (L / Tb) * (altitude / 1000.0 - Hb), ((1000.0 * grav0) / (Rd * L))); //Corrected to 1 - (L/...)

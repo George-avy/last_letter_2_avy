@@ -1,29 +1,22 @@
 
 Model::Model() : environment(this), dynamics(this)
 {
-    //set dynamic matrices dimensions based on simulated multirotor
-    //if a plane is simulated, skip this.
-    //matrices for quadrotor:(4,4), hexarotor:(4,6)
-    multirotor_matrix.resize(4, 4);
-    multirotor_matrix_inverse.resize(4, 4);
-    // Vectors for quadrotor (4), hexarotor (6)
-    commands.resize(4);
-    input_signal_vector.resize(4);
 
-    // Read the mixer type
-    if (!ros::param::getCached("HID/mixerid", mixerid)) { ROS_INFO("No mixing function selected"); mixerid = 0;}
+    // Read the type of model
+    if (!ros::param::getCached("model/type", model_type)) { ROS_INFO("No model type selected"); model_type = 0;}
+    // Read the type of handling 
+    if (!ros::param::getCached("model/handling", handling)) { ROS_INFO("No mixing function selected"); handling = 0;}
     //Read the number of airfoils
     if (!ros::param::getCached("nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown(); }
     //Read the number of motors
     if (!ros::param::getCached("nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
-    
+
+
     char paramMsg[50];
 
-    switch (mixerid)
+    switch (model_type)
     {
-    case 0: // No mixing applied
-        break;
-    case 1: // Airplane mixing
+    case 1: // Airplane
 
         //Load basic characteristics for each airfoil
         for (i = 0; i < num_wings; ++i)
@@ -42,11 +35,29 @@ Model::Model() : environment(this), dynamics(this)
             if (!ros::param::getCached(paramMsg, deltaz_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
         }
         break;
-    case 2:
+
+    case 4: //quadcopter
+
+        // set dynamic matrices/vectors dimensions
+        multirotor_matrix.resize(4, 4);
+        multirotor_matrix_inverse.resize(4, 4);
+        commands.resize(4);
+        input_signal_vector.resize(4);
         initMultirotorMatrix();
         break;
+
+    case 6: // hexacopter
+
+        // set dynamic matrices/vectors dimensions
+        multirotor_matrix.resize(4, 6);
+        multirotor_matrix_inverse.resize(6, 4);
+        commands.resize(4);
+        input_signal_vector.resize(6);
+        initMultirotorMatrix();
+        break;
+
     default:
-        ROS_FATAL("Invalid parameter for -/HID/mixerid- in param server!");
+        ROS_FATAL("Invalid parameter for -/model/type- in param server!");
         ros::shutdown();
         break;
     }
@@ -77,7 +88,6 @@ void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr& ms
     model_states.airfoil_states=msg->airfoil_states;
     model_states.motor_states=msg->motor_states;
     
-    loop_num.data = msg->loop_number.data;
     //so convert gazebo data from FLU to FRD to continue with calculations
     FLUtoFRD(model_states.base_link_states.x, model_states.base_link_states.y, model_states.base_link_states.z);
     FLUtoFRD(model_states.base_link_states.roll, model_states.base_link_states.pitch, model_states.base_link_states.yaw);
@@ -104,16 +114,31 @@ void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr& ms
 
 void Model::initMultirotorMatrix()
 {
-    //init multirotor matrix, that finds roll, pitch, yaw, thrust, based on motor inputs
-    float k1 = 0.25;
-    float l = 10;
-    float k2 = 0.6;
-    multirotor_matrix << k1, k1, k1, k1,
-                        0, -l * k1, 0, l * k1,
-                        l * k1, 0, -l * k1, 0,
-                        -k2, k2, -k2, k2;
-     //calculate inverse of multirotor matrix. Usefull for future calculations
-     multirotor_matrix_inverse = multirotor_matrix.completeOrthogonalDecomposition().pseudoInverse();
+    // Read the thrust constant
+    if (!ros::param::getCached("model/b", b)) { ROS_FATAL("Invalid parameters for -model/b- in param server!"); ros::shutdown(); }
+    // Read the motor distance to center of gravity
+    if (!ros::param::getCached("model/l", l)) { ROS_FATAL("Invalid parameters for -model/l- in param server!"); ros::shutdown(); }
+    // Read the drag factor
+    if (!ros::param::getCached("model/d", d)) { ROS_FATAL("Invalid parameters for -model/d- in param server!"); ros::shutdown(); }
+    
+    switch (model_type)
+    {
+    case 4: //  quadcopter matrix
+        multirotor_matrix <<b,     b,      b,      b,      //thrust row
+                            0,    -l * b,  0,      l * b,  //roll row
+                            l * b, 0,     -l * b,  0,      //pitch row
+                           -d,     d,     -d,      d;      //yaw row
+        break;
+
+    case 6: //hexacopter matrix
+        multirotor_matrix << b,    b,           b,          b,    b,          b,             //thrust row 
+                             0,   -b*l*1.73/2, -b*l*1.73/2, 0,    b*l*1.73/2, b*l*1.73/2,   //roll row
+                             b*l,  b*l/2,      -b*l/2,     -b*l, -b*l/2,      b*l/2,        //pitch row
+                            -d,    d,          -d,          d,   -d,          d;            //yaw row
+        break;
+    }
+    //calculate inverse of multirotor matrix. Usefull for future calculations
+    multirotor_matrix_inverse = multirotor_matrix.completeOrthogonalDecomposition().pseudoInverse();
 }
 
 void Model::modelStep()
@@ -155,18 +180,20 @@ void Model::getControlInputs()
         airfoil_inputs[i].z = deltaz_max[i] * control_inputs_msg.response.input_signals[z_axis_turn_chan[i]];
     }
 
-    switch (mixerid)
+    switch (model_type)
     {
-    case 0: // No mixing applied
-        break;
-    case 1: // Airplane mixing
+    case 1: // Airplane 
+
         //store motor inputs
         for (i = 0; i < num_motors; i++)
         {
             motor_input[i] = control_inputs_msg.response.input_signals[4];
         }
         break;
-    case 2: // Multirotor mixing
+
+    case 4: 
+    case 6:// Multirotor mixing
+
         commands(0) = control_inputs_msg.response.input_signals[4]; //thrust
         commands(1) = control_inputs_msg.response.input_signals[1]; //roll
         commands(2) = control_inputs_msg.response.input_signals[2]; //pitch
@@ -179,8 +206,9 @@ void Model::getControlInputs()
                 motor_input[i] = 0;
         }
         break;
+
     default:
-        ROS_FATAL("Invalid parameter for -/HID/mixerid- in param server!");
+        ROS_FATAL("Invalid parameter for -/model/model_type- in param server!");
         ros::shutdown();
         break;
     }

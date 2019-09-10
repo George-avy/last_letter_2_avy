@@ -24,7 +24,6 @@ using namespace Eigen;
     //Declare subscribers
     ros::Subscriber gazebo_sub;
 
-    ros::Publisher loop_number;
     // Declare service msgs
     last_letter_2_msgs::apply_model_wrenches_srv apply_wrenches_srv;
     last_letter_2_msgs::get_control_inputs_srv control_inputs_msg;
@@ -34,18 +33,18 @@ using namespace Eigen;
     last_letter_2_msgs::air_data airdata;
     last_letter_2_msgs::model_states model_states;
     geometry_msgs::Vector3 airfoil_inputs[3];
-    float motor_input[4];
+    float motor_input[6];
+    float b, l, d;
     int i;
-    int mixerid, num_wings, num_motors;
-    std_msgs::Int32 loop_num;
+    int model_type, handling, num_wings, num_motors;
     int x_axis_turn_chan[4], y_axis_turn_chan[4], z_axis_turn_chan[4];
     float deltax_max[4], deltay_max[4], deltaz_max[4];
     float button_input[20];
 
     MatrixXf multirotor_matrix;
     MatrixXf multirotor_matrix_inverse;
-    Vector4f commands;
-    Vector4f input_signal_vector;
+    VectorXf commands;
+    VectorXf input_signal_vector;
 
     //Class methods
     Model();

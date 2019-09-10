@@ -1,4 +1,0 @@
-#simulation characteristics
-
-simulation/synch_sim_contr: false
-simulation/thread_rate:  1200

@@ -1,0 +1,29 @@
+# Basic model Characteristics
+
+# Model type:
+# 1 for plane
+# 4 for quadcopter
+# 6 for hexacopter
+/model/type: 4
+
+# Handling type: 
+# 0 for manual 
+# 1 for controller
+/model/handling: 1
+
+
+#In case of multirotor
+/model/b: 0.15  # thrust constant [Ns^2]
+/model/l: 2     # motor distance to center of gravity
+/model/d: 0.6   # drag factor [Nms]
+
+# quadcopter matrix << b,     b,      b,      b,      //thrust row
+#                      0,    -l * b,  0,      l * b,  //roll row
+#                      l * b, 0,     -l * b,  0,      //pitch row
+#                     -d,     d,     -d,      d;      //yaw row
+
+
+# hexacopter matrix  << b,    b,           b,          b,    b,          b,            //thrust row 
+#                       0,   -b*l*1.73/2, -b*l*1.73/2, 0,    b*l*1.73/2, b*l*1.73/2,   //roll row
+#                       b*l,  b*l/2,      -b*l/2,     -b*l, -b*l/2,      b*l/2,        //pitch row
+#                      -d,    d,          -d,          d,   -d,          d;            //yaw row

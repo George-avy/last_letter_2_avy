@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
-<robot name="quadrotor" xmlns:xacro="http://www.ros.org/wiki/xacro">
+<robot name="quadcopter" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-<xacro:property name="source" value="$(find last_letter_2)/config/param/aircrafts/quadrotor/rigidBody.yaml" />
+<xacro:property name="source" value="$(find last_letter_2)/config/param/aircrafts/quadcopter/rigidBody.yaml" />
 <xacro:property name="dictionary" value="${load_yaml(source)}"/>
 <xacro:property name="body_mass" value="${dictionary['airframe/m']}"/>
 
@@ -39,7 +39,7 @@
 
     </link>
 
----------------------------------------------------------- 4 quadrotor arms
+---------------------------------------------------------- 4 quadcopter arms
 <xacro:property name="arm_x" value="${2*body_s}" />
 <xacro:property name="arm_y" value="${0.1*body_s}" />
 <xacro:property name="arm_z" value="${0.1*body_s}" />

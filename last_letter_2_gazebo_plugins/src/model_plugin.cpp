@@ -65,7 +65,7 @@ class model_plugin : public ModelPlugin
 
     last_letter_2_msgs::link_states base_link_states;
     last_letter_2_msgs::link_states airfoil_states[3];
-    last_letter_2_msgs::link_states motor_states[4];
+    last_letter_2_msgs::link_states motor_states[6];
     last_letter_2_msgs::model_states model_states;
     ignition::math::Vector3d relLinVel;
     ignition::math::Vector3d rotation;
@@ -74,10 +74,10 @@ class model_plugin : public ModelPlugin
     ignition::math::Vector3d force, torque;
    
     int num_wings, num_motors;
-    int i ,thread_rate, loop_number;
+    int i ,thread_rate, step_number;
     std::string link_name, joint_name;
     char name_temp[30];
-    double omega,rotationDir[4];
+    double omega,rotationDir[6];
     double camera_angle, laser_angle;
 
 public:
@@ -96,7 +96,6 @@ public:
         {
             ROS_INFO("Waiting for node to rise");
         }
-        if (!ros::param::getCached("simulation/thread_rate", thread_rate)) { ROS_FATAL("Invalid parameters for thread_rate in param server!"); ros::shutdown(); }
 
         // Spin up the queue helper thread.
         this->rosQueueThread1 =
@@ -111,7 +110,7 @@ public:
         this->apply_wrenches_server = this->rosNode->advertiseService(so);
 
         //Subscriber
-        ros::SubscribeOptions soo = (ros::SubscribeOptions::create<last_letter_2_msgs::joystick_input>("last_letter_2/rawPWM", 1, boost::bind(&model_plugin::manageChan, this, _1), ros::VoidPtr(), &this->wrenches_rosQueue));
+        ros::SubscribeOptions soo = (ros::SubscribeOptions::create<last_letter_2_msgs::joystick_input>("last_letter_2/channelsPWM", 1, boost::bind(&model_plugin::manageChan, this, _1), ros::VoidPtr(), &this->wrenches_rosQueue));
         this->channels_sub = this->rosNode->subscribe(soo);
 
         // Publish code
@@ -130,7 +129,7 @@ public:
         }
         
         wrenches_applied = false;
-        loop_number = 0;
+        step_number = 0;
         omega=0;
         camera_angle=0;
         laser_angle=0;
@@ -182,7 +181,11 @@ public:
     //  ROS helper function that processes messages
     void QueueThread1()
     {
-        ROS_INFO(" i am in QueueThread1 now\n");
+        // Set thread rate= 2.2 * simulation frequency
+        // After many tries, it seems to be the most efficent rate
+        thread_rate= 2.2 * model->GetWorld()->Physics()->GetRealTimeUpdateRate();
+        ROS_INFO(" Gazebo queue thread started with rate = %d\n",thread_rate);
+
         // the sleep rate, increase dramaticaly the preformance
         ros::WallRate r(thread_rate);
         while (this->rosNode->ok())
@@ -284,8 +287,8 @@ public:
     void BeforeUpdate()
     {
         std::unique_lock<std::mutex> lk(m);
-        // //wait until wrenches are ready
-        if (loop_number>24)
+        //wait until wrenches are ready
+        if (step_number>24)  // do 24 steps without being stuck, to be sure that everything is ready
         {
             cv.wait(lk, [] { return wrenches_applied == true; });
         }
@@ -405,13 +408,12 @@ public:
 
             model_states.motor_states[i]=motor_states[i];
         }
-        loop_number++; // check if start from zero!
-
-        model_states.loop_number.data=loop_number;
+        step_number++; // check if start from zero!
         //publish model states, ros starts calculation step
         model_states.header.stamp=ros::Time::now();
 
         this->states_pub.publish(model_states);
+
     }
 
 };
