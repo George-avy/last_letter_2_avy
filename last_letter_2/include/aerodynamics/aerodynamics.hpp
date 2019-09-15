@@ -3,7 +3,7 @@ class Aerodynamics
 {
   public:
     ros::NodeHandle nh;
-    double M = 50;
+    double M;
     double oswald;
     double a0; 
     double airspeed, alpha, beta;

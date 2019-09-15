@@ -10,15 +10,18 @@
   <!-- <arg name="uav_name" default="plane_1wing"/> -->
   <!-- <arg name="uav_name" default="plane_1wing_sensors"/> -->
   <!-- <arg name="uav_name" default="plane_3wing"/> -->
-  <arg name="uav_name" default="quadcopter"/>
-  <!-- <arg name="uav_name" default="hexacopter"/> -->
+  <!-- <arg name="uav_name" default="quadcopter"/> -->
+  <arg name="uav_name" default="hexacopter"/>
+
+  <!-- choose a world for the simulation -->
+  <arg name="sim_world_name" default="$(find last_letter_2)/config/param/worlds/myworld.world"/>
 
   <arg name="model" default="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/urdf/model.urdf.xacro"/>
   <arg name="can_model" default="$(find last_letter_2)/config/param/objects/can/urdf/can_model.urdf.xacro"/>
 
   <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
   <include file="$(find gazebo_ros)/launch/empty_world.launch" >
-    <arg name="world_name" value="$(find last_letter_2)/config/param/worlds/myworld.world"/>
+    <arg name="world_name" value="$(arg sim_world_name)"/>
     <arg name="debug" value="$(arg debug)" />
     <arg name="gui" value="$(arg gui)" />
     <arg name="paused" value="$(arg paused)"/>
@@ -32,13 +35,13 @@
 
   <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/aerodynamics.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/propulsion.yaml" />
-  <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/rigidBody.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/mass.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/init.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/model.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/channel_mix.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/environment.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/world.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/HID.yaml" />
-  <rosparam command="load" file="$(find last_letter_2)/config/param/model.yaml" />
 
    <!-- push model_description to factory and spawn model in gazebo -->
   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"

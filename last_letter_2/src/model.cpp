@@ -230,6 +230,7 @@ void Model::getAirdata()
     airdata.wind_y = environment.airdata.wind_y;
     airdata.wind_z = environment.airdata.wind_z;
     airdata.density = environment.airdata.density;
+    airdata.pressure = environment.airdata.pressure;
     airdata.temperature = environment.airdata.temperature;
 }
 

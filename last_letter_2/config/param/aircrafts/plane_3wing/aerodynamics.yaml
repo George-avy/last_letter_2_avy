@@ -2,12 +2,6 @@
 #aerodynamicsType: 0:NoAerodynamics, 1:StdLinearAero 2:polyAero
 nWings: 3
 
-airfoil1/chanGimbal: -1
-airfoil1/gimbalAngle_max: 0.0
-
-airfoil1/CGOffset: [-0.02, 0.00, -0.05] # vector from CG to CoL
-airfoil1/mountOrientation: [0.0, 0.0, 0.0] # Euler rotations from body axes to propeller normal plane. Gimbal rotation axis should be in z-axis.
-airfoil1/gimbalAxis: 0
 airfoil1/aerodynamicsType: 1
 airfoil1/s: 0.45   #wing surface = b*c
 airfoil1/b: 1.88   #wingspan
@@ -55,17 +49,11 @@ airfoil1/deltaz_max: 0
 
 #0 if airfoil is not affect for move (relative to airfoil), else 1,2,3 for which of the input signals the airfoil listens to
 #0-nothing, 1-aileron, 2-elevator, 3-rudder  (input signals)
-airfoil1/x_axis_turn_chan: 1     #airfoil1 affects only roll and listens to aileron signal
-airfoil1/y_axis_turn_chan: 0    #airfoil1 not affects pitch move
+airfoil1/x_axis_turn_chan: 1      #airfoil1 affects only roll and listens to aileron signal
+airfoil1/y_axis_turn_chan: 0      #airfoil1 not affects pitch move
 airfoil1/z_axis_turn_chan: 0      #airfoil1 not affects yaw move
 
 # airfoil 2
-airfoil2/chanGimbal: -1
-airfoil2/gimbalAngle_max: 0.0
-
-airfoil2/CGOffset: [-0.02, 0.00, -0.05] # vector from CG to CoL
-airfoil2/mountOrientation: [0.0, 0.0, 0.0] # Euler rotations from body axes to propeller normal plane. Gimbal rotation axis should be in z-axis.
-airfoil2/gimbalAxis: 0
 airfoil2/aerodynamicsType: 1
 airfoil2/s: 0.12   #wing surface = b*c
 airfoil2/b: 0.5   #wingspan
@@ -117,12 +105,6 @@ airfoil2/y_axis_turn_chan: 2
 airfoil2/z_axis_turn_chan: 0
 
 # airfoil 3
-airfoil3/chanGimbal: -1
-airfoil3/gimbalAngle_max: 0.0
-
-airfoil3/CGOffset: [-0.02, 0.00, -0.05] # vector from CG to CoL
-airfoil3/mountOrientation: [0.0, 0.0, 0.0] # Euler rotations from body axes to propeller normal plane. Gimbal rotation axis should be in z-axis.
-airfoil3/gimbalAxis: 0
 airfoil3/aerodynamicsType: 1
 airfoil3/s: 0.48   #wing surface = b*c
 airfoil3/b: 2   #wingspan

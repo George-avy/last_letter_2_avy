@@ -126,6 +126,7 @@ switch (handling)
     case 1: // Controller
         switch (model_type)
         {
+        // Call control algorith based on model type
         case 1: // Plane
             break;
         case 4: // quadcopter
@@ -209,7 +210,7 @@ void Controller::PD()
     //yaw direction control
     kp = 1;
     kd = 1;
-    yaw_direction += delta_r * 0.01;
+    yaw_direction += delta_r * 0.001;
     if (yaw_direction > 3.13)
         yaw_direction = -3.13;
     else if (yaw_direction < -3.13)

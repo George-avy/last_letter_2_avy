@@ -2,5 +2,5 @@
 
 channels/roll_angle: 0
 channels/pitch_angle: 1
-channels/yaw_angle: 3
-channels/thrust: 2
+channels/yaw_angle: 2
+channels/thrust: 3

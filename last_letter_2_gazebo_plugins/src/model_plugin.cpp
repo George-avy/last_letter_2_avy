@@ -99,7 +99,7 @@ public:
 
         // Spin up the queue helper thread.
         this->rosQueueThread1 =
-            std::thread(std::bind(&model_plugin::QueueThread1, this));
+            std::thread(std::bind(&model_plugin::QueueThread, this));
 
         //Connect a callback to the world update start signal.
         this->beforeUpdateConnection = event::Events::ConnectBeforePhysicsUpdate(std::bind(&model_plugin::BeforeUpdate, this));
@@ -179,7 +179,7 @@ public:
     }
 
     //  ROS helper function that processes messages
-    void QueueThread1()
+    void QueueThread()
     {
         // Set thread rate= 2.2 * simulation frequency
         // After many tries, it seems to be the most efficent rate
