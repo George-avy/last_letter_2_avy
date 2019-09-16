@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot name="hexacopter" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-<xacro:property name="source" value="$(find last_letter_2)/config/param/aircrafts/hexacopter/mass.yaml" />
+<xacro:property name="source" value="$(find last_letter_2)/config/param/models/hexacopter/mass.yaml" />
 <xacro:property name="dictionary" value="${load_yaml(source)}"/>
 <xacro:property name="body_mass" value="${dictionary['airframe/m']}"/>
 

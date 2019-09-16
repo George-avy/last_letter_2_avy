@@ -20,20 +20,21 @@ std::string spawn_model_name;
 char name_temp[30];
 int i, j, prev_j;
 
+// Manage channel functions. Mainly for calling defalut gazebo services
 void srvServer(last_letter_2_msgs::joystick_input channels)
 {
     int button_num;
 
     //reset simulation
     button_num = 12;
-    if (channels.value[5 + button_num] == 2000)
+    if (channels.value[5 + button_num] == 1)
     {
         resetSimulation.call(emptySrv);
     }
 
     //spawn a small cube under the multirotor
     button_num = 1;
-    if (channels.value[5 + button_num] == 2000)
+    if (channels.value[5 + button_num] == 1)
     {
         sprintf(name_temp, "can%i", i++);
         spawn_model_name.assign(name_temp);
@@ -45,7 +46,7 @@ void srvServer(last_letter_2_msgs::joystick_input channels)
 
     //delete all cubes from world
     button_num = 2;
-    if (channels.value[5 + button_num] == 2000)
+    if (channels.value[5 + button_num] == 1)
     {
         for (j = prev_j; j < i; j++)
         {
@@ -61,12 +62,12 @@ void srvServer(last_letter_2_msgs::joystick_input channels)
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "buttonFunctions_node");
+    ros::init(argc, argv, "chan2srv_node");
 
     ros::NodeHandle n;
 
     //Init Subscriber
-    ros::Subscriber sub = n.subscribe("last_letter_2/channelsPWM", 1, srvServer, ros::TransportHints().tcpNoDelay());
+    ros::Subscriber sub = n.subscribe("last_letter_2/channels", 1, srvServer, ros::TransportHints().tcpNoDelay());
 
     //Init Services
     ros::service::waitForService("/gazebo/pause_physics"); //pause gazebo

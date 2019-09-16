@@ -39,7 +39,7 @@ using namespace Eigen;
     int model_type, handling, num_wings, num_motors;
     int x_axis_turn_chan[4], y_axis_turn_chan[4], z_axis_turn_chan[4];
     float deltax_max[4], deltay_max[4], deltaz_max[4];
-    float button_input[20];
+    float channel_input[20];
 
     MatrixXf multirotor_matrix;
     MatrixXf multirotor_matrix_inverse;

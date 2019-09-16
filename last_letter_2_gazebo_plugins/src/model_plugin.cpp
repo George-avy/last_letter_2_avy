@@ -110,7 +110,7 @@ public:
         this->apply_wrenches_server = this->rosNode->advertiseService(so);
 
         //Subscriber
-        ros::SubscribeOptions soo = (ros::SubscribeOptions::create<last_letter_2_msgs::joystick_input>("last_letter_2/channelsPWM", 1, boost::bind(&model_plugin::manageChan, this, _1), ros::VoidPtr(), &this->wrenches_rosQueue));
+        ros::SubscribeOptions soo = (ros::SubscribeOptions::create<last_letter_2_msgs::joystick_input>("last_letter_2/channels", 1, boost::bind(&model_plugin::manageChan, this, _1), ros::VoidPtr(), &this->wrenches_rosQueue));
         this->channels_sub = this->rosNode->subscribe(soo);
 
         // Publish code
@@ -258,27 +258,27 @@ public:
         return true;
     }
 
-    //Serve button functions 
+    //Manage channel functions 
     void manageChan(const last_letter_2_msgs::joystick_input::ConstPtr &channels)
     {
         //Handle Camera's angle 
         //Camera sensor listen to 5th channel
-        if (channels->value[4] == 1000 && camera_angle>=-1.9)
+        if (channels->value[4] == -1 && camera_angle>=-1.9)
         {
             camera_angle-=0.1;
         }
-        if (channels->value[4] == 2000 && camera_angle<=1.9)
+        if (channels->value[4] == 1 && camera_angle<=1.9)
         {
             camera_angle+=0.1;
         }
 
         //Handle Laser's angle
         //Laser sensor listen to 6th channel
-        if (channels->value[5] == 2000 && laser_angle>=-0.9)
+        if (channels->value[5] == 1 && laser_angle>=-0.9)
         {
             laser_angle-=0.1;
         }
-        if (channels->value[5] == 1000 && laser_angle<=0.9)
+        if (channels->value[5] == -1 && laser_angle<=0.9)
         {
             laser_angle+=0.1;
         }

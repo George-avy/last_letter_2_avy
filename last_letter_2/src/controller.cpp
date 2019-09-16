@@ -1,5 +1,5 @@
-// A node that converts channels signals, to input signals for the model,
-// based on the kind of model is loaded (plane, multirotor etc)
+// A node that export model input signals from channels signals,
+// based on model type (plane, multirotor etc)
 
 #include <ros/ros.h>
 #include <last_letter_2_msgs/joystick_input.h>
@@ -30,11 +30,10 @@ private:
     int roll_angle, pitch_angle, yaw_angle, thrust; // for mixing
     float input_signals[5];
 
-    float delta_a, delta_e, delta_r, delta_t;
+    float roll_input, pitch_input, yaw_input, thrust_input;
     float prev_roll_error, prev_pitch_error, prev_yaw_error, prev_alt_error;
     float altitude, yaw_direction;
-    float new_delta_a, new_delta_e, new_delta_r, new_delta_t;
-    float buttons[20];
+    float new_roll_input, new_pitch_input, new_yaw_input, new_thrust_input;
     float dt;
 
 public:
@@ -44,7 +43,7 @@ public:
     bool returnControlInputs(last_letter_2_msgs::get_control_inputs_srv::Request &req,
                                last_letter_2_msgs::get_control_inputs_srv::Response &res);
     void initControllerVariables();
-    void buttonFunctions();
+    void channelFunctions();
 
     //control functions are declared here
     void PD();
@@ -53,7 +52,7 @@ public:
 Controller::Controller()
 {
     //Init Subscribers
-    sub_chan = n.subscribe("last_letter_2/channelsPWM", 1, &Controller::chan2signal, this, ros::TransportHints().tcpNoDelay());
+    sub_chan = n.subscribe("last_letter_2/channels", 1, &Controller::chan2signal, this, ros::TransportHints().tcpNoDelay());
     sub_mod_st = n.subscribe("last_letter_2/model_states", 1, &Controller::storeStates, this, ros::TransportHints().tcpNoDelay());
 
     //Init service
@@ -88,17 +87,15 @@ void Controller::chan2signal(last_letter_2_msgs::joystick_input msg)
 {
     channels = msg;
 
-    //Channel mixing
-    delta_a = (float)(channels.value[roll_angle] - 1500) / 500;  // roll angle signal
-    delta_e = (float)(channels.value[pitch_angle] - 1500) / 500; // pitch angle signal
-    delta_r = (float)(channels.value[yaw_angle] - 1500) / 500;   // yaw angle signal
-    delta_t = (float)(channels.value[thrust] - 1000) / 1000;     // thrust signal
-    for (i = 4; i < 20; i++)                                     //store the rest button singals
-        buttons[i] = (channels.value[i] - 1500) / 500;
-    FRDtoFLU(delta_a, delta_e, delta_r); //convert channels from FRD to FLU frame, that states from gazebo are expressed
-                                         //now all data are expressed in FLU frame
+    //Keep basic signals
+    roll_input = channels.value[roll_angle];         // roll angle signal
+    pitch_input = channels.value[pitch_angle];       // pitch angle signal
+    yaw_input = channels.value[yaw_angle];           // yaw angle signal
+    thrust_input = (channels.value[thrust] + 1) / 2; // thrust signal
+    FRDtoFLU(roll_input, pitch_input, yaw_input);    //convert channels from FRD to FLU frame, that states from gazebo are expressed
+                                                     //now all data are expressed in FLU frame
     model_inputs.header.stamp = ros::Time::now();
-    buttonFunctions();
+    channelFunctions();
 }
 
 // store the model_states published by gazebo
@@ -114,12 +111,12 @@ bool Controller::returnControlInputs(last_letter_2_msgs::get_control_inputs_srv:
     if (req.header.seq != model_states.header.seq)
         ros::spinOnce();
 
-    new_delta_a = delta_a;
-    new_delta_e = delta_e;
-    new_delta_r = delta_r;
-    new_delta_t = delta_t;
+    new_roll_input = roll_input;
+    new_pitch_input = pitch_input;
+    new_yaw_input = yaw_input;
+    new_thrust_input = thrust_input;
 
-switch (handling)
+    switch (handling)
     {
     case 0: // Manual
         break;
@@ -147,15 +144,16 @@ switch (handling)
         break;
     }
 
-    FLUtoFRD(new_delta_a, new_delta_e, new_delta_r); //convert signals back to FRD frame, the default model frame
+    FLUtoFRD(new_roll_input, new_pitch_input, new_yaw_input); //convert signals back to FRD frame, the default model frame
+    // Store input_signals separate from channels before send them to model
     res.input_signals[0] = 0;
-    res.input_signals[1] = new_delta_a; // roll signal
-    res.input_signals[2] = new_delta_e; // pitch signal
-    res.input_signals[3] = new_delta_r; // yaw signal
-    res.input_signals[4] = new_delta_t; // thrust signal
-    for (i = 4; i < 20; i++)
+    res.input_signals[1] = new_roll_input;   // roll signal
+    res.input_signals[2] = new_pitch_input;  // pitch signal
+    res.input_signals[3] = new_yaw_input;    // yaw signal
+    res.input_signals[4] = new_thrust_input; // thrust signal
+    for (i = 0; i < 20; i++)
     {
-        res.button_signals[i] = buttons[i]; //button signals
+        res.channel_signals[i] = channels.value[i]; // all channel signals
     }
     return true;
 }
@@ -165,10 +163,10 @@ switch (handling)
 //initialize variables used in control
 void Controller::initControllerVariables()
 {
-    delta_a = 0;
-    delta_e = 0;
-    delta_r = 0;
-    delta_t = 0;
+    roll_input = 0;
+    pitch_input = 0;
+    yaw_input = 0;
+    thrust_input = 0;
     altitude = 0;
     yaw_direction = 0;
     prev_roll_error = 0;
@@ -186,31 +184,31 @@ void Controller::PD()
     //stabilize roll
     kp = 3;
     kd = 0.5;
-    error = delta_a - model_states.base_link_states.roll;
+    error = roll_input - model_states.base_link_states.roll;
     d_error = (error - prev_roll_error) / dt;
     prev_roll_error = error; // Keep current data for next step
-    new_delta_a = kp * error + kd * d_error;
-    if (new_delta_a < -1)
-        new_delta_a = -1;
-    if (new_delta_a > 1)
-        new_delta_a = 1;
+    new_roll_input = kp * error + kd * d_error;
+    if (new_roll_input < -1)
+        new_roll_input = -1;
+    if (new_roll_input > 1)
+        new_roll_input = 1;
 
     //stabilize pitch
     kp = 3;
     kd = 0.5;
-    error = delta_e - model_states.base_link_states.pitch;
+    error = pitch_input - model_states.base_link_states.pitch;
     d_error = (error - prev_pitch_error) / dt;
     prev_pitch_error = error; // Keep current data for next step
-    new_delta_e = kp * error + kd * d_error;
-    if (new_delta_e < -1)
-        new_delta_e = -1;
-    if (new_delta_e > 1)
-        new_delta_e = 1;
+    new_pitch_input = kp * error + kd * d_error;
+    if (new_pitch_input < -1)
+        new_pitch_input = -1;
+    if (new_pitch_input > 1)
+        new_pitch_input = 1;
 
     //yaw direction control
     kp = 1;
     kd = 1;
-    yaw_direction += delta_r * 0.001;
+    yaw_direction += yaw_input * 0.001;
     if (yaw_direction > 3.13)
         yaw_direction = -3.13;
     else if (yaw_direction < -3.13)
@@ -222,39 +220,39 @@ void Controller::PD()
         error = -0.1;
     d_error = (error - prev_yaw_error) / dt;
     prev_yaw_error = error; // Keep current data for next step
-    new_delta_r = kp * error + kd * d_error;
-    if (new_delta_r < -1)
-        new_delta_r = -1;
-    if (new_delta_r > 1)
-        new_delta_r = 1;
+    new_yaw_input = kp * error + kd * d_error;
+    if (new_yaw_input < -1)
+        new_yaw_input = -1;
+    if (new_yaw_input > 1)
+        new_yaw_input = 1;
 
     //altitude control
     kp = 1;
     kd = 0.8;
-    altitude = 50 * delta_t; //control altitude from thrust signal
+    altitude = 50 * thrust_input; //control altitude from thrust signal
     error = altitude - model_states.base_link_states.z;
     d_error = (error - prev_alt_error) / dt;
     prev_alt_error = error; // Keep current data for next step
-    new_delta_t = kp * error + kd * d_error;
-    if (new_delta_t < 0)
-        new_delta_t = 0;
-    if (new_delta_t > 1)
-        new_delta_t = 1;
+    new_thrust_input = kp * error + kd * d_error;
+    if (new_thrust_input < 0)
+        new_thrust_input = 0;
+    if (new_thrust_input > 1)
+        new_thrust_input = 1;
 }
 
 // do the button functions
-void Controller::buttonFunctions()
+void Controller::channelFunctions()
 {
     int button_num;
-    button_num=3;
-    if (buttons[5 + button_num] == 1)
+    button_num = 3;
+    if (channels.value[5 + button_num] == 1)
     {
-        std::cout << "function: button No" <<button_num << std::endl;
+        std::cout << "function: button No" << button_num << std::endl;
     }
-    button_num=4;
-    if (buttons[5 + button_num] == 1)
+    button_num = 4;
+    if (channels.value[5 + button_num] == 1)
     {
-        std::cout << "function: button No" <<button_num << std::endl;
+        std::cout << "function: button No" << button_num << std::endl;
     }
 }
 

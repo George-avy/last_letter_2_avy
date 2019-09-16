@@ -3,4 +3,4 @@
 Header header
 ---
 float32[5] input_signals
-int16[20] button_signals
+int16[20] channel_signals

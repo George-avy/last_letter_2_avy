@@ -213,10 +213,10 @@ void Model::getControlInputs()
         break;
     }
 
-    //store button inputs
-    for (i = 4; i < 20; i++)
+    //keep all channel matrix
+    for (i = 0; i < 20; i++)
     {
-        button_input[i - 4] = control_inputs_msg.response.button_signals[i];
+        channel_input[i] = control_inputs_msg.response.channel_signals[i];
     }
 }
 

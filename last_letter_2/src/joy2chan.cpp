@@ -13,7 +13,7 @@ void joy2chan(sensor_msgs::Joy joyMsg)
     last_letter_2_msgs::joystick_input channels;
     double input[20];
     int i;
-    // put axis and buttons singals in a continuous array to create channels
+    //put axis and buttons singals in a continuous array to create channels
     for (i = 0; i < 20; i++)
     {
         if (axisIndex[i] != -1)
@@ -29,19 +29,11 @@ void joy2chan(sensor_msgs::Joy joyMsg)
             input[i] = 0.0;
         }
     }
-    //convert joy singlas to PWM channels, range =[1000,2000]
+    //load channels with joystick inputs
     for (i = 0; i < 20; i++)
     {
-        channels.value[i] = (unsigned int)(input[i] * 500 + 1500);
+        channels.value[i] = input[i];
     }
-    for (i = 0; i < 20; i++) // Cap channel limits
-    {
-        if (channels.value[i] < 1000)
-            channels.value[i] = 1000;
-        if (channels.value[i] > 2000)
-            channels.value[i] = 2000;
-    }
-
     channels.header.stamp = ros::Time::now();
     pub.publish(channels);
 }
@@ -51,7 +43,7 @@ int main(int argc, char **argv)
     ros::init(argc, argv, "joy_to_channels_node");
     ros::NodeHandle n;
     ros::Subscriber sub = n.subscribe("joy", 1, joy2chan, ros::TransportHints().tcpNoDelay());
-    pub = n.advertise<last_letter_2_msgs::joystick_input>("last_letter_2/channelsPWM", 1);
+    pub = n.advertise<last_letter_2_msgs::joystick_input>("last_letter_2/channels", 1);
 
     // Read the controller configuration parameters from the HID.yaml file
     XmlRpc::XmlRpcValue listInt, listDouble;

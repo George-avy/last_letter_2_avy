@@ -16,7 +16,7 @@
   <!-- choose a world for the simulation -->
   <arg name="sim_world_name" default="$(find last_letter_2)/config/param/worlds/myworld.world"/>
 
-  <arg name="model" default="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/urdf/model.urdf.xacro"/>
+  <arg name="model" default="$(find last_letter_2)/config/param/models/$(arg uav_name)/urdf/model.urdf.xacro"/>
   <arg name="can_model" default="$(find last_letter_2)/config/param/objects/can/urdf/can_model.urdf.xacro"/>
 
   <!-- We resume the logic in empty_world.launch, changing only the name of the world to be launched -->
@@ -33,12 +33,12 @@
   <param name="can" command="$(find xacro)/xacro '$(arg can_model)'"/>
   <param name="use_gui" value="$(arg gui)"/>
 
-  <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/aerodynamics.yaml" />
-  <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/propulsion.yaml" />
-  <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/mass.yaml" />
-  <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/init.yaml" />
-  <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/model.yaml" />
-  <rosparam command="load" file="$(find last_letter_2)/config/param/aircrafts/$(arg uav_name)/channel_mix.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/models/$(arg uav_name)/aerodynamics.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/models/$(arg uav_name)/propulsion.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/models/$(arg uav_name)/mass.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/models/$(arg uav_name)/init.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/models/$(arg uav_name)/model.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/models/$(arg uav_name)/channel_mix.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/environment.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/world.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/HID.yaml" />
@@ -54,7 +54,7 @@
   <node pkg="last_letter_2" name="joy2chan" type="joy2chan" output="screen" />
   <node pkg="last_letter_2" name="controller" type="controller" output="screen" />
   <node pkg="last_letter_2" name="core" type="core" output="screen" />
-  <node pkg="last_letter_2" name="buttonFunctions" type="buttonFunctions" output="screen" />
+  <node pkg="last_letter_2" name="chan2srv" type="chan2srv" output="screen" />
 
   <node pkg="robot_state_publisher" name="robot_state_publisher" type="robot_state_publisher">
     <remap from="robot_description" to="model_description"/>
