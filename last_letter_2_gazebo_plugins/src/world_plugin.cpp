@@ -1,5 +1,6 @@
 #include <gazebo/gazebo_client.hh> //gazebo version >6
 #include <ros/ros.h>
+#include <gazebo/physics/physics.hh>
 #include <gazebo/physics/World.hh>
 #include <ignition/math/Vector3.hh>
 #include "ros/callback_queue.h"
@@ -17,12 +18,15 @@ namespace gazebo
 class world_plugin : public WorldPlugin
 {
   // Pointer to the World
-private:
+private: 
   physics::WorldPtr World;
 
   ///  A node use for ROS transport
   ros::NodeHandle *rosNode;
 
+  double simRate;
+  double deltaT;
+  
 public:
   world_plugin() : WorldPlugin() //constructor
   {
@@ -38,7 +42,14 @@ public:
     {
       ROS_INFO("Waiting for node to rise");
     }
-    publishWorldStaticFrames();
+
+  if (!ros::param::getCached("world/simRate", simRate)) { ROS_FATAL("No simulation Rate selected"); ros::shutdown();}
+  if (!ros::param::getCached("world/deltaT", deltaT)) { ROS_FATAL("No time step selected"); ros::shutdown();}
+
+  this->World->Physics()->SetRealTimeUpdateRate(simRate);
+  this->World->Physics()->SetMaxStepSize(deltaT);
+
+  publishWorldStaticFrames();
   }
 
   // publish the relation between the world static frames Inertial_NWU-Inertial_NED 

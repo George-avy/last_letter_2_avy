@@ -7,11 +7,11 @@ airfoil1/s: 0.45   #wing surface = b*c
 airfoil1/b: 1.88   #wingspan
 airfoil1/c: 0.24   #wing mean cord
 
-airfoil1/c_lift_0: 0.56 
+airfoil1/c_lift_0: 0.35
 airfoil1/c_lift_deltae: 0.0
 airfoil1/c_lift_a: 6.9
-airfoil1/c_lift_q: 0
-airfoil1/mcoeff: 50
+airfoil1/c_lift_q: -1
+airfoil1/mcoeff: 50         # no idea
 airfoil1/oswald: 0.9
 airfoil1/alpha_stall: 0.4712
 airfoil1/c_drag_q: 0.0
@@ -30,7 +30,7 @@ airfoil1/c_l_0: 0
 airfoil1/c_l_p: -1.0
 airfoil1/c_l_b: -0.12
 airfoil1/c_l_r: 0.14
-airfoil1/c_l_deltaa: 0.05 #0.25
+airfoil1/c_l_deltaa: 0.15 #0.25
 airfoil1/c_l_deltar: -0.037
 airfoil1/c_m_0: 0.045
 airfoil1/c_m_a: -0.7
@@ -82,7 +82,7 @@ airfoil2/c_l_0: 0
 airfoil2/c_l_p: -1.0
 airfoil2/c_l_b: -0.12
 airfoil2/c_l_r: 0.14
-airfoil2/c_l_deltaa: 0.25
+airfoil2/c_l_deltaa: 0
 airfoil2/c_l_deltar: -0.037
 airfoil2/c_m_0: 0.045
 airfoil2/c_m_a: -0.7
@@ -106,8 +106,8 @@ airfoil2/z_axis_turn_chan: 0
 
 # airfoil 3
 airfoil3/aerodynamicsType: 1
-airfoil3/s: 0.48   #wing surface = b*c
-airfoil3/b: 2   #wingspan
+airfoil3/s: 0.072   #wing surface = b*c
+airfoil3/b: 0.3   #wingspan
 airfoil3/c: 0.24   #wing mean cord
 
 airfoil3/c_lift_0: 0

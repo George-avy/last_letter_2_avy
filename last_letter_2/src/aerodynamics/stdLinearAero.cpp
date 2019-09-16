@@ -70,7 +70,6 @@ void StdLinearAero::calcTorques()
 double StdLinearAero::liftCoeff(double alpha)
 {
     double sigmoid = (1 + exp(-M * (alpha - a0)) + exp(M * (alpha + a0))) / (1 + exp(-M * (alpha - a0))) / (1 + exp(M * (alpha + a0)));
-    std::cout<<M<<std::endl;
     if (isnan(sigmoid))
         sigmoid = 0;
     double linear = (1.0 - sigmoid) * (c_lift_0 + c_lift_a * alpha);                         //Lift at small AoA
@@ -81,7 +80,7 @@ double StdLinearAero::liftCoeff(double alpha)
 double StdLinearAero::dragCoeff(double alpha)
 {
     double AR = pow(b, 2) / s;
-    double c_drag_alpha = c_drag_p + pow(c_drag_0 + c_drag_a * alpha, 2) / (M_PI * oswald * AR);
+    double c_drag_alpha = c_drag_p + pow(c_lift_0 + c_lift_a * alpha, 2) / (M_PI * oswald * AR);
     return c_drag_alpha;
 }
 
@@ -95,10 +94,6 @@ void StdLinearAero::initParam(int id)
     if (!ros::param::getCached(paramMsg, c_drag_deltae)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/c_drag_q", id);
     if (!ros::param::getCached(paramMsg, c_drag_q)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-    sprintf(paramMsg, "airfoil%i/c_drag_0", id);
-    if (!ros::param::getCached(paramMsg, c_drag_0)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-    sprintf(paramMsg, "airfoil%i/c_drag_a", id);
-    if (!ros::param::getCached(paramMsg, c_drag_a)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/c_lift_0", id);
     if (!ros::param::getCached(paramMsg, c_lift_0)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/c_lift_deltae", id);

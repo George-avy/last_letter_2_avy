@@ -6,4 +6,5 @@
 #Simulation time-step
 /world/deltaT: 0.002
 
-#Simulation 
+# realTimeFactor = simRate * deltaT
+# For real time simulation simRate * deltaT = 1
