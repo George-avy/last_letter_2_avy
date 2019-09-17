@@ -48,16 +48,16 @@
   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
          args="-z 1 -urdf -model my_model -param model_description" respawn="false" output="screen">
   </node> 
-  <node pkg="joy" type="joy_node" name="joystick" output="screen" >
+  <node pkg="joy" type="joy_node" name="joystick_node" output="screen" >
     <param name="dev" value="/dev/input/js0" />
     <param name="deadzone" value="0.01" />
   </node>
-  <node pkg="last_letter_2" name="joy2chan" type="joy2chan" output="screen" />
-  <node pkg="last_letter_2" name="controller" type="controller" output="screen" />
-  <node pkg="last_letter_2" name="core" type="core" output="screen" />
-  <node pkg="last_letter_2" name="chan2srv" type="chan2srv" output="screen" />
+  <node pkg="last_letter_2" name="joy2chan_node" type="joy2chan_node" output="screen" />
+  <node pkg="last_letter_2" name="controller_node" type="controller_node" output="screen" />
+  <node pkg="last_letter_2" name="core_node" type="core_node" output="screen" />
+  <node pkg="last_letter_2" name="chan2srv_node" type="chan2srv_node" output="screen" />
 
-  <node pkg="robot_state_publisher" name="robot_state_publisher" type="robot_state_publisher">
+  <node pkg="robot_state_publisher" name="robot_state_publisher_node" type="robot_state_publisher">
     <remap from="robot_description" to="model_description"/>
     <remap from="joint_states" to="last_letter_2/joint_states"/>
     <param name="ignore_timestamp" value="true"/>

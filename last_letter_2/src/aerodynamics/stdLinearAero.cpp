@@ -32,9 +32,9 @@ void StdLinearAero::calcForces()
     }
     else
     {
-        aero_wrenches.drag = qbar * ((-c_drag_alpha * ca + c_lift_alpha * sa) + (-c_drag_q * ca + c_lift_q * sa) * 0.5 / airspeed * c * q + (-c_drag_deltae * ca + c_lift_deltae * sa) * input_y);
-        aero_wrenches.fy = qbar * (c_y_0 + c_y_b * beta + c_y_p * b / 2 / airspeed * p + c_y_r * b / 2 / airspeed * r + c_y_deltaa * input_x + c_y_deltar * input_z);
-        aero_wrenches.lift = qbar * ((-c_drag_alpha * sa - c_lift_alpha * ca) + (-c_drag_q * sa - c_lift_q * ca) * 0.5 / airspeed * c * q + (-c_drag_deltae * sa - c_lift_deltae * ca) * input_y);
+        aero_wrenches.drag = qbar * ((-c_drag_alpha * ca + c_lift_alpha * sa) + (-c_drag_q * ca + c_lift_q * sa) * 0.5 / airspeed * c * q + (-c_drag_input_y * ca + c_lift_input_y * sa) * input_y);
+        aero_wrenches.fy = qbar * (c_y_0 + c_y_b * beta + c_y_p * b / 2 / airspeed * p + c_y_r * b / 2 / airspeed * r + c_y_input_x * input_x + c_y_input_z * input_z);
+        aero_wrenches.lift = qbar * ((-c_drag_alpha * sa - c_lift_alpha * ca) + (-c_drag_q * sa - c_lift_q * ca) * 0.5 / airspeed * c * q + (-c_drag_input_y * sa - c_lift_input_y * ca) * input_y);
     }
 }
 
@@ -61,9 +61,9 @@ void StdLinearAero::calcTorques()
     }
     else
     {
-        aero_wrenches.l = qbar * (b * (c_l_0 + c_l_b * beta + c_l_p * b / 2 / airspeed * p + c_l_r * b / 2 / airspeed * r + c_l_deltaa * input_x + c_l_deltar * input_z));
-        aero_wrenches.m = qbar * (c * (c_m_0 + c_m_a * alpha + c_m_q * c / 2 / airspeed * q + c_m_deltae * input_y));
-        aero_wrenches.n = qbar * (b * (c_n_0 + c_n_b * beta + c_n_p * b / 2 / airspeed * p + c_n_r * b / 2 / airspeed * r + c_n_deltaa * input_x + c_n_deltar * input_z));
+        aero_wrenches.l = qbar * (b * (c_l_0 + c_l_b * beta + c_l_p * b / 2 / airspeed * p + c_l_r * b / 2 / airspeed * r + c_l_input_x * input_x + c_l_input_z * input_z));
+        aero_wrenches.m = qbar * (c * (c_m_0 + c_m_a * alpha + c_m_q * c / 2 / airspeed * q + c_m_input_y * input_y));
+        aero_wrenches.n = qbar * (b * (c_n_0 + c_n_b * beta + c_n_p * b / 2 / airspeed * p + c_n_r * b / 2 / airspeed * r + c_n_input_x * input_x + c_n_input_z * input_z));
     }
 }
 
@@ -90,14 +90,14 @@ void StdLinearAero::initParam(int id)
     char paramMsg[50];
     sprintf(paramMsg, "airfoil%i/c_drag_p", id);
     if (!ros::param::getCached(paramMsg, c_drag_p)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-    sprintf(paramMsg, "airfoil%i/c_drag_deltae", id);
-    if (!ros::param::getCached(paramMsg, c_drag_deltae)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+    sprintf(paramMsg, "airfoil%i/c_drag_input_y", id);
+    if (!ros::param::getCached(paramMsg, c_drag_input_y)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/c_drag_q", id);
     if (!ros::param::getCached(paramMsg, c_drag_q)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/c_lift_0", id);
     if (!ros::param::getCached(paramMsg, c_lift_0)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-    sprintf(paramMsg, "airfoil%i/c_lift_deltae", id);
-    if (!ros::param::getCached(paramMsg, c_lift_deltae)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+    sprintf(paramMsg, "airfoil%i/c_lift_input_y", id);
+    if (!ros::param::getCached(paramMsg, c_lift_input_y)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/c_lift_q", id);
     if (!ros::param::getCached(paramMsg, c_lift_q)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/c_lift_a", id);
@@ -118,10 +118,10 @@ void StdLinearAero::initParam(int id)
     if (!ros::param::getCached(paramMsg, c_y_p)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/c_y_r", id);
     if (!ros::param::getCached(paramMsg, c_y_r)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-    sprintf(paramMsg, "airfoil%i/c_y_deltaa", id);
-    if (!ros::param::getCached(paramMsg, c_y_deltaa)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-    sprintf(paramMsg, "airfoil%i/c_y_deltar", id);
-    if (!ros::param::getCached(paramMsg, c_y_deltar)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+    sprintf(paramMsg, "airfoil%i/c_y_input_x", id);
+    if (!ros::param::getCached(paramMsg, c_y_input_x)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+    sprintf(paramMsg, "airfoil%i/c_y_input_z", id);
+    if (!ros::param::getCached(paramMsg, c_y_input_z)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/c_l_0", id);
     if (!ros::param::getCached(paramMsg, c_l_0)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/c_l_p", id);
@@ -130,18 +130,18 @@ void StdLinearAero::initParam(int id)
     if (!ros::param::getCached(paramMsg, c_l_b)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/c_l_r", id);
     if (!ros::param::getCached(paramMsg, c_l_r)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-    sprintf(paramMsg, "airfoil%i/c_l_deltaa", id);
-    if (!ros::param::getCached(paramMsg, c_l_deltaa)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-    sprintf(paramMsg, "airfoil%i/c_l_deltar", id);
-    if (!ros::param::getCached(paramMsg, c_l_deltar)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+    sprintf(paramMsg, "airfoil%i/c_l_input_x", id);
+    if (!ros::param::getCached(paramMsg, c_l_input_x)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+    sprintf(paramMsg, "airfoil%i/c_l_input_z", id);
+    if (!ros::param::getCached(paramMsg, c_l_input_z)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/c_m_0", id);
     if (!ros::param::getCached(paramMsg, c_m_0)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/c_m_a", id);
     if (!ros::param::getCached(paramMsg, c_m_a)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/c_m_q", id);
     if (!ros::param::getCached(paramMsg, c_m_q)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-    sprintf(paramMsg, "airfoil%i/c_m_deltae", id);
-    if (!ros::param::getCached(paramMsg, c_m_deltae)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+    sprintf(paramMsg, "airfoil%i/c_m_input_y", id);
+    if (!ros::param::getCached(paramMsg, c_m_input_y)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/c_n_0", id);
     if (!ros::param::getCached(paramMsg, c_n_0)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/c_n_b", id);
@@ -150,10 +150,10 @@ void StdLinearAero::initParam(int id)
     if (!ros::param::getCached(paramMsg, c_n_p)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/c_n_r", id);
     if (!ros::param::getCached(paramMsg, c_n_r)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-    sprintf(paramMsg, "airfoil%i/c_n_deltaa", id);
-    if (!ros::param::getCached(paramMsg, c_n_deltaa)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-    sprintf(paramMsg, "airfoil%i/c_n_deltar", id);
-    if (!ros::param::getCached(paramMsg, c_n_deltar)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+    sprintf(paramMsg, "airfoil%i/c_n_input_x", id);
+    if (!ros::param::getCached(paramMsg, c_n_input_x)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+    sprintf(paramMsg, "airfoil%i/c_n_input_z", id);
+    if (!ros::param::getCached(paramMsg, c_n_input_z)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/oswald", id);
     if (!ros::param::getCached(paramMsg, oswald)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "airfoil%i/mcoeff", id);

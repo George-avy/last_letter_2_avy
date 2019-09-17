@@ -27,20 +27,20 @@ include_directories(
  ${catkin_INCLUDE_DIRS} ${GAZEBO_INCLUDE_DIRS} ${Boost_INCLUDE_DIR}
  )
 
-add_executable(joy2chan src/joy2chan.cpp) 
-add_executable(controller src/controller.cpp) 
-add_executable(core src/core.cpp)
-add_executable(chan2srv src/chan2srv.cpp)
+add_executable(joy2chan_node src/joy2chan_node.cpp) 
+add_executable(controller_node src/controller_node.cpp) 
+add_executable(core_node src/core_node.cpp)
+add_executable(chan2srv_node src/chan2srv_node.cpp)
 
-add_dependencies(joy2chan ${catkin_EXPORTED_TARGETS})
-add_dependencies(controller ${catkin_EXPORTED_TARGETS})
-add_dependencies(core ${catkin_EXPORTED_TARGETS})
-add_dependencies(chan2srv ${catkin_EXPORTED_TARGETS})
+add_dependencies(joy2chan_node ${catkin_EXPORTED_TARGETS})
+add_dependencies(controller_node ${catkin_EXPORTED_TARGETS})
+add_dependencies(core_node ${catkin_EXPORTED_TARGETS})
+add_dependencies(chan2srv_node ${catkin_EXPORTED_TARGETS})
 
-target_link_libraries(joy2chan ${catkin_LIBRARIES})
-target_link_libraries(controller ${catkin_LIBRARIES})
-target_link_libraries(core ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
-target_link_libraries(chan2srv ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
+target_link_libraries(joy2chan_node ${catkin_LIBRARIES})
+target_link_libraries(controller_node ${catkin_LIBRARIES})
+target_link_libraries(core_node ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
+target_link_libraries(chan2srv_node ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
 
 
 

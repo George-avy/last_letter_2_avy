@@ -8,7 +8,7 @@ int axisIndex[20];
 int buttonIndex[20];
 double throwIndex[20];
 
-void joy2chan(sensor_msgs::Joy joyMsg)
+void buildChannels(sensor_msgs::Joy joyMsg)
 {
     last_letter_2_msgs::joystick_input channels;
     double input[20];
@@ -42,7 +42,7 @@ int main(int argc, char **argv)
 {
     ros::init(argc, argv, "joy_to_channels_node");
     ros::NodeHandle n;
-    ros::Subscriber sub = n.subscribe("joy", 1, joy2chan, ros::TransportHints().tcpNoDelay());
+    ros::Subscriber sub = n.subscribe("joy", 1, buildChannels, ros::TransportHints().tcpNoDelay());
     pub = n.advertise<last_letter_2_msgs::joystick_input>("last_letter_2/channels", 1);
 
     // Read the controller configuration parameters from the HID.yaml file

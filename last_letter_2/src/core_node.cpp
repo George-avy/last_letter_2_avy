@@ -8,7 +8,7 @@
 
 int main(int argc, char **argv)
 {
-    ros::init(argc, argv, "core");
+    ros::init(argc, argv, "core_node");
     //Create a Model object
     Model model;
     //Start spin

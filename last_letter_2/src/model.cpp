@@ -21,12 +21,12 @@ Model::Model() : environment(this), dynamics(this)
         //Load basic characteristics for each airfoil
         for (i = 0; i < num_wings; ++i)
         {
-            sprintf(paramMsg, "airfoil%i/x_axis_turn_chan", i + 1);
-            if (!ros::param::getCached(paramMsg, x_axis_turn_chan[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-            sprintf(paramMsg, "airfoil%i/y_axis_turn_chan", i + 1);
-            if (!ros::param::getCached(paramMsg, y_axis_turn_chan[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-            sprintf(paramMsg, "airfoil%i/z_axis_turn_chan", i + 1);
-            if (!ros::param::getCached(paramMsg, z_axis_turn_chan[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            sprintf(paramMsg, "airfoil%i/input_x_chan", i + 1);
+            if (!ros::param::getCached(paramMsg, input_x_chan[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            sprintf(paramMsg, "airfoil%i/input_y_chan", i + 1);
+            if (!ros::param::getCached(paramMsg, input_y_chan[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+            sprintf(paramMsg, "airfoil%i/input_z_chan", i + 1);
+            if (!ros::param::getCached(paramMsg, input_z_chan[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
             sprintf(paramMsg, "airfoil%i/deltax_max", i + 1);
             if (!ros::param::getCached(paramMsg, deltax_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
             sprintf(paramMsg, "airfoil%i/deltay_max", i + 1);
@@ -149,7 +149,7 @@ void Model::modelStep()
     applyWrenches();
 }
 
-// get control inputs for the model from controller node
+// get control inputs for the model from controller_node
 void Model::getControlInputs()
 {
     control_inputs_msg.request.header=model_states.header;
@@ -175,9 +175,9 @@ void Model::getControlInputs()
     //store airfoil inputs
     for (i = 0; i < num_wings; i++)
     {
-        airfoil_inputs[i].x = deltax_max[i] * control_inputs_msg.response.input_signals[x_axis_turn_chan[i]];
-        airfoil_inputs[i].y = deltay_max[i] * control_inputs_msg.response.input_signals[y_axis_turn_chan[i]];
-        airfoil_inputs[i].z = deltaz_max[i] * control_inputs_msg.response.input_signals[z_axis_turn_chan[i]];
+        airfoil_inputs[i].x = deltax_max[i] * control_inputs_msg.response.input_signals[input_x_chan[i]];
+        airfoil_inputs[i].y = deltay_max[i] * control_inputs_msg.response.input_signals[input_y_chan[i]];
+        airfoil_inputs[i].z = deltaz_max[i] * control_inputs_msg.response.input_signals[input_z_chan[i]];
     }
 
     switch (model_type)
