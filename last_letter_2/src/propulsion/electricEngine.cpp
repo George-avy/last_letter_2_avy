@@ -10,7 +10,7 @@ ElectricEng::ElectricEng(Model *parent, int id) : Propulsion(parent,id)
     char s[100];
     char paramMsg[50];
 
-    sprintf(paramMsg, "motor%i/propDiam", id);
+    sprintf(paramMsg, "prop%i/propDiam", id);
     if (!ros::param::getCached(paramMsg, propDiam)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "motor%i/rotationDir", id);
     if (!ros::param::getCached(paramMsg, rotationDir)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
@@ -20,9 +20,9 @@ ElectricEng::ElectricEng(Model *parent, int id) : Propulsion(parent,id)
     if (!ros::param::getCached(paramMsg, Kv)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "motor%i/Rm", id);
     if (!ros::param::getCached(paramMsg, Rm)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-    sprintf(paramMsg, "battery%i/Rs", id);
+    sprintf(paramMsg, "battery/Rs");
     if (!ros::param::getCached(paramMsg, Rs)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-    sprintf(paramMsg, "battery%i/Cells", id);
+    sprintf(paramMsg, "battery/Cells");
     if (!ros::param::getCached(paramMsg, Cells)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     sprintf(paramMsg, "motor%i/I0", id);
     if (!ros::param::getCached(paramMsg, I0)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
@@ -37,10 +37,10 @@ ElectricEng::ElectricEng(Model *parent, int id) : Propulsion(parent,id)
 
     Factory factory;
     // Create propeller efficiency polynomial
-    sprintf(s, "motor%i/nCoeffPoly", id);
+    sprintf(s, "prop%i/nCoeffPoly", id);
     npPoly = factory.buildPolynomial(s);
     // Create propeller power polynomial
-    sprintf(s, "motor%i/propPowerPoly", id);
+    sprintf(s, "prop%i/powerPoly", id);
     propPowerPoly = factory.buildPolynomial(s);
 
     // Initialize engine rotational speed, thrust, torque
