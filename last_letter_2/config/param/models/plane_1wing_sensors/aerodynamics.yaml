@@ -7,18 +7,26 @@ airfoil1/s: 0.45   #wing surface = b*c
 airfoil1/b: 1.88   #wingspan
 airfoil1/c: 0.24   #wing mean cord
 
+airfoil1/deltax_max: 0.3491  #max deflections in radians
+airfoil1/deltay_max: 0.3491
+airfoil1/deltaz_max: 0.3491
+
+airfoil1/input_x_chan: 1 #0-no input, 1-aileron, 2-elevator, 3-rudder
+airfoil1/input_y_chan: 2
+airfoil1/input_z_chan: 3
+
 airfoil1/c_lift_0: 0.56
-airfoil1/c_lift_input_x: 0.0
+airfoil1/c_lift_input_y: 0.0
 airfoil1/c_lift_a: 6.9
 airfoil1/c_lift_q: 0
 airfoil1/mcoeff: 50
 airfoil1/oswald: 0.9
 airfoil1/alpha_stall: 0.4712
 airfoil1/c_drag_q: 0.0
-airfoil1/c_drag_input_y: 0.0
+airfoil1/c_drag_input_y: 0.0  #No documentation
 airfoil1/c_drag_p: 0.0437
-airfoil1/c_drag_0: 0.03
-airfoil1/c_drag_a: 0.3
+airfoil1/c_drag_0: 0.03  #No documentation
+airfoil1/c_drag_a: 0.3  #No documentation
 airfoil1/c_y_0: 0
 airfoil1/c_y_b: -0.98
 airfoil1/c_y_p: 0
@@ -43,10 +51,4 @@ airfoil1/c_n_r: -1
 airfoil1/c_n_input_x: 0.00
 airfoil1/c_n_input_z: 0.1 #opposite sign than c_y_input_z
 
-airfoil1/input_x_max: 0.3491  #max deflections in radians
-airfoil1/input_y_max: 0.3491
-airfoil1/input_z_max: 0.3491
 
-airfoil1/input_x_chan: 1 #0-no input, 1-aileron, 2-elevator, 3-rudder
-airfoil1/input_y_chan: 2
-airfoil1/input_z_chan: 3

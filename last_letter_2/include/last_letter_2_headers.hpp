@@ -16,6 +16,8 @@
 #include <ctime>
 #include <string>
 #include <iostream>
+#include <Eigen/Dense>
+#include <tf2_eigen/tf2_eigen.h>
 
 class Aerodynamics;
 class Propulsion;

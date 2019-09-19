@@ -5,8 +5,6 @@
 #include "propulsion/propulsion.hpp"
 #include "factory.hpp"
   
-#include <iostream>
-#include <Eigen/Dense>
 using namespace Eigen;
  // The model object
  // A class that cordinates all processes for a model step
@@ -33,6 +31,10 @@ using namespace Eigen;
     last_letter_2_msgs::air_data airdata;
     last_letter_2_msgs::model_states model_states;
     geometry_msgs::Vector3 airfoil_inputs[3];
+    geometry_msgs::TransformStamped transformStamped_;
+    Eigen::Vector3d t_in, t_out;
+
+    tf2::Quaternion quat_;
     float motor_input[6];
     float b, l, d;
     int i;
@@ -41,10 +43,7 @@ using namespace Eigen;
     float deltax_max[4], deltay_max[4], deltaz_max[4];
     float channel_input[20];
 
-    tf2_ros::Buffer tfBuffer;
-    tf2_ros::TransformListener tfListener;
-    geometry_msgs::TransformStamped transformStamped;
-    geometry_msgs::Vector3Stamped v_in, v_out;
+
 
     MatrixXf multirotor_matrix;
     MatrixXf multirotor_matrix_inverse;

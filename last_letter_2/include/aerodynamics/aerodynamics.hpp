@@ -19,10 +19,9 @@ class Aerodynamics
     last_letter_2_msgs::link_states wing_states;
     last_letter_2_msgs::aero_wrenches aero_wrenches;
 
-    tf2_ros::Buffer tfBuffer;
-    tf2_ros::TransformListener tfListener;
-    geometry_msgs::TransformStamped transformStamped;
-    geometry_msgs::Vector3Stamped v_in, v_out;
+    geometry_msgs::TransformStamped transformStamped_;
+    tf2::Quaternion quat_;
+    Eigen::Vector3d t_in, t_out;
 
     Aerodynamics(Model * parent, int id);
     // ~Aerodynamics();

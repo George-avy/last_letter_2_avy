@@ -1,4 +1,4 @@
-Model::Model() : environment(this), dynamics(this), tfListener(tfBuffer)
+Model::Model() : environment(this), dynamics(this)
 {
 
     // Read the type of model
@@ -232,27 +232,35 @@ void Model::getAirdata()
     airdata.pressure = environment.airdata.pressure;
     airdata.temperature = environment.airdata.temperature;
 
-    //tranform airdata from inertial_NWU frame to body_FLU
-    v_in.header.frame_id = airdata.header.frame_id;
-    v_in.header.stamp = airdata.header.stamp;
-    v_in.vector.x = airdata.wind_x;
-    v_in.vector.y = airdata.wind_y;
-    v_in.vector.z = airdata.wind_z;
+    transformStamped_.header.stamp = ros::Time::now();
+    transformStamped_.header.frame_id = "inertial_NWU";
+    transformStamped_.child_frame_id = "body_FLU";
+    transformStamped_.transform.translation.x = 0; // We need only rotation transform
+    transformStamped_.transform.translation.y = 0;
+    transformStamped_.transform.translation.z = 0;
+    quat_.setRPY(model_states.base_link_states.roll, model_states.base_link_states.pitch, model_states.base_link_states.yaw);
+    transformStamped_.transform.rotation.x = quat_.x();
+    transformStamped_.transform.rotation.y = quat_.y();
+    transformStamped_.transform.rotation.z = quat_.z();
+    transformStamped_.transform.rotation.w = quat_.w();
+
+    t_in(0) = airdata.wind_x;
+    t_in(1) = airdata.wind_y;
+    t_in(2) = airdata.wind_z;
 
     try
     {
-        tfBuffer.transform(v_in, v_out, "body_FLU", ros::Time(0), "body_FLU");
+        tf2::doTransform(t_in, t_out, transformStamped_);
     }
-    catch (tf2::TransformException &ex)
+    catch (const tf2::TransformException &ex)
     {
-        // ROS_WARN("Could NOT transform inertial_NWU to body_FLU: %s", ex.what());
+        ROS_WARN("Could NOT transform inertial_NWU to body_FLU: %s" ,ex.what());
     }
 
-    airdata.header.frame_id = v_out.header.frame_id;
-    airdata.header.stamp = v_out.header.stamp;
-    airdata.wind_x = v_out.vector.x;
-    airdata.wind_y = v_out.vector.y;
-    airdata.wind_z = v_out.vector.z;
+    airdata.header.frame_id = "body_FLU";
+    airdata.wind_x = t_out(0);
+    airdata.wind_y = t_out(1);
+    airdata.wind_z = t_out(2);
 }
 
 void Model::calcDynamics()
