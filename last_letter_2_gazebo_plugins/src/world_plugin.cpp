@@ -52,7 +52,7 @@ public:
   publishWorldStaticFrames();
   }
 
-  // publish the relation between the world static frames Inertial_NWU-Inertial_NED 
+  // publish the relation between the world static frames inertial_NWU-inertial_NED 
   void publishWorldStaticFrames()
   {
     static tf2_ros::StaticTransformBroadcaster static_broadcaster;

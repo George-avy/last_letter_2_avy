@@ -41,6 +41,11 @@ using namespace Eigen;
     float deltax_max[4], deltay_max[4], deltaz_max[4];
     float channel_input[20];
 
+    tf2_ros::Buffer tfBuffer;
+    tf2_ros::TransformListener tfListener;
+    geometry_msgs::TransformStamped transformStamped;
+    geometry_msgs::Vector3Stamped v_in, v_out;
+
     MatrixXf multirotor_matrix;
     MatrixXf multirotor_matrix_inverse;
     VectorXf commands;

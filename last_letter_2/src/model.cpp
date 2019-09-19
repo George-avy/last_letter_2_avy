@@ -1,5 +1,4 @@
-
-Model::Model() : environment(this), dynamics(this)
+Model::Model() : environment(this), dynamics(this), tfListener(tfBuffer)
 {
 
     // Read the type of model
@@ -224,7 +223,7 @@ void Model::getAirdata()
 {
     environment.calculateAirdata();
 
-    airdata.header.frame_id = "body_FLU";
+    airdata.header.frame_id = "inertial_NWU";
     airdata.header.stamp = ros::Time::now();
     airdata.wind_x = environment.airdata.wind_x;
     airdata.wind_y = environment.airdata.wind_y;
@@ -232,6 +231,28 @@ void Model::getAirdata()
     airdata.density = environment.airdata.density;
     airdata.pressure = environment.airdata.pressure;
     airdata.temperature = environment.airdata.temperature;
+
+    //tranform airdata from inertial_NWU frame to body_FLU
+    v_in.header.frame_id = airdata.header.frame_id;
+    v_in.header.stamp = airdata.header.stamp;
+    v_in.vector.x = airdata.wind_x;
+    v_in.vector.y = airdata.wind_y;
+    v_in.vector.z = airdata.wind_z;
+
+    try
+    {
+        tfBuffer.transform(v_in, v_out, "body_FLU", ros::Time(0), "body_FLU");
+    }
+    catch (tf2::TransformException &ex)
+    {
+        // ROS_WARN("Could NOT transform inertial_NWU to body_FLU: %s", ex.what());
+    }
+
+    airdata.header.frame_id = v_out.header.frame_id;
+    airdata.header.stamp = v_out.header.stamp;
+    airdata.wind_x = v_out.vector.x;
+    airdata.wind_y = v_out.vector.y;
+    airdata.wind_z = v_out.vector.z;
 }
 
 void Model::calcDynamics()

@@ -288,7 +288,7 @@ public:
     {
         std::unique_lock<std::mutex> lk(m);
         //wait until wrenches are ready
-        if (step_number>24)  // do 24 steps without being stuck, to be sure that everything is ready
+        if (step_number>50)  // do 50 steps without being stuck, to be sure that everything is ready
         {
             cv.wait(lk, [] { return wrenches_applied == true; });
         }
@@ -317,9 +317,8 @@ public:
         transformStamped_.transform.rotation.w = quat_.w();
 
         broadcaster_.sendTransform(transformStamped_);
-        
+
         //publish body static transformations between body_FLU and body_FRD
-        transformStamped_.header.stamp = ros::Time::now();
         transformStamped_.header.frame_id = "body_FLU";
         transformStamped_.child_frame_id = "body_FRD";
         transformStamped_.transform.translation.x = 0;
@@ -332,7 +331,7 @@ public:
         transformStamped_.transform.rotation.w = quat_.w();
 
         broadcaster_.sendTransform(transformStamped_);
-        
+
         relLinVel = model->GetLink("body_FLU")->RelativeLinearVel();
         rotation = model->GetLink("body_FLU")->WorldPose().Rot().Euler();
         relAngVel = model->GetLink("body_FLU")->RelativeAngularVel();

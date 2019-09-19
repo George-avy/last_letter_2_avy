@@ -2,7 +2,7 @@
   <!-- these are the arguments you can pass this launch file, for example paused:=true -->
   <arg name="gui" default="true" />
   <arg name="paused" default="false"/>
-  <arg name="use_sim_time" default="false"/>
+  <arg name="use_sim_time" default="true"/>
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
   
@@ -30,7 +30,7 @@
     <arg name="headless" value="$(arg headless)"/>
   </include>
 
-  <param name="model_description" command="$(find xacro)/xacro '$(arg model)'"/>
+  <param name="robot_description" command="$(find xacro)/xacro '$(arg model)'"/>
   <param name="can" command="$(find xacro)/xacro '$(arg can_model)'"/>
   <param name="use_gui" value="$(arg gui)"/>
 
@@ -44,9 +44,9 @@
   <rosparam command="load" file="$(find last_letter_2)/config/param/world.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/HID.yaml" />
 
-   <!-- push model_description to factory and spawn model in gazebo -->
+   <!-- push robot_description to factory and spawn model in gazebo -->
   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
-         args="-z 1 -urdf -model my_model -param model_description" respawn="false" output="screen">
+         args="-z 1 -urdf -model my_model -param robot_description" respawn="false" output="screen">
   </node> 
   <node pkg="joy" type="joy_node" name="joystick_node" output="screen" >
     <param name="dev" value="/dev/input/js0" />
@@ -58,7 +58,7 @@
   <node pkg="last_letter_2" name="chan2srv_node" type="chan2srv_node" output="screen" />
 
   <node pkg="robot_state_publisher" name="robot_state_publisher_node" type="robot_state_publisher">
-    <remap from="robot_description" to="model_description"/>
+    <remap from="robot_description" to="robot_description"/>
     <remap from="joint_states" to="last_letter_2/joint_states"/>
     <param name="ignore_timestamp" value="true"/>
   </node>
