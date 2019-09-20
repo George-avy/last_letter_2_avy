@@ -49,9 +49,9 @@ airfoil1/deltaz_max: 0
 
 #0 if airfoil is not affect for move (relative to airfoil), else 1,2,3 for which of the input signals the airfoil listens to
 #0-nothing, 1-aileron, 2-elevator, 3-rudder  (input signals)
-airfoil1/input_x_chan: 1      #airfoil1 affects only roll and listens to aileron signal
-airfoil1/input_y_chan: 0      #airfoil1 not affects pitch move
-airfoil1/input_z_chan: 0      #airfoil1 not affects yaw move
+airfoil1/input_x_chan: 0      #airfoil1 affects only roll and listens to aileron signal
+airfoil1/input_y_chan: -1      #airfoil1 not affects pitch move
+airfoil1/input_z_chan: -1     #airfoil1 not affects yaw move
 
 # airfoil 2
 airfoil2/aerodynamicsType: 1
@@ -100,9 +100,9 @@ airfoil2/deltay_max: 0.3491
 airfoil2/deltaz_max: 0
 
 #0 if airfoil is not affect for move (relative to airfoil), else 1,2,3 for which of the input signals the airfoil listens to
-airfoil2/input_x_chan: 0   #0-nothing, 1-aileron, 2-elevator, 3-rudder  (input signals)
-airfoil2/input_y_chan: 2
-airfoil2/input_z_chan: 0
+airfoil2/input_x_chan: -1   #0-nothing, 1-aileron, 2-elevator, 3-rudder  (input signals)
+airfoil2/input_y_chan: 1
+airfoil2/input_z_chan: -1
 
 # airfoil 3
 airfoil3/aerodynamicsType: 1
@@ -151,6 +151,6 @@ airfoil3/deltay_max: 0.3491
 airfoil3/deltaz_max: 0
 
 #0 if airfoil is not affect the move (relative to airfoil), else 1,2,3 for which of the input signals the airfoil listens to
-airfoil3/input_x_chan: 0   #0-nothing, 1-aileron, 2-elevator, 3-rudder  (input signals)
-airfoil3/input_y_chan: 3
-airfoil3/input_z_chan: 0
+airfoil3/input_x_chan: -1   #0-nothing, 1-aileron, 2-elevator, 3-rudder  (input signals)
+airfoil3/input_y_chan: 2
+airfoil3/input_z_chan: -1

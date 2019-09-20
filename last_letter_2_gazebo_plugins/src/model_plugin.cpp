@@ -331,7 +331,6 @@ public:
         transformStamped_.transform.rotation.w = quat_.w();
 
         broadcaster_.sendTransform(transformStamped_);
-
         relLinVel = model->GetLink("body_FLU")->RelativeLinearVel();
         rotation = model->GetLink("body_FLU")->WorldPose().Rot().Euler();
         relAngVel = model->GetLink("body_FLU")->RelativeAngularVel();
@@ -410,7 +409,7 @@ public:
         step_number++; // check if start from zero!
         //publish model states, ros starts calculation step
         model_states.header.stamp=ros::Time::now();
-        model_states.header.frame_id="body_FLU";
+        // model_states.header.frame_id="inertial_NWU";
 
         this->states_pub.publish(model_states);
 

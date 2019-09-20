@@ -9,8 +9,8 @@
   <!-- choose a model to simulate -->
   <!-- <arg name="uav_name" default="plane_1wing"/> -->
   <!-- <arg name="uav_name" default="plane_1wing_sensors"/> -->
-  <!-- <arg name="uav_name" default="plane_3wing"/> -->
-  <arg name="uav_name" default="plane_3w_2m_electric"/>
+  <arg name="uav_name" default="plane_3wing"/>
+  <!-- <arg name="uav_name" default="plane_3w_2m_electric"/> -->
   <!-- <arg name="uav_name" default="quadcopter"/> -->
   <!-- <arg name="uav_name" default="hexacopter"/> -->
 
@@ -53,7 +53,10 @@
     <param name="deadzone" value="0.01" />
   </node>
   <node pkg="last_letter_2" name="joy2chan_node" type="joy2chan_node" output="screen" />
-  <node pkg="last_letter_2" name="controller_node" type="controller_node" output="screen" />
+  <!-- <node pkg="last_letter_2" name="controller_node" type="controller_node" output="screen" /> -->
+  <!-- <node pkg="last_letter_2" name="hexacopter_contr_node" type="hexacopter_contr_node" output="screen" /> -->
+  <!-- <node pkg="last_letter_2" name="quadcopter_contr_node" type="quadcopter_contr_node" output="screen" /> -->
+  <node pkg="last_letter_2" name="plane_contr_node" type="plane_contr_node" output="screen" />
   <node pkg="last_letter_2" name="core_node" type="core_node" output="screen" />
   <node pkg="last_letter_2" name="chan2srv_node" type="chan2srv_node" output="screen" />
 

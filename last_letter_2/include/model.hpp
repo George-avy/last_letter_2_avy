@@ -30,7 +30,8 @@ using namespace Eigen;
     Dynamics dynamics;
     last_letter_2_msgs::air_data airdata;
     last_letter_2_msgs::model_states model_states;
-    geometry_msgs::Vector3 airfoil_inputs[3];
+    geometry_msgs::Vector3 airfoil_input[3];
+    geometry_msgs::Vector3 body_wind;
     geometry_msgs::TransformStamped transformStamped_;
     Eigen::Vector3d t_in, t_out;
 
@@ -39,11 +40,10 @@ using namespace Eigen;
     float b, l, d;
     int i;
     int model_type, handling, num_wings, num_motors;
-    int input_x_chan[4], input_y_chan[4], input_z_chan[4];
+    int airfoil_in_x_chan[4], airfoil_in_y_chan[4], airfoil_in_z_chan[4];
+    int motor_in_chan[6];
     float deltax_max[4], deltay_max[4], deltaz_max[4];
     float channel_input[20];
-
-
 
     MatrixXf multirotor_matrix;
     MatrixXf multirotor_matrix_inverse;

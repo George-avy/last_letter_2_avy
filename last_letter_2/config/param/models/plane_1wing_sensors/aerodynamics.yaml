@@ -11,9 +11,9 @@ airfoil1/deltax_max: 0.3491  #max deflections in radians
 airfoil1/deltay_max: 0.3491
 airfoil1/deltaz_max: 0.3491
 
-airfoil1/input_x_chan: 1 #0-no input, 1-aileron, 2-elevator, 3-rudder
-airfoil1/input_y_chan: 2
-airfoil1/input_z_chan: 3
+airfoil1/input_x_chan: 0 #0-no input, 1-aileron, 2-elevator, 3-rudder
+airfoil1/input_y_chan: 1
+airfoil1/input_z_chan: 2
 
 airfoil1/c_lift_0: 0.56
 airfoil1/c_lift_input_y: 0.0

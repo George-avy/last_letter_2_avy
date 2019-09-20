@@ -13,52 +13,29 @@ Model::Model() : environment(this), dynamics(this)
 
     char paramMsg[50];
 
-    switch (model_type)
-    {
-    case 1: // Airplane
 
-        //Load basic characteristics for each airfoil
-        for (i = 0; i < num_wings; ++i)
+    //Load basic characteristics for each airfoil
+    for (i = 0; i < num_wings; ++i)
         {
-            sprintf(paramMsg, "airfoil%i/input_x_chan", i + 1);
-            if (!ros::param::getCached(paramMsg, input_x_chan[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-            sprintf(paramMsg, "airfoil%i/input_y_chan", i + 1);
-            if (!ros::param::getCached(paramMsg, input_y_chan[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-            sprintf(paramMsg, "airfoil%i/input_z_chan", i + 1);
-            if (!ros::param::getCached(paramMsg, input_z_chan[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-            sprintf(paramMsg, "airfoil%i/deltax_max", i + 1);
-            if (!ros::param::getCached(paramMsg, deltax_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-            sprintf(paramMsg, "airfoil%i/deltay_max", i + 1);
-            if (!ros::param::getCached(paramMsg, deltay_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-            sprintf(paramMsg, "airfoil%i/deltaz_max", i + 1);
-            if (!ros::param::getCached(paramMsg, deltaz_max[i]))     { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
-        }
-        break;
+        sprintf(paramMsg, "airfoil%i/input_x_chan", i + 1);
+        if (!ros::param::getCached(paramMsg, airfoil_in_x_chan[i])) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+        sprintf(paramMsg, "airfoil%i/input_y_chan", i + 1);
+        if (!ros::param::getCached(paramMsg, airfoil_in_y_chan[i])) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+        sprintf(paramMsg, "airfoil%i/input_z_chan", i + 1);
+        if (!ros::param::getCached(paramMsg, airfoil_in_z_chan[i])) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+        sprintf(paramMsg, "airfoil%i/deltax_max", i + 1);
+        if (!ros::param::getCached(paramMsg, deltax_max[i])) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+        sprintf(paramMsg, "airfoil%i/deltay_max", i + 1);
+        if (!ros::param::getCached(paramMsg, deltay_max[i])) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+        sprintf(paramMsg, "airfoil%i/deltaz_max", i + 1);
+        if (!ros::param::getCached(paramMsg, deltaz_max[i])) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
+    }
 
-    case 4: //quadcopter
-
-        // set dynamic matrices/vectors dimensions
-        multirotor_matrix.resize(4, 4);
-        multirotor_matrix_inverse.resize(4, 4);
-        commands.resize(4);
-        input_signal_vector.resize(4);
-        initMultirotorMatrix();
-        break;
-
-    case 6: // hexacopter
-
-        // set dynamic matrices/vectors dimensions
-        multirotor_matrix.resize(4, 6);
-        multirotor_matrix_inverse.resize(6, 4);
-        commands.resize(4);
-        input_signal_vector.resize(6);
-        initMultirotorMatrix();
-        break;
-
-    default:
-        ROS_FATAL("Invalid parameter for -/model/type- in param server!");
-        ros::shutdown();
-        break;
+    //Load basic characteristics for each motor
+    for (i = 0; i < num_motors; ++i)
+    {
+        sprintf(paramMsg, "motor%i/input_chan", i + 1);
+        if (!ros::param::getCached(paramMsg, motor_in_chan[i])) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     }
 
     //Subscriber that gets model states from gazebo after physics step
@@ -77,6 +54,17 @@ Model::Model() : environment(this), dynamics(this)
     pauseGazebo = nh.serviceClient<std_srvs::Empty>("/gazebo/pause_physics");
     std_srvs::Empty emptySrv;
     pauseGazebo.call(emptySrv);
+
+    for (i = 0; i < num_wings; i++)
+    {
+        airfoil_input[i].x = 0;
+        airfoil_input[i].y = 0;
+        airfoil_input[i].z = 0;
+    }
+    for (i = 0; i < num_motors; i++)
+    {
+        motor_input[i] = 0;
+    }
 }
 
 void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr& msg)
@@ -109,35 +97,6 @@ void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr& ms
         FLUtoFRD(model_states.motor_states[i].p, model_states.motor_states[i].q, model_states.motor_states[i].r);
     }
     modelStep();
-}
-
-void Model::initMultirotorMatrix()
-{
-    // Read the thrust constant
-    if (!ros::param::getCached("model/b", b)) { ROS_FATAL("Invalid parameters for -model/b- in param server!"); ros::shutdown(); }
-    // Read the motor distance to center of gravity
-    if (!ros::param::getCached("model/l", l)) { ROS_FATAL("Invalid parameters for -model/l- in param server!"); ros::shutdown(); }
-    // Read the drag factor
-    if (!ros::param::getCached("model/d", d)) { ROS_FATAL("Invalid parameters for -model/d- in param server!"); ros::shutdown(); }
-    
-    switch (model_type)
-    {
-    case 4: //  quadcopter matrix
-        multirotor_matrix <<b,     b,      b,      b,      //thrust row
-                            0,    -l * b,  0,      l * b,  //roll row
-                            l * b, 0,     -l * b,  0,      //pitch row
-                           -d,     d,     -d,      d;      //yaw row
-        break;
-
-    case 6: //hexacopter matrix
-        multirotor_matrix << b,    b,           b,          b,    b,          b,             //thrust row 
-                             0,   -b*l*1.73/2, -b*l*1.73/2, 0,    b*l*1.73/2, b*l*1.73/2,   //roll row
-                             b*l,  b*l/2,      -b*l/2,     -b*l, -b*l/2,      b*l/2,        //pitch row
-                            -d,    d,          -d,          d,   -d,          d;            //yaw row
-        break;
-    }
-    //calculate inverse of multirotor matrix. Usefull for future calculations
-    multirotor_matrix_inverse = multirotor_matrix.completeOrthogonalDecomposition().pseudoInverse();
 }
 
 void Model::modelStep()
@@ -174,48 +133,27 @@ void Model::getControlInputs()
     //store airfoil inputs
     for (i = 0; i < num_wings; i++)
     {
-        airfoil_inputs[i].x = deltax_max[i] * control_inputs_msg.response.input_signals[input_x_chan[i]];
-        airfoil_inputs[i].y = deltay_max[i] * control_inputs_msg.response.input_signals[input_y_chan[i]];
-        airfoil_inputs[i].z = deltaz_max[i] * control_inputs_msg.response.input_signals[input_z_chan[i]];
+        if (airfoil_in_x_chan[i] != -1)
+        {
+            airfoil_input[i].x = deltax_max[i] * control_inputs_msg.response.channels[airfoil_in_x_chan[i]];
+
+        }
+        if (airfoil_in_y_chan[i] != -1)
+        {
+            airfoil_input[i].y = deltay_max[i] * control_inputs_msg.response.channels[airfoil_in_y_chan[i]];
+
+        }
+        if (airfoil_in_z_chan[i] != -1)
+        {
+            airfoil_input[i].z = deltaz_max[i] * control_inputs_msg.response.channels[airfoil_in_z_chan[i]];
+
+        }
     }
 
-    switch (model_type)
+    //store motor inputs
+    for (i = 0; i < num_motors; i++)
     {
-    case 1: // Airplane 
-
-        //store motor inputs
-        for (i = 0; i < num_motors; i++)
-        {
-            motor_input[i] = control_inputs_msg.response.input_signals[4];
-        }
-        break;
-
-    case 4: 
-    case 6:// Multirotor mixing
-
-        commands(0) = control_inputs_msg.response.input_signals[4]; //thrust
-        commands(1) = control_inputs_msg.response.input_signals[1]; //roll
-        commands(2) = control_inputs_msg.response.input_signals[2]; //pitch
-        commands(3) = control_inputs_msg.response.input_signals[3]; //yaw
-        input_signal_vector = multirotor_matrix_inverse * commands;
-        for (i = 0; i < num_motors; i++)
-        {
-            motor_input[i] = input_signal_vector(i);
-            if (motor_input[i] < 0)
-                motor_input[i] = 0;
-        }
-        break;
-
-    default:
-        ROS_FATAL("Invalid parameter for -/model/model_type- in param server!");
-        ros::shutdown();
-        break;
-    }
-
-    //keep all channel matrix
-    for (i = 0; i < 20; i++)
-    {
-        channel_input[i] = control_inputs_msg.response.channel_signals[i];
+        motor_input[i] = control_inputs_msg.response.channels[motor_in_chan[i]];
     }
 }
 
@@ -248,6 +186,9 @@ void Model::getAirdata()
     t_in(1) = airdata.wind_y;
     t_in(2) = airdata.wind_z;
 
+    // std::cout<<"wind inertial_NWU"<<std::endl;
+    // std::cout<<t_in<<std::endl<<std::endl;
+
     try
     {
         tf2::doTransform(t_in, t_out, transformStamped_);
@@ -257,10 +198,11 @@ void Model::getAirdata()
         ROS_WARN("Could NOT transform inertial_NWU to body_FLU: %s" ,ex.what());
     }
 
-    airdata.header.frame_id = "body_FLU";
-    airdata.wind_x = t_out(0);
-    airdata.wind_y = t_out(1);
-    airdata.wind_z = t_out(2);
+    body_wind.x = t_out(0);
+    body_wind.y = t_out(1);
+    body_wind.z = t_out(2);
+    //  std::cout<<"wind body_FLU"<<std::endl;
+    // std::cout<<t_out<<std::endl<<std::endl;
 }
 
 void Model::calcDynamics()

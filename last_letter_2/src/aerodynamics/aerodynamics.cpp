@@ -28,9 +28,9 @@ void Aerodynamics::getStates()
 // load airfoil input signals from model
 void Aerodynamics::getInputSignals()
 {
-    airfoil_inputs.x = model->airfoil_inputs[airfoil_number - 1].x;
-    airfoil_inputs.y = model->airfoil_inputs[airfoil_number - 1].y;
-    airfoil_inputs.z = model->airfoil_inputs[airfoil_number - 1].z;
+    airfoil_inputs.x = model->airfoil_input[airfoil_number - 1].x;
+    airfoil_inputs.y = model->airfoil_input[airfoil_number - 1].y;
+    airfoil_inputs.z = model->airfoil_input[airfoil_number - 1].z;
 }
 
 // rotate wind vector from body to airfoil Link
@@ -56,10 +56,10 @@ void Aerodynamics::rotateWind()
     transformStamped_.transform.rotation.z = quat_.z();
     transformStamped_.transform.rotation.w = quat_.w();
 
-    t_in(0) = model->airdata.wind_x;
-    t_in(1) = model->airdata.wind_y;
-    t_in(2) = model->airdata.wind_z;
-
+    t_in(0) = model->body_wind.x;
+    t_in(1) = model->body_wind.y;
+    t_in(2) = model->body_wind.z;
+    
     try
     {
         tf2::doTransform(t_in, t_out, transformStamped_);
@@ -72,6 +72,10 @@ void Aerodynamics::rotateWind()
     relative_wind.x=t_out(0);
     relative_wind.y=t_out(1);
     relative_wind.z=t_out(2);
+
+
+    // std::cout<<"wind airfoil1"<<std::endl;
+    // std::cout<<t_out<<std::endl<<std::endl;
 }
 
 //calculate essential values (airspeed, alpha, beta)

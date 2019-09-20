@@ -53,9 +53,10 @@ void Propulsion::rotateWind()
     transformStamped_.transform.rotation.z = quat_.z();
     transformStamped_.transform.rotation.w = quat_.w();
 
-    t_in(0) = model->airdata.wind_x;
-    t_in(1) = model->airdata.wind_y;
-    t_in(2) = model->airdata.wind_z;
+
+    t_in(0) = model->body_wind.x;
+    t_in(1) = model->body_wind.y;
+    t_in(2) = model->body_wind.z;
 
     try
     {
@@ -70,6 +71,9 @@ void Propulsion::rotateWind()
     relative_wind.x = t_out(0);
     relative_wind.y = t_out(1);
     relative_wind.z = t_out(2);
+
+    // std::cout<<"wind motor "<<motor_number<<" :"<<std::endl;
+    // std::cout<<relative_wind<<std::endl<<std::endl;
 }
 
 //calculate relative airspeed
@@ -79,6 +83,11 @@ void Propulsion::calcAirspeed()
     float u_r = motor_states.u - relative_wind.x;
     float v_r = motor_states.v - relative_wind.y;
     float w_r = motor_states.w - relative_wind.z;
+    normalWind = u_r;
+    // std::cout<<"motor_states.u:"<< motor_states.u <<std::endl;
+    // std::cout<<"relative_wind.x:"<<relative_wind.x<<std::endl;
+
+    // std::cout<<"normalWind:"<<normalWind<<std::endl;
     airspeed = sqrt(pow(u_r, 2) + pow(v_r, 2) + pow(w_r, 2));
 }
 

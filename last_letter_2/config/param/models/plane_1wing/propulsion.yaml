@@ -2,13 +2,36 @@
 # Motor types: 0 No motor, 1 generic Engine
 
 nMotors: 1
-motor1/motorType: 1
+# motor1/motorType: 1
+# motor1/rotationDir: 1.0
+# motor1/input_chan: 3
+
+# #features for generic Engine
+# motor1/s_prop: 0.01619
+# motor1/c_prop: 1.0
+# motor1/k_motor: 55
+# motor1/k_t_p: 0.0
+# motor1/k_omega: 20.0
+
 motor1/rotationDir: 1.0
+motor1/input_chan: 3
 
-#features for generic Engine
-motor1/s_prop: 0.01619
-motor1/c_prop: 1.0
-motor1/k_motor: 55
-motor1/k_t_p: 0.0
-motor1/k_omega: 20.0
+motor1/motorType: 3
+motor1/Kv: 13.333 # in RPS/V
+motor1/Rm: 0.041 # in Ohms
+motor1/I0: 0.9 # in Amperes
 
+motor1/RadPSLimits: [0.01, 1000.0]
+motor1/engInertia: 0.008 # in kg*m^3
+
+prop1/propDiam: 0.305 # in m
+prop1/nCoeffPoly/polyType: 0
+prop1/nCoeffPoly/polyNo: 4
+prop1/nCoeffPoly/coeffs: [0.0, 3.19, -12.15, 27.83, -21.82]
+prop1/propPowerPoly/polyType: 0
+prop1/propPowerPoly/polyNo: 3
+prop1/propPowerPoly/coeffs: [0.0661, -0.1647, 0.2958, -0.2355]
+
+
+battery/Rs: 0.0 # in Ohms
+battery/Cells: 3 # number of LiPo cells

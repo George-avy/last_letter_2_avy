@@ -2,5 +2,4 @@
 
 Header header
 ---
-float32[5] input_signals
-int16[20] channel_signals
+float64[20] channels
