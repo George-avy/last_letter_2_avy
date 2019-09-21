@@ -39,12 +39,12 @@ void Propulsion::rotateWind()
     sprintf(name_temp, "motor%i", motor_number);
     motor_link_name.assign(name_temp);
 
-    // Transform wing vector from body_FLU to motor_FLU frame
-    transformation_matrix = KDL::Frame(KDL::Rotation::EulerZYX( motor_states.yaw - model->model_states.base_link_states.yaw,
-                                                                motor_states.pitch - model->model_states.base_link_states.pitch,
-                                                                motor_states.roll - model->model_states.base_link_states.roll),
+    // Transform wing vector from inertial_NWU to motor_FLU frame
+    transformation_matrix = KDL::Frame(KDL::Rotation::EulerZYX( motor_states.yaw,
+                                                                motor_states.pitch,
+                                                                motor_states.roll),
                                                                 KDL::Vector(0, 0, 0));
-    v_out = tf2::Stamped<KDL::Vector>(transformation_matrix.Inverse() * KDL::Vector(model->body_wind.x,model->body_wind.y,model->body_wind.z), ros::Time::now(), "motor_FLU");
+    v_out = tf2::Stamped<KDL::Vector>(transformation_matrix.Inverse() * KDL::Vector(model->airdata.wind_x,model->airdata.wind_y,model->airdata.wind_z), ros::Time::now(), "motor_FLU");
 
     relative_wind.x=v_out[0];
     relative_wind.y=v_out[1];

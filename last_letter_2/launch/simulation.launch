@@ -9,8 +9,8 @@
   <!-- choose a model to simulate -->
   <!-- <arg name="uav_name" default="plane_1wing"/> -->
   <!-- <arg name="uav_name" default="plane_1wing_sensors"/> -->
-  <arg name="uav_name" default="plane_3wing"/>
-  <!-- <arg name="uav_name" default="plane_3w_2m_electric"/> -->
+  <!-- <arg name="uav_name" default="plane_3wing"/> -->
+  <arg name="uav_name" default="plane_3w_2m_electric"/>
   <!-- <arg name="uav_name" default="quadcopter"/> -->
   <!-- <arg name="uav_name" default="hexacopter"/> -->
 
