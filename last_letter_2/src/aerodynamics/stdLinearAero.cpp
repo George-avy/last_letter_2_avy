@@ -16,9 +16,11 @@ void StdLinearAero::calcForces()
     double ca = cos(alpha);
     double sa = sin(alpha);
 
-    double p = wing_states.p;
-    double q = wing_states.q;
-    double r = wing_states.r;
+    float p = airfoil_states.p;
+    float q = airfoil_states.q;
+    float r = airfoil_states.r;
+    // Transform relative angular speed from airfoil_FLU to airfoil_FRD for calculations
+    FLUtoFRD(p, q, r);
     double input_x = airfoil_inputs.x;
     double input_y = airfoil_inputs.y;
     double input_z = airfoil_inputs.z;
@@ -46,9 +48,11 @@ void StdLinearAero::calcTorques()
     double ca = cos(alpha);
     double sa = sin(alpha);
 
-    double p = wing_states.p;
-    double q = wing_states.q;
-    double r = wing_states.r;
+    float p = airfoil_states.p;
+    float q = airfoil_states.q;
+    float r = airfoil_states.r;
+    // Transform relative angular speed from airfoil_FLU to airfoil_FRD for calculations
+    FLUtoFRD(p, q, r);
     double input_x = airfoil_inputs.x;
     double input_y = airfoil_inputs.y;
     double input_z = airfoil_inputs.z;

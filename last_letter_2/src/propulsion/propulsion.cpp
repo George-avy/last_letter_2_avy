@@ -39,41 +39,19 @@ void Propulsion::rotateWind()
     sprintf(name_temp, "motor%i", motor_number);
     motor_link_name.assign(name_temp);
 
-    transformStamped_.header.stamp = ros::Time::now();
-    transformStamped_.header.frame_id = "body_FLU";
-    transformStamped_.child_frame_id = motor_link_name;
-    transformStamped_.transform.translation.x = 0; //Need only rotation transform
-    transformStamped_.transform.translation.y = 0;
-    transformStamped_.transform.translation.z = 0;
-    quat_.setRPY(model->model_states.motor_states[motor_number - 1].roll - model->model_states.base_link_states.roll,
-                 model->model_states.motor_states[motor_number - 1].pitch - model->model_states.base_link_states.pitch,
-                 model->model_states.motor_states[motor_number - 1].yaw - model->model_states.base_link_states.yaw);
-    transformStamped_.transform.rotation.x = quat_.x();
-    transformStamped_.transform.rotation.y = quat_.y();
-    transformStamped_.transform.rotation.z = quat_.z();
-    transformStamped_.transform.rotation.w = quat_.w();
+    // Transform wing vector from body_FLU to motor_FLU frame
+    transformation_matrix = KDL::Frame(KDL::Rotation::EulerZYX( motor_states.yaw - model->model_states.base_link_states.yaw,
+                                                                motor_states.pitch - model->model_states.base_link_states.pitch,
+                                                                motor_states.roll - model->model_states.base_link_states.roll),
+                                                                KDL::Vector(0, 0, 0));
+    v_out = tf2::Stamped<KDL::Vector>(transformation_matrix.Inverse() * KDL::Vector(model->body_wind.x,model->body_wind.y,model->body_wind.z), ros::Time::now(), "motor_FLU");
 
+    relative_wind.x=v_out[0];
+    relative_wind.y=v_out[1];
+    relative_wind.z=v_out[2];
 
-    t_in(0) = model->body_wind.x;
-    t_in(1) = model->body_wind.y;
-    t_in(2) = model->body_wind.z;
-
-    try
-    {
-        tf2::doTransform(t_in, t_out, transformStamped_);
-    }
-    catch (const tf2::TransformException &ex)
-    {
-        ROS_WARN("Could NOT transform body_FLU to motor%i: %s", motor_number, ex.what());
-    }
-
-    //wind expressed on motor frame
-    relative_wind.x = t_out(0);
-    relative_wind.y = t_out(1);
-    relative_wind.z = t_out(2);
-
-    // std::cout<<"wind motor "<<motor_number<<" :"<<std::endl;
-    // std::cout<<relative_wind<<std::endl<<std::endl;
+    std::cout<<"wind motor "<<motor_number<<" :"<<std::endl;
+    std::cout<<relative_wind<<std::endl<<std::endl;
 }
 
 //calculate relative airspeed
@@ -83,11 +61,9 @@ void Propulsion::calcAirspeed()
     float u_r = motor_states.u - relative_wind.x;
     float v_r = motor_states.v - relative_wind.y;
     float w_r = motor_states.w - relative_wind.z;
+    // Transform relative speed from airfoil_FLU to airfoil_FRD for calculations
+    FLUtoFRD(u_r, v_r, w_r);
     normalWind = u_r;
-    // std::cout<<"motor_states.u:"<< motor_states.u <<std::endl;
-    // std::cout<<"relative_wind.x:"<<relative_wind.x<<std::endl;
-
-    // std::cout<<"normalWind:"<<normalWind<<std::endl;
     airspeed = sqrt(pow(u_r, 2) + pow(v_r, 2) + pow(w_r, 2));
 }
 

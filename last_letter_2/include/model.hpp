@@ -32,10 +32,13 @@ using namespace Eigen;
     last_letter_2_msgs::model_states model_states;
     geometry_msgs::Vector3 airfoil_input[3];
     geometry_msgs::Vector3 body_wind;
-    geometry_msgs::TransformStamped transformStamped_;
-    Eigen::Vector3d t_in, t_out;
+    KDL::Frame transformation_matrix;
+    tf2::Stamped<KDL::Vector> v_out;
 
-    tf2::Quaternion quat_;
+    // geometry_msgs::TransformStamped transformStamped_;
+    // Eigen::Vector3d t_in, t_out;
+
+    // tf2::Quaternion quat_;
     float motor_input[6];
     float b, l, d;
     int i;

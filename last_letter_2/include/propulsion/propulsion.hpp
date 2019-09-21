@@ -14,9 +14,8 @@ public:
   last_letter_2_msgs::link_states motor_states;
   last_letter_2_msgs::prop_wrenches prop_wrenches;
 
-  geometry_msgs::TransformStamped transformStamped_;
-  tf2::Quaternion quat_;
-  Eigen::Vector3d t_in, t_out;
+  KDL::Frame transformation_matrix;
+  tf2::Stamped<KDL::Vector> v_out;
 
   Model *model;
   Propulsion(Model* parent, int id);

@@ -77,8 +77,8 @@ class model_plugin : public ModelPlugin
     int i ,thread_rate, step_number;
     std::string link_name, joint_name;
     char name_temp[30];
-    double omega,rotationDir[6];
-    double camera_angle, laser_angle;
+    float omega,rotationDir[6];
+    float camera_angle, laser_angle;
 
 public:
     model_plugin() : ModelPlugin() //constructor
@@ -409,7 +409,7 @@ public:
         step_number++; // check if start from zero!
         //publish model states, ros starts calculation step
         model_states.header.stamp=ros::Time::now();
-        // model_states.header.frame_id="inertial_NWU";
+        model_states.header.frame_id="inertial_NWU";
 
         this->states_pub.publish(model_states);
 

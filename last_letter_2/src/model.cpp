@@ -74,28 +74,6 @@ void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr& ms
     model_states.base_link_states=msg->base_link_states;
     model_states.airfoil_states=msg->airfoil_states;
     model_states.motor_states=msg->motor_states;
-    
-    //so convert gazebo data from FLU to FRD to continue with calculations
-    FLUtoFRD(model_states.base_link_states.x, model_states.base_link_states.y, model_states.base_link_states.z);
-    FLUtoFRD(model_states.base_link_states.roll, model_states.base_link_states.pitch, model_states.base_link_states.yaw);
-    FLUtoFRD(model_states.base_link_states.u, model_states.base_link_states.v, model_states.base_link_states.w);
-    FLUtoFRD(model_states.base_link_states.p, model_states.base_link_states.q, model_states.base_link_states.r);
-    
-    for (i = 0; i < num_wings; i++)
-    {
-        FLUtoFRD(model_states.airfoil_states[i].x, model_states.airfoil_states[i].y, model_states.airfoil_states[i].z);
-        FLUtoFRD(model_states.airfoil_states[i].roll, model_states.airfoil_states[i].pitch, model_states.airfoil_states[i].yaw);
-        FLUtoFRD(model_states.airfoil_states[i].u, model_states.airfoil_states[i].v, model_states.airfoil_states[i].w);
-        FLUtoFRD(model_states.airfoil_states[i].p, model_states.airfoil_states[i].q, model_states.airfoil_states[i].r);
-    }
-
-    for (i = 0; i < num_motors; i++)
-    {
-        FLUtoFRD(model_states.motor_states[i].x, model_states.motor_states[i].y, model_states.motor_states[i].z);
-        FLUtoFRD(model_states.motor_states[i].roll, model_states.motor_states[i].pitch, model_states.motor_states[i].yaw);
-        FLUtoFRD(model_states.motor_states[i].u, model_states.motor_states[i].v, model_states.motor_states[i].w);
-        FLUtoFRD(model_states.motor_states[i].p, model_states.motor_states[i].q, model_states.motor_states[i].r);
-    }
     modelStep();
 }
 
@@ -170,39 +148,48 @@ void Model::getAirdata()
     airdata.pressure = environment.airdata.pressure;
     airdata.temperature = environment.airdata.temperature;
 
-    transformStamped_.header.stamp = ros::Time::now();
-    transformStamped_.header.frame_id = "inertial_NWU";
-    transformStamped_.child_frame_id = "body_FLU";
-    transformStamped_.transform.translation.x = 0; // We need only rotation transform
-    transformStamped_.transform.translation.y = 0;
-    transformStamped_.transform.translation.z = 0;
-    quat_.setRPY(model_states.base_link_states.roll, model_states.base_link_states.pitch, model_states.base_link_states.yaw);
-    transformStamped_.transform.rotation.x = quat_.x();
-    transformStamped_.transform.rotation.y = quat_.y();
-    transformStamped_.transform.rotation.z = quat_.z();
-    transformStamped_.transform.rotation.w = quat_.w();
+    // transformStamped_.header.stamp = ros::Time::now();
+    // transformStamped_.header.frame_id = "inertial_NWU";
+    // transformStamped_.child_frame_id = "body_FLU";
+    // transformStamped_.transform.translation.x = 0; // We need only rotation transform
+    // transformStamped_.transform.translation.y = 0;
+    // transformStamped_.transform.translation.z = 0;
+    // quat_.setRPY(0 - model_states.base_link_states.roll,
+    //              0 - model_states.base_link_states.pitch,
+    //              0 - model_states.base_link_states.yaw);
+    // transformStamped_.transform.rotation.x = quat_.x();
+    // transformStamped_.transform.rotation.y = quat_.y();
+    // transformStamped_.transform.rotation.z = quat_.z();
+    // transformStamped_.transform.rotation.w = quat_.w();
 
-    t_in(0) = airdata.wind_x;
-    t_in(1) = airdata.wind_y;
-    t_in(2) = airdata.wind_z;
+    // Transform wing vector from inertial_NWU frame to body_FLU
+    transformation_matrix = KDL::Frame(KDL::Rotation::EulerZYX( model_states.base_link_states.yaw,
+                                                                model_states.base_link_states.pitch,
+                                                                model_states.base_link_states.roll),
+                                                                KDL::Vector(0, 0, 0));
+    v_out = tf2::Stamped<KDL::Vector>(transformation_matrix.Inverse() * KDL::Vector(airdata.wind_x, airdata.wind_y, airdata.wind_z), ros::Time::now(), "bodu_FLU");
 
-    // std::cout<<"wind inertial_NWU"<<std::endl;
-    // std::cout<<t_in<<std::endl<<std::endl;
+    // t_in(0) = airdata.wind_x;
+    // t_in(1) = airdata.wind_y;
+    // t_in(2) = airdata.wind_z;
 
-    try
-    {
-        tf2::doTransform(t_in, t_out, transformStamped_);
-    }
-    catch (const tf2::TransformException &ex)
-    {
-        ROS_WARN("Could NOT transform inertial_NWU to body_FLU: %s" ,ex.what());
-    }
+    // // std::cout<<"wind inertial_NWU"<<std::endl;
+    // // std::cout<<t_in<<std::endl<<std::endl;
 
-    body_wind.x = t_out(0);
-    body_wind.y = t_out(1);
-    body_wind.z = t_out(2);
-    //  std::cout<<"wind body_FLU"<<std::endl;
-    // std::cout<<t_out<<std::endl<<std::endl;
+    // try
+    // {
+    //     tf2::doTransform(t_in, t_out, transformStamped_);
+    // }
+    // catch (const tf2::TransformException &ex)
+    // {
+    //     ROS_WARN("Could NOT transform inertial_NWU to body_FLU: %s" ,ex.what());
+    // }
+
+    body_wind.x = v_out[0];
+    body_wind.y = v_out[1];
+    body_wind.z = v_out[2];
+     std::cout<<"wind body_FLU"<<std::endl;
+    std::cout<<body_wind<<std::endl<<std::endl;
 }
 
 void Model::calcDynamics()
@@ -217,7 +204,7 @@ void Model::applyWrenches()
     std::list<Aerodynamics *>::iterator itAero = dynamics.listOfAerodynamics.begin();
     for (itAero = dynamics.listOfAerodynamics.begin(); itAero != dynamics.listOfAerodynamics.end(); ++itAero)
     {
-        //gazebo default link frames are FLU, but forces and torques are expressed in FRD
+        //gazebo default link frames are FLU, but forces and torques are calculated in FRD
         // so convert wrenches from FRD to FLU before apply them
         FRDtoFLU((*itAero)->aero_wrenches.drag, (*itAero)->aero_wrenches.fy, (*itAero)->aero_wrenches.lift);
         FRDtoFLU((*itAero)->aero_wrenches.l, (*itAero)->aero_wrenches.m, (*itAero)->aero_wrenches.n);

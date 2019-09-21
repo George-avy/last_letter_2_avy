@@ -12,6 +12,8 @@
 #include <ros/transport_hints.h>
 #include <std_msgs/String.h>
 #include <std_srvs/Empty.h>
+#include <tf2/convert.h>
+#include <kdl_parser/kdl_parser.hpp>
 #include <math.h>
 #include <ctime>
 #include <string>

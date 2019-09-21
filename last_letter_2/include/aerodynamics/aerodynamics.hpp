@@ -1,4 +1,3 @@
-
 class Aerodynamics 
 {
   public:
@@ -15,15 +14,14 @@ class Aerodynamics
     
     Model *model;
 
-     //Declare msgs 
-    last_letter_2_msgs::link_states wing_states;
+    //Declare msgs
+    last_letter_2_msgs::link_states airfoil_states;
     last_letter_2_msgs::aero_wrenches aero_wrenches;
 
-    geometry_msgs::TransformStamped transformStamped_;
-    tf2::Quaternion quat_;
-    Eigen::Vector3d t_in, t_out;
+    KDL::Frame transformation_matrix;
+    tf2::Stamped<KDL::Vector> v_out;
 
-    Aerodynamics(Model * parent, int id);
+    Aerodynamics(Model *parent, int id);
     // ~Aerodynamics();
     void calculationCycle();
     void getStates();
