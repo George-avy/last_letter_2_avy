@@ -34,6 +34,7 @@ void buildChannels(sensor_msgs::Joy joyMsg)
     {
         channels.value[i] = input[i];
     }
+
     channels.header.stamp = ros::Time::now();
     pub.publish(channels);
 }

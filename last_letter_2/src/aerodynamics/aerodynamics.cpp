@@ -53,8 +53,8 @@ void Aerodynamics::rotateWind()
     relative_wind.y=v_out[1];
     relative_wind.z=v_out[2];
 
-    std::cout<<"wind airfoil"<<airfoil_number<<std::endl;
-    std::cout<<relative_wind<<std::endl<<std::endl;
+    // std::cout<<"wind airfoil"<<airfoil_number<<std::endl;
+    // std::cout<<relative_wind<<std::endl<<std::endl;
 }
 
 //calculate essential values (airspeed, alpha, beta)

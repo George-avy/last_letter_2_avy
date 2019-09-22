@@ -188,8 +188,9 @@ void Model::getAirdata()
     body_wind.x = v_out[0];
     body_wind.y = v_out[1];
     body_wind.z = v_out[2];
-     std::cout<<"wind body_FLU"<<std::endl;
-    std::cout<<body_wind<<std::endl<<std::endl;
+    
+    //  std::cout<<"wind body_FLU"<<std::endl;
+    // std::cout<<body_wind<<std::endl<<std::endl;
 }
 
 void Model::calcDynamics()

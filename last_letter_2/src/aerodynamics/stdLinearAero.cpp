@@ -24,7 +24,7 @@ void StdLinearAero::calcForces()
     double input_x = airfoil_inputs.x;
     double input_y = airfoil_inputs.y;
     double input_z = airfoil_inputs.z;
-
+    std::cout<<"input_y:"<<input_y<<std::endl;
     // force calculation - - - - - - - - - - -expressed to airfoil link
     if (airspeed == 0)
     {
@@ -38,6 +38,8 @@ void StdLinearAero::calcForces()
         aero_wrenches.fy = qbar * (c_y_0 + c_y_b * beta + c_y_p * b / 2 / airspeed * p + c_y_r * b / 2 / airspeed * r + c_y_input_x * input_x + c_y_input_z * input_z);
         aero_wrenches.lift = qbar * ((-c_drag_alpha * sa - c_lift_alpha * ca) + (-c_drag_q * sa - c_lift_q * ca) * 0.5 / airspeed * c * q + (-c_drag_input_y * sa - c_lift_input_y * ca) * input_y);
     }
+    std::cout<<"body_FRD_lift:"<<aero_wrenches.lift<<std::endl;
+
 }
 
 void StdLinearAero::calcTorques()
@@ -69,6 +71,8 @@ void StdLinearAero::calcTorques()
         aero_wrenches.m = qbar * (c * (c_m_0 + c_m_a * alpha + c_m_q * c / 2 / airspeed * q + c_m_input_y * input_y));
         aero_wrenches.n = qbar * (b * (c_n_0 + c_n_b * beta + c_n_p * b / 2 / airspeed * p + c_n_r * b / 2 / airspeed * r + c_n_input_x * input_x + c_n_input_z * input_z));
     }
+    std::cout<<"body_FRD_m:"<<aero_wrenches.m<<std::endl;
+
 }
 
 double StdLinearAero::liftCoeff(double alpha)
