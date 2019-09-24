@@ -15,9 +15,8 @@
     <!-- only body_FLU acceptable name for base_link -->
     <link name="body_FLU">
         <visual>
-            <origin rpy="0 -${pi/2} 0 " />
             <geometry>
-                <cylinder radius="${body_r}" length="${body_h}" />
+               <mesh filename="file:///home/me/catkin_ws/src/last_letter_2/last_letter_2/config/param/meshes/piper_pa18_dae/piper_pa18.dae"/>
             </geometry>
         </visual>
 
@@ -152,7 +151,7 @@
     </joint>
 
 <!-- propeller link parameters x, y, z, mass -->
-<xacro:property name="propeller_x" value="${0.8*body_s}" />
+<xacro:property name="propeller_x" value="${1.3*body_s}" />
 <xacro:property name="propeller_y" value="${0.2*body_s}" />
 <xacro:property name="propeller_z" value="${0.05*body_s}" />
 <xacro:property name="propeller_m" value="${0.015*mass}" />
@@ -160,8 +159,9 @@
     
     <link name="prop1">
         <visual>
+        <origin xyz="0 -0.149 0.01" rpy="0 0 0" />
             <geometry>
-                <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
+               <mesh filename="file:///home/me/catkin_ws/src/last_letter_2/last_letter_2/config/param/meshes/propeller.dae"/>
             </geometry>
         </visual>
 

@@ -293,8 +293,9 @@
     
     <link name="prop1">
         <visual>
+        <origin xyz="0 -0.149 0.01" rpy="0 0 0" />
             <geometry>
-                <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
+               <mesh filename="file:///home/me/catkin_ws/src/last_letter_2/last_letter_2/config/param/meshes/propeller.dae"/>
             </geometry>
         </visual>
 
@@ -321,8 +322,9 @@
 
     <link name="prop2">
         <visual>
+        <origin xyz="0 -0.149 0.01" rpy="0 0 0" />
             <geometry>
-                <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
+               <mesh filename="file:///home/me/catkin_ws/src/last_letter_2/last_letter_2/config/param/meshes/propeller.dae"/>
             </geometry>
         </visual>
 
