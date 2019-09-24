@@ -1,15 +1,9 @@
 Model::Model() : environment(this), dynamics(this)
 {
-
-    // Read the type of model
-    if (!ros::param::getCached("model/type", model_type)) { ROS_INFO("No model type selected"); model_type = 0;}
-    // Read the type of handling 
-    if (!ros::param::getCached("model/handling", handling)) { ROS_INFO("No mixing function selected"); handling = 0;}
     //Read the number of airfoils
     if (!ros::param::getCached("nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown(); }
     //Read the number of motors
     if (!ros::param::getCached("nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
-
 
     char paramMsg[50];
 
@@ -163,9 +157,9 @@ void Model::getAirdata()
     // transformStamped_.transform.rotation.w = quat_.w();
 
     // Transform wing vector from inertial_NWU frame to body_FLU
-    transformation_matrix = KDL::Frame(KDL::Rotation::EulerZYX( model_states.base_link_states.yaw,
-                                                                model_states.base_link_states.pitch,
-                                                                model_states.base_link_states.roll),
+    transformation_matrix = KDL::Frame(KDL::Rotation::EulerZYX( model_states.base_link_states.psi,
+                                                                model_states.base_link_states.theta,
+                                                                model_states.base_link_states.phi),
                                                                 KDL::Vector(0, 0, 0));
     v_out = tf2::Stamped<KDL::Vector>(transformation_matrix.Inverse() * KDL::Vector(airdata.wind_x, airdata.wind_y, airdata.wind_z), ros::Time::now(), "bodu_FLU");
 

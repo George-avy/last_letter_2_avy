@@ -60,12 +60,6 @@ void Environment::calcTemp()
 void Environment::calcWind()
 {
     //Call functions
-    // std::cout<<"sin(windDir):"<<sin(windDir)<<std::endl;
-    // std::cout<<"kwind:"<<kwind<<std::endl;
-    // std::cout<<"states.z:"<<states.z<<std::endl;
-    // std::cout<<"surfSmooth:"<<surfSmooth<<std::endl;
-    // std::cout<<"pow(abs(states.z) + 0.001, surfSmooth):"<<pow(abs(states.z) + 0.001, surfSmooth)<<std::endl;
-
     double Va, input, temp[2];
     airdata.wind_x = -cos(windDir) * kwind * pow(abs(states.z) + 0.001, surfSmooth);
     airdata.wind_y = -sin(windDir) * kwind * pow(abs(states.z) + 0.001, surfSmooth); //abs is used to avoid exp(x,0) which may return nan
@@ -74,9 +68,6 @@ void Environment::calcWind()
     wind.x = airdata.wind_x;
     wind.y = airdata.wind_y;
     wind.z = airdata.wind_z;
-    // std::cout<<"wind from environment"<<std::endl;
-    // std::cout<<wind<<std::endl;
-
     if (isnan(wind.x) || isnan(wind.y) || isnan(wind.z))
     {
         ROS_FATAL("earth wind NAN in environmentNode!");
@@ -122,11 +113,6 @@ void Environment::calcWind()
     airdata.wind_x += windDistU; // add turbulence
     airdata.wind_y += windDistV[0];
     airdata.wind_z += windDistW[0];
-    // std::cout<<" - - - - - - - - - - - - :"<<std::endl<<std::endl;
-    // std::cout<<" wind x:"<<airdata.wind_x<<std::endl;
-    // std::cout<<" wind y:"<<airdata.wind_y<<std::endl;
-    // std::cout<<" wind z:"<<airdata.wind_z<<std::endl;
-
     if (isnan(airdata.wind_x) || isnan(airdata.wind_y) || isnan(airdata.wind_z))
     {
         ROS_FATAL("body wind NAN in environmentNode!");

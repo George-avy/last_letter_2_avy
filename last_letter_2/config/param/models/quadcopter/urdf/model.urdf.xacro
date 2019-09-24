@@ -1,9 +1,7 @@
 <?xml version="1.0"?>
 <robot name="quadcopter" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-<xacro:property name="source" value="$(find last_letter_2)/config/param/models/quadcopter/mass.yaml" />
-<xacro:property name="dictionary" value="${load_yaml(source)}"/>
-<xacro:property name="body_mass" value="${dictionary['airframe/m']}"/>
+<xacro:property name="body_mass" value="3"/>
 
 <!-- body, airfoil sizes -->
 <xacro:property name="body_s" value="1" />   

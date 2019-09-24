@@ -40,9 +40,8 @@ using namespace Eigen;
 
     // tf2::Quaternion quat_;
     float motor_input[6];
-    float b, l, d;
     int i;
-    int model_type, handling, num_wings, num_motors;
+    int num_wings, num_motors;
     int airfoil_in_x_chan[4], airfoil_in_y_chan[4], airfoil_in_z_chan[4];
     int motor_in_chan[6];
     float deltax_max[4], deltay_max[4], deltaz_max[4];

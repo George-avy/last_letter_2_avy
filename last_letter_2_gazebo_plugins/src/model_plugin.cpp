@@ -310,7 +310,7 @@ public:
         transformStamped_.transform.translation.x = model_states.base_link_states.x;
         transformStamped_.transform.translation.y = model_states.base_link_states.y;
         transformStamped_.transform.translation.z = model_states.base_link_states.z;
-        quat_.setRPY(model_states.base_link_states.roll, model_states.base_link_states.pitch, model_states.base_link_states.yaw);
+        quat_.setRPY(model_states.base_link_states.phi, model_states.base_link_states.theta, model_states.base_link_states.psi);
         transformStamped_.transform.rotation.x = quat_.x();
         transformStamped_.transform.rotation.y = quat_.y();
         transformStamped_.transform.rotation.z = quat_.z();
@@ -341,9 +341,9 @@ public:
         base_link_states.x = position[0];
         base_link_states.y = position[1];
         base_link_states.z = position[2];
-        base_link_states.roll = rotation[0];
-        base_link_states.pitch = rotation[1];
-        base_link_states.yaw = rotation[2];
+        base_link_states.phi = rotation[0];
+        base_link_states.theta = rotation[1];
+        base_link_states.psi = rotation[2];
         base_link_states.u = relLinVel[0];
         base_link_states.v = relLinVel[1];
         base_link_states.w = relLinVel[2];
@@ -367,9 +367,9 @@ public:
             airfoil_states[i].x = position[0];
             airfoil_states[i].y = position[1];
             airfoil_states[i].z = position[2];
-            airfoil_states[i].roll = rotation[0];
-            airfoil_states[i].pitch = rotation[1];
-            airfoil_states[i].yaw = rotation[2];
+            airfoil_states[i].phi = rotation[0];
+            airfoil_states[i].theta = rotation[1];
+            airfoil_states[i].psi = rotation[2];
             airfoil_states[i].u = relLinVel[0];
             airfoil_states[i].v = relLinVel[1];
             airfoil_states[i].w = relLinVel[2];
@@ -394,9 +394,9 @@ public:
             motor_states[i].x = position[0];
             motor_states[i].y = position[1];
             motor_states[i].z = position[2];
-            motor_states[i].roll = rotation[0];
-            motor_states[i].pitch = rotation[1];
-            motor_states[i].yaw = rotation[2];
+            motor_states[i].phi = rotation[0];
+            motor_states[i].theta = rotation[1];
+            motor_states[i].psi = rotation[2];
             motor_states[i].u = relLinVel[0];
             motor_states[i].v = relLinVel[1];
             motor_states[i].w = relLinVel[2];
@@ -411,9 +411,7 @@ public:
         model_states.header.stamp=ros::Time::now();
 
         this->states_pub.publish(model_states);
-
     }
-
 };
 // Register this plugin with the simulator
 GZ_REGISTER_MODEL_PLUGIN(model_plugin)

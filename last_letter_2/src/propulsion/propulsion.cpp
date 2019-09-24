@@ -1,6 +1,5 @@
 #include "noEngine.cpp"
 #include "genericEngine.cpp"
-#include "electricEngine.cpp"
 
 Propulsion::Propulsion(Model *parent, int id)
 {
@@ -40,18 +39,15 @@ void Propulsion::rotateWind()
     motor_link_name.assign(name_temp);
 
     // Transform wing vector from inertial_NWU to motor_FLU frame
-    transformation_matrix = KDL::Frame(KDL::Rotation::EulerZYX( motor_states.yaw,
-                                                                motor_states.pitch,
-                                                                motor_states.roll),
+    transformation_matrix = KDL::Frame(KDL::Rotation::EulerZYX( motor_states.psi,
+                                                                motor_states.theta,
+                                                                motor_states.phi),
                                                                 KDL::Vector(0, 0, 0));
     v_out = tf2::Stamped<KDL::Vector>(transformation_matrix.Inverse() * KDL::Vector(model->airdata.wind_x,model->airdata.wind_y,model->airdata.wind_z), ros::Time::now(), "motor_FLU");
 
     relative_wind.x=v_out[0];
     relative_wind.y=v_out[1];
     relative_wind.z=v_out[2];
-
-    // std::cout<<"wind motor "<<motor_number<<" :"<<std::endl;
-    // std::cout<<relative_wind<<std::endl<<std::endl;
 }
 
 //calculate relative airspeed

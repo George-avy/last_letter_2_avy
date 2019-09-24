@@ -43,9 +43,9 @@ void Aerodynamics::rotateWind()
     airfoil_link_name.assign(name_temp);
 
     // Transform wing vector from inertial_NWU to airfoil_FLU frame
-    transformation_matrix = KDL::Frame(KDL::Rotation::EulerZYX( airfoil_states.yaw,
-                                                                airfoil_states.pitch,
-                                                                airfoil_states.roll),
+    transformation_matrix = KDL::Frame(KDL::Rotation::EulerZYX( airfoil_states.psi,
+                                                                airfoil_states.theta,
+                                                                airfoil_states.phi),
                                                                 KDL::Vector(0, 0, 0));
     v_out = tf2::Stamped<KDL::Vector>(transformation_matrix.Inverse() * KDL::Vector(model->airdata.wind_x,model->airdata.wind_y,model->airdata.wind_z), ros::Time::now(), "airfoil_FLU");
 

@@ -18,7 +18,6 @@ add_message_files(
   air_data.msg
   aero_wrenches.msg
   prop_wrenches.msg
-  model_inputs.msg
 )
 
 add_service_files(

@@ -22,9 +22,9 @@ private:
     last_letter_2_msgs::model_states model_states;
 
     //Create essencial variables, based on parameter server values.
-    int handling, i;
+    int i;
     int num_wings, num_motors;
-    int roll_angle, pitch_angle, yaw_angle, thrust; 
+    int phi_chan, theta_chan, psi_chan, throttle_chan; 
     float roll_input, pitch_input, yaw_input, thrust_input;
     float new_roll_input, new_pitch_input, new_yaw_input, new_thrust_input;
     int input_x_chan[4], input_y_chan[4], input_z_chan[4];
@@ -38,9 +38,6 @@ public:
                                last_letter_2_msgs::get_control_inputs_srv::Response &res);
     void initControllerVariables();
     void channelFunctions();
-
-    //control function
-
 };
 
 Controller::Controller()
@@ -52,8 +49,6 @@ Controller::Controller()
     //Init service
     get_control_inputs_service = n.advertiseService("last_letter_2/get_control_inputs_srv", &Controller::returnControlInputs, this);
 
-    // Read the type of handling 
-    if (!ros::param::getCached("model/handling", handling)) { ROS_INFO("No mixing function selected"); handling = 0;}
     //Read the number of airfoils
     if (!ros::param::getCached("nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown();}
     //Read the number of motors
@@ -61,15 +56,15 @@ Controller::Controller()
 
     char paramMsg[50];
 
-    sprintf(paramMsg, "channels/roll_angle");
-    if (!ros::param::getCached(paramMsg, roll_angle)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-    sprintf(paramMsg, "channels/pitch_angle");
-    if (!ros::param::getCached(paramMsg, pitch_angle)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-    sprintf(paramMsg, "channels/yaw_angle");
-    if (!ros::param::getCached(paramMsg, yaw_angle)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-    sprintf(paramMsg, "channels/thrust");
-    if (!ros::param::getCached(paramMsg, thrust)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-    
+    sprintf(paramMsg, "channels/phi_chan");
+    if (!ros::param::getCached(paramMsg, phi_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
+    sprintf(paramMsg, "channels/theta_chan");
+    if (!ros::param::getCached(paramMsg, theta_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
+    sprintf(paramMsg, "channels/psi_chan");
+    if (!ros::param::getCached(paramMsg, psi_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
+    sprintf(paramMsg, "channels/throttle_chan");
+    if (!ros::param::getCached(paramMsg, throttle_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
+
     //Load basic characteristics for each airfoil
     for (i = 0; i < num_wings; ++i)
     {
@@ -95,11 +90,10 @@ void Controller::chan2signal(last_letter_2_msgs::joystick_input msg)
     channels = msg;
 
     //Keep basic signals
-    roll_input = channels.value[roll_angle];         // roll angle signal
-    pitch_input = channels.value[pitch_angle];       // pitch angle signal
-    yaw_input = channels.value[yaw_angle];           // yaw angle signal
-    thrust_input = (channels.value[thrust] + 1) / 2; // thrust signal
-
+    roll_input = channels.value[phi_chan];         // roll angle signal
+    pitch_input = channels.value[theta_chan];       // pitch angle signal
+    yaw_input = channels.value[psi_chan];           // yaw angle signal
+    thrust_input = (channels.value[throttle_chan] + 1) / 2; // throttle signal
     channelFunctions();
 }
 
@@ -120,19 +114,6 @@ bool Controller::returnControlInputs(last_letter_2_msgs::get_control_inputs_srv:
     new_pitch_input = pitch_input;
     new_yaw_input = yaw_input;
     new_thrust_input = thrust_input;
-
-    switch (handling)
-    {
-    case 0: // Manual
-        break;
-    case 1: // plane Controller
-
-        break;
-    default:
-        ROS_FATAL("Invalid parameter for -/model/handling- in param server!");
-        ros::shutdown();
-        break;
-    }
 
     res.channels[0] = new_roll_input;
     res.channels[1] = new_pitch_input;

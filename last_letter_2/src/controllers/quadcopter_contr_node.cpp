@@ -5,9 +5,21 @@
 #include <last_letter_2_msgs/model_states.h>
 #include <last_letter_2_msgs/get_control_inputs_srv.h>
 #include "last_letter_2_libs/math_lib.hpp"
+#include <dynamic_reconfigure/server.h>
+#include <last_letter_2/PD_gainsConfig.h>
+#include <std_msgs/Float64.h>
 #include <iostream>
 #include <Eigen/Dense>
 
+std_msgs::Float64 roll_kp;
+std_msgs::Float64 roll_kd;
+std_msgs::Float64 pitch_kp;
+std_msgs::Float64 pitch_kd;
+std_msgs::Float64 yaw_kp;
+std_msgs::Float64 yaw_kd;
+std_msgs::Float64 alt_kp;
+std_msgs::Float64 alt_kd;
+ 
 class Controller
 {
 private:
@@ -29,9 +41,9 @@ private:
     Eigen::VectorXf input_signal_vector;
    
     //Create essencial variables, based on parameter server values.
-    int handling, i;
+    int i;
     int num_wings, num_motors;
-    int roll_angle, pitch_angle, yaw_angle, thrust; 
+    int phi_chan, theta_chan, psi_chan, throttle_chan; 
     float roll_input, pitch_input, yaw_input, thrust_input;
     float new_roll_input, new_pitch_input, new_yaw_input, new_thrust_input;
 
@@ -39,7 +51,7 @@ private:
     float prev_roll_error, prev_pitch_error, prev_yaw_error, prev_alt_error;
     float altitude, yaw_direction;
     float dt;
-    float b, l, d;
+    float b, l, d, k;
 
 public:
     Controller();
@@ -63,8 +75,6 @@ Controller::Controller()
     //Init service
     get_control_inputs_service = n.advertiseService("last_letter_2/get_control_inputs_srv", &Controller::returnControlInputs, this);
 
-    // Read the type of handling 
-    if (!ros::param::getCached("model/handling", handling)) { ROS_INFO("No mixing function selected"); handling = 0;}
     //Read the number of airfoils
     if (!ros::param::getCached("nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown();}
     //Read the number of motors
@@ -74,14 +84,14 @@ Controller::Controller()
 
     char paramMsg[50];
 
-    sprintf(paramMsg, "channels/roll_angle");
-    if (!ros::param::getCached(paramMsg, roll_angle)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-    sprintf(paramMsg, "channels/pitch_angle");
-    if (!ros::param::getCached(paramMsg, pitch_angle)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-    sprintf(paramMsg, "channels/yaw_angle");
-    if (!ros::param::getCached(paramMsg, yaw_angle)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-    sprintf(paramMsg, "channels/thrust");
-    if (!ros::param::getCached(paramMsg, thrust)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
+    sprintf(paramMsg, "channels/phi_chan");
+    if (!ros::param::getCached(paramMsg, phi_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
+    sprintf(paramMsg, "channels/theta_chan");
+    if (!ros::param::getCached(paramMsg, theta_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
+    sprintf(paramMsg, "channels/psi_chan");
+    if (!ros::param::getCached(paramMsg, psi_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
+    sprintf(paramMsg, "channels/throttle_chan");
+    if (!ros::param::getCached(paramMsg, throttle_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
 
     initControllerVariables();
 }
@@ -92,12 +102,10 @@ void Controller::chan2signal(last_letter_2_msgs::joystick_input msg)
     channels = msg;
 
     //Keep basic signals
-    roll_input = channels.value[roll_angle];         // roll angle signal
-    pitch_input = channels.value[pitch_angle];       // pitch angle signal
-    yaw_input = channels.value[yaw_angle];           // yaw angle signal
-    thrust_input = (channels.value[thrust] + 1) / 2; // thrust signal
-    // FRDtoFLU(roll_input, pitch_input, yaw_input);    //convert channels from FRD to FLU frame, that states from gazebo are expressed
-                                                     //now all data are expressed in FLU frame
+    roll_input = channels.value[phi_chan];         // roll angle signal
+    pitch_input = channels.value[theta_chan];       // pitch angle signal
+    yaw_input = channels.value[psi_chan];           // yaw angle signal
+    thrust_input = (channels.value[throttle_chan] + 1) / 2; // throttle signal
     channelFunctions();
 }
 
@@ -119,12 +127,8 @@ bool Controller::returnControlInputs(last_letter_2_msgs::get_control_inputs_srv:
     new_yaw_input = yaw_input;
     new_thrust_input = thrust_input;
 
-    // FLUtoFRD(new_roll_input, new_pitch_input, new_yaw_input); //convert signals back to FRD frame, the default model frame
-
     //Call Controller
     PD();
-
-    // FLUtoFRD(new_roll_input, new_pitch_input, new_yaw_input); //convert signals back to FRD frame, the default model frame
     
     //Convert PD outputs to motor inputs
     commands(0) = new_thrust_input; //thrust
@@ -132,19 +136,23 @@ bool Controller::returnControlInputs(last_letter_2_msgs::get_control_inputs_srv:
     commands(2) = new_pitch_input;  //pitch
     commands(3) = new_yaw_input;    //yaw
     input_signal_vector = multirotor_matrix_inverse * commands;
-    std::cout<<commands<<std::endl;
     for (i = 0; i < num_motors; i++)
     {
         res.channels[i] = input_signal_vector[i]; // store calculated motor inputs 
-    res.channels[i]=std::max(std::min((double)res.channels[i], 1.0), -1.0);
-
-    std::cout<<"d"<<i<<":"<<res.channels[i]<<" ";
-        
     }
-    std::cout<<std::endl;
-
-
     return true;
+}
+
+void GainsCallback(last_letter_2::PD_gainsConfig &config, uint32_t level)
+{
+    roll_kp.data=config.roll_kp;
+    roll_kd.data=config.roll_kd;
+    pitch_kp.data=config.pitch_kp;
+    pitch_kd.data=config.pitch_kd;
+    yaw_kp.data=config.yaw_kp;
+    yaw_kd.data=config.yaw_kd;
+    alt_kp.data=config.alt_kp;
+    alt_kd.data=config.alt_kd;
 }
 
 //Controller functions
@@ -180,11 +188,12 @@ void Controller::initControllerVariables()
     if (!ros::param::getCached("model/l", l)) { ROS_FATAL("Invalid parameters for -model/l- in param server!"); ros::shutdown(); }
     // Read the drag factor
     if (!ros::param::getCached("model/d", d)) { ROS_FATAL("Invalid parameters for -model/d- in param server!"); ros::shutdown(); }
+    if (!ros::param::getCached("model/k", k)) { ROS_FATAL("Invalid parameters for -model/k- in param server!"); ros::shutdown(); }
    
     //Built quadcopter matrix
     multirotor_matrix <<    b,     b,      b,      b,      //thrust row
-                            0,    -l * b,  0,      l * b,  //roll row
-                            l * b, 0,     -l * b,  0,      //pitch row
+                            0,    -l * k,  0,      l * k,  //roll row
+                            l * k, 0,     -l * k,  0,      //pitch row
                            -d,     d,     -d,      d;      //yaw row
 
     //calculate inverse of quadcopter matrix. Usefull for future calculations
@@ -199,38 +208,32 @@ void Controller::PD()
     float kp, kd;
 
     //stabilize roll
-    kp = 0.65;
-    kd = 0.17;
-    error = roll_input - model_states.base_link_states.roll;
+    kp = roll_kp.data;
+    kd = roll_kd.data;
+    error = 0.8*roll_input - model_states.base_link_states.phi;
     d_error = (error - prev_roll_error) / dt;
     prev_roll_error = error; // Keep current data for next step
     new_roll_input = kp * error + kd * d_error;
-    if (new_roll_input < -1)
-        new_roll_input = -1;
-    if (new_roll_input > 1)
-        new_roll_input = 1;
+    new_roll_input=std::max(std::min((double)new_roll_input, 1.0), -1.0); // keep in range [-1, 1]
 
     //stabilize pitch
-    kp = 0.65;
-    kd = 0.17;
-    error = pitch_input + model_states.base_link_states.pitch;
+    kp = pitch_kp.data;
+    kd = pitch_kd.data;
+    error = 0.8*pitch_input + model_states.base_link_states.theta;
     d_error = (error - prev_pitch_error) / dt;
     prev_pitch_error = error; // Keep current data for next step
     new_pitch_input = kp * error + kd * d_error;
-    if (new_pitch_input < -1)
-        new_pitch_input = -1;
-    if (new_pitch_input > 1)
-        new_pitch_input = 1;
+    new_pitch_input=std::max(std::min((double)new_pitch_input, 1.0), -1.0); // keep in range [-1, 1]
 
     //yaw direction control
-    kp = 0.5;
-    kd = 0.5;
+    kp = yaw_kp.data;
+    kd = yaw_kd.data;
     yaw_direction += yaw_input * 0.001;
     if (yaw_direction > 3.13)
         yaw_direction = -3.13;
     else if (yaw_direction < -3.13)
         yaw_direction = 3.13;
-    error = yaw_direction + model_states.base_link_states.yaw;
+    error = yaw_direction + model_states.base_link_states.psi;
     if (error > 3.14)
         error = 0.1;
     else if (error < -3.14)
@@ -238,23 +241,17 @@ void Controller::PD()
     d_error = (error - prev_yaw_error) / dt;
     prev_yaw_error = error; // Keep current data for next step
     new_yaw_input = kp * error + kd * d_error;
-    if (new_yaw_input < -1)
-        new_yaw_input = -1;
-    if (new_yaw_input > 1)
-        new_yaw_input = 1;
+    new_yaw_input=std::max(std::min((double)new_yaw_input, 1.0), -1.0); // keep in range [-1, 1]
 
     //altitude control
-    kp = 1;
-    kd = 0.5;
+    kp = alt_kp.data;
+    kd = alt_kd.data;
     altitude = 50 * thrust_input; //control altitude from thrust signal
     error = altitude - model_states.base_link_states.z;
     d_error = (error - prev_alt_error) / dt;
     prev_alt_error = error; // Keep current data for next step
     new_thrust_input = kp * error + kd * d_error;
-    if (new_thrust_input < 0)
-        new_thrust_input = 0;
-    if (new_thrust_input > 1)
-        new_thrust_input = 1;
+    new_thrust_input=std::max(std::min((double)new_thrust_input, 1.0), 0.0); // keep in range [0, 1]
 }
 
 // do the button functions
@@ -279,6 +276,12 @@ int main(int argc, char **argv)
 
     //create the controller
     Controller controller;
+
+    dynamic_reconfigure::Server<last_letter_2::PD_gainsConfig> server;
+    dynamic_reconfigure::Server<last_letter_2::PD_gainsConfig>::CallbackType f;
+
+    f = boost::bind(&GainsCallback, _1, _2);
+    server.setCallback(f);
 
     //Build a thread to spin for callbacks
     ros::AsyncSpinner spinner(1); // Use 1 threads

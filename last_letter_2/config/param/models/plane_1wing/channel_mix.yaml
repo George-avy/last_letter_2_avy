@@ -1,6 +1,6 @@
 # choose the channels for the basic moves
 
-channels/roll_angle: 0
-channels/pitch_angle: 1
-channels/yaw_angle: 2
-channels/thrust: 3
+channels/phi_chan: 0
+channels/theta_chan: 1
+channels/psi_chan: 2
+channels/throttle_chan: 3
