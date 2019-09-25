@@ -16,7 +16,7 @@
     <link name="body_FLU">
         <visual>
             <geometry>
-               <mesh filename="file:///home/me/catkin_ws/src/last_letter_2/last_letter_2/config/param/meshes/piper_pa18_dae/piper_pa18.dae"/>
+                <cylinder radius="${body_r}" length="${body_h}" />
             </geometry>
         </visual>
 

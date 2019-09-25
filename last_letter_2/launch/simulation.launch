@@ -1,21 +1,22 @@
 <launch>
-  <!-- these are the arguments you can pass this launch file, for example paused:=true -->
+
+  <!-- choose a model to simulate -->
+  <!-- <arg name="uav_name" default="plane_1wing"/> -->
+  <!-- <arg name="uav_name" default="plane_1wing_sensors"/> -->
+  <arg name="uav_name" default="plane_3wing_2motor"/>
+  <!-- <arg name="uav_name" default="quadcopter"/> -->
+  <!-- <arg name="uav_name" default="hexacopter"/> -->
+
+  <!-- gazebo node parameters -->
   <arg name="gui" default="true" />
   <arg name="paused" default="false"/>
   <arg name="use_sim_time" default="true"/>
   <arg name="headless" default="false"/>
   <arg name="debug" default="false"/>
   
-  <!-- choose a model to simulate -->
-  <arg name="uav_name" default="plane_1wing"/>
-  <!-- <arg name="uav_name" default="plane_1wing_sensors"/> -->
-  <!-- <arg name="uav_name" default="plane_3wing"/> -->
-  <!-- <arg name="uav_name" default="plane_3w_2m_electric"/> -->
-  <!-- <arg name="uav_name" default="quadcopter"/> -->
-  <!-- <arg name="uav_name" default="hexacopter"/> -->
-
   <!-- choose a world for the simulation -->
   <arg name="sim_world_name" default="$(find last_letter_2)/config/param/worlds/myworld.world"/>
+
 
   <arg name="model" default="$(find last_letter_2)/config/param/models/$(arg uav_name)/urdf/model.urdf.xacro"/>
   <arg name="can_model" default="$(find last_letter_2)/config/param/objects/can/urdf/can_model.urdf.xacro"/>
@@ -34,6 +35,7 @@
   <param name="can" command="$(find xacro)/xacro '$(arg can_model)'"/>
   <param name="use_gui" value="$(arg gui)"/>
 
+  <!-- Load Parameter server  -->
   <rosparam command="load" file="$(find last_letter_2)/config/param/models/$(arg uav_name)/aerodynamics.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/models/$(arg uav_name)/propulsion.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/models/$(arg uav_name)/init.yaml" />
@@ -52,14 +54,18 @@
     <param name="deadzone" value="0.01" />
   </node>
   <node pkg="last_letter_2" name="joy2chan_node" type="joy2chan_node" output="screen" />
-  <!-- <node pkg="last_letter_2" name="hexacopter_contr_node" type="hexacopter_contr_node" output="screen" /> -->
-  <!-- <node pkg="last_letter_2" name="quadcopter_contr_node" type="quadcopter_contr_node" output="screen" /> -->
-  <node pkg="last_letter_2" name="plane_contr_node" type="plane_contr_node" output="screen" />
   <node pkg="last_letter_2" name="core_node" type="core_node" output="screen" />
   <node pkg="last_letter_2" name="chan2srv_node" type="chan2srv_node" output="screen" />
 
+  <!-- Controller nodes. Choosed based on model -->
+  <node pkg="last_letter_2" name="hexacopter_contr_node" type="hexacopter_contr_node" output="screen" if="$(eval uav_name == 'hexacopter')"/>
+  <node pkg="last_letter_2" name="quadcopter_contr_node" type="quadcopter_contr_node" output="screen" if="$(eval uav_name == 'quadcopter')"/>
+  <node pkg="last_letter_2" name="plane_contr_node" type="plane_contr_node" output="screen" if="$(eval uav_name == 'plane_1wing')"/>
+  <node pkg="last_letter_2" name="plane_contr_node" type="plane_contr_node" output="screen" if="$(eval uav_name == 'plane_1wing_sensors')"/>
+  <node pkg="last_letter_2" name="plane_contr_node" type="plane_contr_node" output="screen" if="$(eval uav_name == 'plane_3wing_2motor')"/>
+ 
+ <!-- start rqt_reconfigure node for controller's tuning -->
 	<!-- <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" /> -->
-
 
   <node pkg="robot_state_publisher" name="robot_state_publisher_node" type="robot_state_publisher">
     <remap from="robot_description" to="robot_description"/>
