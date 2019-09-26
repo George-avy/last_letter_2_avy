@@ -233,7 +233,7 @@ public:
             omega = req.motor_omega[i];
             sprintf(name_temp, "motor%i_to_axle%i", i + 1, i + 1); // joint name need fix
             joint_name.assign(name_temp);
-            model->GetJoint(joint_name)->SetVelocity(0,rotationDir[i]*omega);
+            model->GetJoint(joint_name)->SetVelocity(0,omega);
         }
 
         //Handle sensors

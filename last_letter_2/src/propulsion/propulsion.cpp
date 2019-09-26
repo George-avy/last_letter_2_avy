@@ -1,5 +1,6 @@
 #include "noEngine.cpp"
 #include "genericEngine.cpp"
+#include "electricEngine.cpp"
 
 Propulsion::Propulsion(Model *parent, int id)
 {

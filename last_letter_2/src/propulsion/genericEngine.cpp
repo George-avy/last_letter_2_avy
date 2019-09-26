@@ -18,7 +18,7 @@ void genericEngine::calcTorque()
 
 void genericEngine::calcOmega()
 {
-    prop_wrenches.omega = 10*k_omega * motor_input;
+    prop_wrenches.omega = rotationDir * k_omega * motor_input;
 }
 
 void genericEngine::initParam(int id)

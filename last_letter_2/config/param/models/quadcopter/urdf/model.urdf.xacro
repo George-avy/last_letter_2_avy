@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot name="quadcopter" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-<xacro:property name="body_mass" value="3"/>
+<xacro:property name="body_mass" value="1.5"/>
 
 <!-- body, airfoil sizes -->
 <xacro:property name="body_s" value="1" />   

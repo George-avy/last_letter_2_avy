@@ -3,24 +3,50 @@
 
 nMotors: 2
 
-motor1/motorType: 1
+motor1/motorType: 2
 motor1/rotationDir: 1.0
 motor1/input_chan: 3
 
 #features for generic Engine
-motor1/s_prop: 0.19625
-motor1/c_prop: 1.0
-motor1/k_motor: 55
-motor1/k_t_p: 0.0
-motor1/k_omega: 20.0
+motor1/maxThrust: 138  # 5*mass*9.81  
+motor1/Kv: 13.333 # in RPS/V
+motor1/Rm: 0.041 # in Ohms
+motor1/I0: 0.9 # in Amperes
 
-motor2/motorType: 1
-motor2/rotationDir: 1.0
+motor1/RadPSLimits: [0.01, 1000.0]
+motor1/engInertia: 0.008 # in kg*m^3
+
+prop1/propDiam:  0.305 # in m
+prop1/nCoeffPoly/polyType: 0
+prop1/nCoeffPoly/polyNo: 4
+prop1/nCoeffPoly/coeffs: [0.0, 3.19, -12.15, 27.83, -21.82]
+prop1/powerPoly/polyType: 0
+prop1/powerPoly/polyNo: 3
+prop1/powerPoly/coeffs: [0.0661, -0.1647, 0.2958, -0.2355]
+
+motor2/motorType: 2
+motor2/rotationDir: -1.0
 motor2/input_chan: 3
 
 #features for generic Engine
-motor2/s_prop: 0.19625
-motor2/c_prop: 1.0
-motor2/k_motor: 55
-motor2/k_t_p: 0.0
-motor2/k_omega: 20.0
+motor2/maxThrust: 138  # 5*mass*9.81  
+motor2/Kv: 13.333 # in RPS/V
+motor2/Rm: 0.041 # in Ohms
+motor2/I0: 0.9 # in Amperes
+
+motor2/RadPSLimits: [0.01, 1000.0]
+motor2/engInertia: 0.008 # in kg*m^3
+
+prop2/propDiam:  0.305 # in m
+prop2/nCoeffPoly/polyType: 0
+prop2/nCoeffPoly/polyNo: 4
+prop2/nCoeffPoly/coeffs: [0.0, 3.19, -12.15, 27.83, -21.82]
+prop2/powerPoly/polyType: 0
+prop2/powerPoly/polyNo: 3
+prop2/powerPoly/coeffs: [0.0661, -0.1647, 0.2958, -0.2355]
+
+battery/Rs: 0.0 # in Ohms
+battery/Cells: 3 # number of LiPo cells
+
+
+

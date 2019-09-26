@@ -31,6 +31,8 @@ Propulsion *Factory::buildPropulsion(Model *parent, int id)
         return new NoEngine(parent, id+1);
     case 1:
         return new genericEngine(parent, id+1);
+    case 2:
+        return new electricEngine(parent, id + 1);
     }
 }
 

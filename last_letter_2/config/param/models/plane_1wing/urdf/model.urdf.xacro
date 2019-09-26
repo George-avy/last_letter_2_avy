@@ -15,6 +15,7 @@
     <!-- only body_FLU acceptable name for base_link -->
     <link name="body_FLU">
         <visual>
+            <origin rpy="0 -${pi/2} 0 " />
             <geometry>
                 <cylinder radius="${body_r}" length="${body_h}" />
             </geometry>

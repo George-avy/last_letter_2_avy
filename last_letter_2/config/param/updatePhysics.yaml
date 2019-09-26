@@ -1,10 +1,10 @@
-#World Parameters
+#Physics Parameters
 
 #Simulation calculation rate (frame rate)
-/world/simRate: 500
+/updatePhysics/simRate: 500
 
 #Simulation time-step
-/world/deltaT: 0.002
+/updatePhysics/deltaT: 0.002
 
 # realTimeFactor = simRate * deltaT
 # For real time simulation simRate * deltaT = 1

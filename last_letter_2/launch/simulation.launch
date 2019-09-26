@@ -42,7 +42,7 @@
   <rosparam command="load" file="$(find last_letter_2)/config/param/models/$(arg uav_name)/model.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/models/$(arg uav_name)/channel_mix.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/environment.yaml" />
-  <rosparam command="load" file="$(find last_letter_2)/config/param/world.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/updatePhysics.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/HID.yaml" />
 
    <!-- push robot_description to factory and spawn model in gazebo -->

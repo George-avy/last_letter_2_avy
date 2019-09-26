@@ -4,9 +4,9 @@ Environment::Environment(Model *parent)
     model=parent;
 
     //Init publisher
-    air_data_pub = n.advertise<last_letter_2_msgs::air_data>("last_letter_2/airData", 1);
+    air_data_pub = n.advertise<last_letter_2_msgs::air_data>("last_letter_2/air_data", 1);
 
-    if(!ros::param::getCached("/world/deltaT", dt)) {ROS_FATAL("Invalid parameters for -deltaT- in param server!"); ros::shutdown();}
+    if(!ros::param::getCached("updatePhysics/deltaT", dt)) {ROS_FATAL("Invalid parameters for -deltaT- in param server!"); ros::shutdown();}
     if(!ros::param::getCached("/environment/Dryden/use", allowTurbulence)) {ROS_FATAL("Invalid parameters for -/environment/Dryden/use- in param server!"); ros::shutdown();}
 
     //initialize atmosphere stuff

@@ -68,7 +68,7 @@ Controller::Controller()
     //Read the number of motors
     if (!ros::param::getCached("nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown();}
     //Read the update rate
-    if (!ros::param::getCached("world/deltaT", dt)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown();}
+    if (!ros::param::getCached("updatePhysics/deltaT", dt)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown();}
 
     char paramMsg[50];
 

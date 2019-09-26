@@ -43,8 +43,8 @@ public:
       ROS_INFO("Waiting for node to rise");
     }
 
-  if (!ros::param::getCached("world/simRate", simRate)) { ROS_FATAL("No simulation Rate selected"); ros::shutdown();}
-  if (!ros::param::getCached("world/deltaT", deltaT)) { ROS_FATAL("No time step selected"); ros::shutdown();}
+  if (!ros::param::getCached("updatePhysics/simRate", simRate)) { ROS_FATAL("No simulation Rate selected"); ros::shutdown();}
+  if (!ros::param::getCached("updatePhysics/deltaT", deltaT)) { ROS_FATAL("No time step selected"); ros::shutdown();}
 
   this->World->Physics()->SetRealTimeUpdateRate(simRate);
   this->World->Physics()->SetMaxStepSize(deltaT);
