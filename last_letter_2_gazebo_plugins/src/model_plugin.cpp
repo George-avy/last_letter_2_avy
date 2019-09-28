@@ -1,28 +1,18 @@
 #include <ros/ros.h>
-#include "ros/callback_queue.h"
-#include "ros/subscribe_options.h"
-#include <ros/service.h>
-#include <rosgraph_msgs/Clock.h>
 #include <gazebo/gazebo_client.hh> //gazebo version >6
 #include <gazebo/physics/physics.hh>
-#include <ignition/math/Vector3.hh>
+#include "ros/callback_queue.h"
+#include "ros/subscribe_options.h"
 #include <last_letter_2_msgs/model_states.h>
 #include <last_letter_2_msgs/link_states.h>
 #include <last_letter_2_msgs/apply_model_wrenches_srv.h>
 #include <last_letter_2_msgs/channels.h>
-#include <geometry_msgs/Vector3Stamped.h>
-#include <geometry_msgs/TransformStamped.h>
-#include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2_ros/transform_broadcaster.h>
 #include <tf2/LinearMath/Quaternion.h>
-#include <tf2_ros/transform_listener.h>
 #include <tf2/convert.h>
+#include <ignition/math/Vector3.hh>
 #include <kdl_parser/kdl_parser.hpp>
 #include <boost/bind.hpp>
-#include <ctime> // for timer
-#include <iostream>
-#include <string>
-
 #include <thread>
 #include <mutex>
 #include <condition_variable>
@@ -79,6 +69,7 @@ private:
     int i, thread_rate, thread_rate_multiplier, step_number;
     float omega;
     float camera_angle, laser_angle;
+    int reset_sim_chan, camera_angle_chan, laser_angle_chan;
 
 public:
     model_plugin() : ModelPlugin()
@@ -121,17 +112,18 @@ public:
         if (!ros::param::getCached("nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown(); }
         //Read the number of motors
         if (!ros::param::getCached("nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
-
+        //Read the camera angle channel if available
+        if (ros::param::getCached("channels/camera_angle_chan", camera_angle_chan)) { ROS_INFO("Camera angle channel loaded");}
+        //Read the laser angle channel if available
+        if (ros::param::getCached("channels/laser_angle_chan", laser_angle_chan)) { ROS_INFO("Laser angle channel loaded");}
+        //Read the reset Simulation channel
+        if (ros::param::getCached("channels/reset_sim_chan", reset_sim_chan)) { ROS_INFO("Reset simulation channel loaded");}
+        
         char paramMsg[50];
         step_number = 0;
         wrenches_applied = false;
         modelStateInit();
     }
-
-    // void Reset()
-    // {
-    //     modelStateInit();
-    // }
 
     // Init variables
     void modelStateInit()
@@ -241,15 +233,13 @@ public:
 
         //Handle sensors
 
-        //Check if camera_joint exists.
-        // If camera_joitn exists, set the camera_angle, if not skip
+        //Check if camera_joint exists to set the camera_angle
         if (model->GetJoint("camera_joint"))
         {
             model->GetJoint("camera_joint")->SetPosition(0, camera_angle);
         }
 
-        //Check if laser_joint exists.
-        // If laser_joitn exists, set the laser_angle, if not skip
+        //Check if laser_joint exists to set the laser_angle
         if (model->GetJoint("laser_joint"))
         {
             model->GetJoint("laser_joint")->SetPosition(0, laser_angle);
@@ -265,29 +255,33 @@ public:
     void manageChan(const last_letter_2_msgs::channels::ConstPtr &channels)
     {
         //Handle Camera's angle
-        //Camera sensor listen to 5th channel
-        if (channels->value[4] == -1 && camera_angle >= -1.9)
+        if (model->GetJoint("camera_joint"))
         {
-            camera_angle -= 0.1;
-
-        }
-        if (channels->value[4] == 1 && camera_angle <= 1.9)
-        {
-            camera_angle += 0.1;
+            if (channels->value[camera_angle_chan] == -1 && camera_angle >= -1.9)
+            {
+                camera_angle -= 0.1;
+            }
+            if (channels->value[camera_angle_chan] == 1 && camera_angle <= 1.9)
+            {
+                camera_angle += 0.1;
+            }
         }
 
         //Handle Laser's angle
-        //Laser sensor listen to 6th channel
-        if (channels->value[5] == 1 && laser_angle >= -0.9)
+        if (model->GetJoint("laser_joint"))
         {
-            laser_angle -= 0.1;
-        }
-        if (channels->value[5] == -1 && laser_angle <= 0.9)
-        {
-            laser_angle += 0.1;
+            if (channels->value[laser_angle_chan] == 1 && laser_angle >= -0.9)
+            {
+                laser_angle -= 0.1;
+            }
+            if (channels->value[laser_angle_chan] == -1 && laser_angle <= 0.9)
+            {
+                laser_angle += 0.1;
+            }
         }
 
-        if (channels->value[12+5] == 1)
+        //Reset simulation 
+        if (channels->value[reset_sim_chan] == 1)
         {
             modelStateInit();
         }

@@ -87,7 +87,7 @@
           <pose>400 0 0  0 0 1.57</pose>
           <cast_shadows>false</cast_shadows>
           <geometry>
-             <mesh><uri>file:///home/me/catkin_ws/src/last_letter_2/last_letter_2/config/param/meshes/csl_logo/csl_logo.dae</uri></mesh>
+             <mesh><uri>package://last_letter_2/config/param/meshes/csl_logo/csl_logo.dae</uri></mesh>
           </geometry>
          </visual>
       </link>

@@ -83,7 +83,7 @@ void Environment::calcWind()
 
     Va = sqrt(pow(airspeed.x, 2) + pow(airspeed.y, 2) + pow(airspeed.z, 2));
 
-    if (allowTurbulence)
+    if (allowTurbulence)    //turbulence is calculated at body_FLU frame
     {
         input = (((double)rand()) / (RAND_MAX)-0.5); //turbulence u-component
 
@@ -109,9 +109,21 @@ void Environment::calcWind()
         ros::shutdown();
     }
 
+    // Rotate turbulence from bodu_FLU that calculated to inertial_NWU before added to wind vector
+    transformation_matrix = KDL::Frame(KDL::Rotation::EulerZYX(-states.psi,
+                                                               -states.theta,
+                                                               -states.phi),
+                                       KDL::Vector(0, 0, 0));
+    v_out = tf2::Stamped<KDL::Vector>(transformation_matrix.Inverse() * KDL::Vector(windDistU, windDistV[0], windDistW[0]), ros::Time::now(), "inertial_FLU");
+
+    windDistU = v_out[0];
+    windDistV[0] = v_out[1];
+    windDistW[0] = v_out[2];
+
     airdata.wind_x += windDistU;    // add turbulence
     airdata.wind_y += windDistV[0];
     airdata.wind_z += windDistW[0];
+    
     if (isnan(airdata.wind_x) || isnan(airdata.wind_y) || isnan(airdata.wind_z))
     {
         ROS_FATAL("body wind NAN in environmentNode!");

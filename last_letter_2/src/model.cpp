@@ -7,6 +7,8 @@ Model::Model() : environment(this), dynamics(this)
     if (!ros::param::getCached("nWings", num_wings)) { ROS_FATAL("Invalid parameters for wings_number in param server!"); ros::shutdown(); }
     //Read the number of motors
     if (!ros::param::getCached("nMotors", num_motors)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
+    //Read the initial state of gazebo
+    if (!ros::param::getCached("updatePhysics/paused", start_paused)) { ROS_FATAL("Invalid parameters for motor_number in param server!"); ros::shutdown(); }
 
     char paramMsg[50];
 
@@ -42,13 +44,17 @@ Model::Model() : environment(this), dynamics(this)
     apply_wrench_client = nh.serviceClient<last_letter_2_msgs::apply_model_wrenches_srv>("last_letter_2/apply_model_wrenches_srv", true);
     ros::service::waitForService("last_letter_2/get_control_inputs_srv");
     get_control_inputs_client = nh.serviceClient<last_letter_2_msgs::get_control_inputs_srv>("last_letter_2/get_control_inputs_srv", true);
-    // // Start gazebo on pause state
-    // // Freeze gazebo with service after the initialization of all classes, services and topics
-    // // Otherwise it hangs
-    // ros::service::waitForService("/gazebo/pause_physics");
-    // pauseGazebo = nh.serviceClient<std_srvs::Empty>("/gazebo/pause_physics");
-    // std_srvs::Empty emptySrv;
-    // pauseGazebo.call(emptySrv);
+
+    // Start gazebo on pause state
+    // Freeze gazebo with service after create the Model object
+    // Otherwise it hangs
+    ros::service::waitForService("/gazebo/pause_physics");
+    ros::ServiceClient pauseGazebo = nh.serviceClient<std_srvs::Empty>("/gazebo/pause_physics");
+    std_srvs::Empty emptySrv;
+    if (start_paused == 1)
+    {
+        pauseGazebo.call(emptySrv);
+    }
 
     // Init variables
     for (i = 0; i < num_wings; i++)

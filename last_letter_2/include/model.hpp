@@ -34,9 +34,10 @@ public:
   tf2::Stamped<KDL::Vector> v_out;
 
   int i, num_wings, num_motors;
-  int airfoil_in_x_chan[4], airfoil_in_y_chan[4], airfoil_in_z_chan[4];
-  int motor_in_chan[6];
-  float deltax_max[4], deltay_max[4], deltaz_max[4];
+  int airfoil_in_x_chan[10], airfoil_in_y_chan[10], airfoil_in_z_chan[10];
+  int motor_in_chan[10];
+  int start_paused;
+  float deltax_max[10], deltay_max[10], deltaz_max[10];
   float channel_input[20];
 
   Eigen::MatrixXf multirotor_matrix;

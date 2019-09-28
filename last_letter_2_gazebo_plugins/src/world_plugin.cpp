@@ -1,17 +1,8 @@
-#include <gazebo/gazebo_client.hh> //gazebo version >6
 #include <ros/ros.h>
+#include <gazebo/gazebo_client.hh> //gazebo version >6
 #include <gazebo/physics/physics.hh>
-#include <gazebo/physics/World.hh>
-#include <ignition/math/Vector3.hh>
-#include "ros/callback_queue.h"
-#include <boost/bind.hpp>
-#include <rosgraph_msgs/Clock.h>
 #include <tf2_ros/static_transform_broadcaster.h>
 #include <tf2/LinearMath/Quaternion.h>
-#include <ctime> // for timer
-#include <ros/service.h>
-#include <thread>
-#include <std_srvs/Empty.h>
 
 namespace gazebo
 {

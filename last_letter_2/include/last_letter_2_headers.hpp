@@ -7,16 +7,8 @@
 #include <last_letter_2_msgs/prop_wrenches.h>
 #include <last_letter_2_msgs/get_control_inputs_srv.h>
 #include <last_letter_2_msgs/apply_model_wrenches_srv.h>
-#include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <std_msgs/String.h>
 #include <std_srvs/Empty.h>
-// #include <kdl_parser/kdl_parser.hpp>
-#include <XmlRpcValue.h>
-#include <math.h>
-#include <ctime>
-#include <string>
-#include <iostream>
 #include <Eigen/Dense>
 
 class Aerodynamics;

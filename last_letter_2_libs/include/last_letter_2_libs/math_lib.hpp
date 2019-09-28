@@ -1,4 +1,3 @@
-#include <cstdio>
 #include <cmath>
 
 class Polynomial

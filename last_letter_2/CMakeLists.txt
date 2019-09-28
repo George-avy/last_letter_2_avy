@@ -4,13 +4,8 @@ project(last_letter_2)
 find_package(catkin REQUIRED 
   COMPONENTS
   roscpp
-  geometry_msgs
-  rosgraph_msgs
-  sensor_msgs
-  std_msgs
   last_letter_2_msgs
   last_letter_2_libs
-  tf2_ros
   tf2_geometry_msgs
   dynamic_reconfigure
 )
@@ -23,7 +18,6 @@ generate_dynamic_reconfigure_options(
 
 catkin_package(DEPENDS
   CATKIN_DEPENDS 
-  std_msgs
 )
 
 include_directories(

@@ -2,10 +2,10 @@
 <package format="2">
     <name>last_letter_2_libs</name>
     <version>0.0.0</version>
-    <description>Last_letter_2 math and util libraries</description>
+    <description>Last_letter_2 math libraries</description>
 
     <maintainer email="tailwhipx4@gmail.com">George Zogopoulos-Papaliakos</maintainer>
-
+    <maintainer email="milistefanos@hotmail.com">Stefanos Miliotis</maintainer>
 
     <license>GPL-3.0</license>
 

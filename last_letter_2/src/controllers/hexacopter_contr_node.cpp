@@ -31,7 +31,7 @@ private:
     // Essencial variables
     int i;
     int num_wings, num_motors;
-    int phi_chan, theta_chan, psi_chan, throttle_chan;
+    int roll_in_chan, pitch_in_chan, yaw_in_chan, throttle_in_chan;
     float roll_input, pitch_input, yaw_input, thrust_input;
     float new_roll_input, new_pitch_input, new_yaw_input, new_thrust_input;
     float b, l, d;
@@ -49,9 +49,7 @@ public:
                              last_letter_2_msgs::get_control_inputs_srv::Response &res);
     void initControllerVariables();
     void channelFunctions();
-
-    //control function
-    void PD();
+    void controlLaw();
 };
 
 Controller::Controller()
@@ -72,14 +70,14 @@ Controller::Controller()
 
     char paramMsg[50];
 
-    sprintf(paramMsg, "channels/phi_chan");
-    if (!ros::param::getCached(paramMsg, phi_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-    sprintf(paramMsg, "channels/theta_chan");
-    if (!ros::param::getCached(paramMsg, theta_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-    sprintf(paramMsg, "channels/psi_chan");
-    if (!ros::param::getCached(paramMsg, psi_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
-    sprintf(paramMsg, "channels/throttle_chan");
-    if (!ros::param::getCached(paramMsg, throttle_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
+    sprintf(paramMsg, "channels/roll_in_chan");
+    if (!ros::param::getCached(paramMsg, roll_in_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
+    sprintf(paramMsg, "channels/pitch_in_chan");
+    if (!ros::param::getCached(paramMsg, pitch_in_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
+    sprintf(paramMsg, "channels/yaw_in_chan");
+    if (!ros::param::getCached(paramMsg, yaw_in_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
+    sprintf(paramMsg, "channels/throttle_in_chan");
+    if (!ros::param::getCached(paramMsg, throttle_in_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
 
     initControllerVariables();
 }
@@ -90,10 +88,10 @@ void Controller::chan2signal(last_letter_2_msgs::channels msg)
     channels = msg;
 
     //Keep basic signals
-    roll_input = channels.value[phi_chan];                  // roll angle signal
-    pitch_input = channels.value[theta_chan];               // pitch angle signal
-    yaw_input = channels.value[psi_chan];                   // yaw angle signal
-    thrust_input = (channels.value[throttle_chan] + 1) / 2; // throttle signal
+    roll_input = channels.value[roll_in_chan];                  // roll angle signal
+    pitch_input = channels.value[pitch_in_chan];               // pitch angle signal
+    yaw_input = channels.value[yaw_in_chan];                   // yaw angle signal
+    thrust_input = (channels.value[throttle_in_chan] + 1) / 2; // throttle signal
     channelFunctions();
 }
 
@@ -110,14 +108,8 @@ bool Controller::returnControlInputs(last_letter_2_msgs::get_control_inputs_srv:
     //check for model_states update. If previous model_states, spin once to call storeState clb for new onces and then continue
     if (req.header.seq != model_states.header.seq)
         ros::spinOnce();
-
-    new_roll_input = roll_input;
-    new_pitch_input = pitch_input;
-    new_yaw_input = yaw_input;
-    new_thrust_input = thrust_input;
-
-    //Call Controller
-    PD();
+        
+    controlLaw();
 
     //Convert PD outputs to motor inputs using quadcopter matrix
     commands(0) = new_thrust_input; //thrust
@@ -173,9 +165,15 @@ void Controller::initControllerVariables()
     multirotor_matrix_inverse = multirotor_matrix.completeOrthogonalDecomposition().pseudoInverse();
 }
 
-//PD controller
-void Controller::PD()
+// Control law calculations
+void Controller::controlLaw()
 {
+    // PD controller for roll, pitch, yaw and altitude
+    new_roll_input = roll_input;
+    new_pitch_input = pitch_input;
+    new_yaw_input = yaw_input;
+    new_thrust_input = thrust_input;
+
     float error, d_error;
     float kp, kd;
 

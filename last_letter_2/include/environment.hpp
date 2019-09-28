@@ -20,6 +20,8 @@ public:
     double windDistV[2], windDistW[2];
     double Lu, Lw, sigmau, sigmaw;
     double allowTurbulence, dt;
+    KDL::Frame transformation_matrix;
+    tf2::Stamped<KDL::Vector> v_out;
     Model *model;
     Environment(Model *model);
     void calculateAirdata();

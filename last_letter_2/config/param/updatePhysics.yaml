@@ -8,3 +8,6 @@
 
 # realTimeFactor = simRate * deltaT
 # For real time simulation simRate * deltaT = 1
+
+#Gazebo wolrd Initial State
+/updatePhysics/paused: 1  # 1 for paused, 0 for not paused

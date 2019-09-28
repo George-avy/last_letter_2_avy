@@ -5,8 +5,6 @@ project(last_letter_2_gazebo_plugins)
 find_package(catkin REQUIRED 
   COMPONENTS
   roscpp
-  rosgraph_msgs
-  std_srvs
   last_letter_2_msgs
   tf2_ros
 )
@@ -27,7 +25,6 @@ add_library(world_plugin src/world_plugin.cpp)
 
 add_dependencies(model_plugin ${catkin_EXPORTED_TARGETS})
 add_dependencies(world_plugin ${catkin_EXPORTED_TARGETS})
-
 
 target_link_libraries(model_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES} ${MY_ADDED_LIBS})
 target_link_libraries(world_plugin ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})

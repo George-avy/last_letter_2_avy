@@ -12,17 +12,14 @@
     <buildtool_depend>catkin</buildtool_depend>
     
     <build_depend>roscpp</build_depend>
-    <build_depend>rosgraph_msgs</build_depend>
     <build_depend>last_letter_2_msgs</build_depend>
     <build_depend>tf2_ros</build_depend>
 
     <build_export_depend>roscpp</build_export_depend>
-    <build_export_depend>rosgraph_msgs</build_export_depend>
     <build_export_depend>last_letter_2_msgs</build_export_depend>
     <build_export_depend>tf2_ros</build_export_depend>
 
     <exec_depend>roscpp</exec_depend>
-    <exec_depend>rosgraph_msgs</exec_depend>
     <exec_depend>last_letter_2_msgs</exec_depend>
     <exec_depend>tf2_ros</exec_depend>
 </package>

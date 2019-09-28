@@ -294,7 +294,7 @@
         <visual>
         <origin xyz="0 -0.149 0.01" rpy="0 0 0" />
             <geometry>
-               <mesh filename="file:///home/me/catkin_ws/src/last_letter_2/last_letter_2/config/param/meshes/propeller.dae"/>
+               <mesh filename="package://last_letter_2/config/param/meshes/propeller.dae"/>
             </geometry>
         </visual>
 
@@ -322,7 +322,7 @@
         <visual>
         <origin xyz="0 -0.149 0.01" rpy="0 0 0" />
             <geometry>
-               <mesh filename="file:///home/me/catkin_ws/src/last_letter_2/last_letter_2/config/param/meshes/propeller.dae"/>
+               <mesh filename="package://last_letter_2/config/param/meshes/propeller.dae"/>
             </geometry>
         </visual>
 

@@ -17,14 +17,13 @@ gazebo_msgs::DeleteModel delete_model;
 std_srvs::Empty emptySrv;
 std::string spawn_model_name;
 char name_temp[30];
-int i, j, prev_j, button_num;
+int i, j, prev_j, spawn_can_chan, despawn_cans_chan;
 
 // Manage channel functions. Mainly for calling defalut gazebo services
 void srvServer(last_letter_2_msgs::channels channels)
 {
     //spawn a small cube under the multirotor
-    button_num = 1;
-    if (channels.value[5 + button_num] == 1)
+    if (channels.value[spawn_can_chan] == 1)
     {
         sprintf(name_temp, "can%i", i++);
         spawn_model_name.assign(name_temp);
@@ -35,8 +34,7 @@ void srvServer(last_letter_2_msgs::channels channels)
     }
 
     //delete all cubes from world
-    button_num = 2;
-    if (channels.value[5 + button_num] == 1)
+    if (channels.value[despawn_cans_chan] == 1)
     {
         for (j = prev_j; j < i; j++)
         {
@@ -66,6 +64,11 @@ int main(int argc, char **argv)
     spawnModel = n.serviceClient<gazebo_msgs::SpawnModel>("/gazebo/spawn_urdf_model");
     ros::service::waitForService("/gazebo/delete_model"); //delete a model from gazebo world
     deleteModel = n.serviceClient<gazebo_msgs::DeleteModel>("/gazebo/delete_model");
+
+    //Read the channel that spawn the can
+    if (ros::param::getCached("channels/spawn_can_chan", spawn_can_chan)) { ROS_INFO("spawn_can_chan loaded"); }
+   //Read the that delete all spawned cans
+    if (ros::param::getCached("channels/despawn_cans_chan", despawn_cans_chan)) { ROS_INFO("despawn_cans_chan loaded"); }
 
     // get the urdf of can model from parameter server
     if (!ros::param::getCached("can", spawn_model.request.model_xml))
