@@ -1,7 +1,7 @@
 // A node that runs the controller for hexacopter model
 
 #include <ros/ros.h>
-#include <last_letter_2_msgs/joystick_input.h>
+#include <last_letter_2_msgs/channels.h>
 #include <last_letter_2_msgs/model_states.h>
 #include <last_letter_2_msgs/get_control_inputs_srv.h>
 #include "last_letter_2_libs/math_lib.hpp"
@@ -20,33 +20,33 @@ private:
     //Service
     ros::ServiceServer get_control_inputs_service;
 
-    last_letter_2_msgs::joystick_input channels;
+    last_letter_2_msgs::channels channels;
     last_letter_2_msgs::model_states model_states;
 
     Eigen::MatrixXf multirotor_matrix;
     Eigen::MatrixXf multirotor_matrix_inverse;
     Eigen::VectorXf commands;
     Eigen::VectorXf input_signal_vector;
-   
-    //Create essencial variables, based on parameter server values.
+
+    // Essencial variables
     int i;
     int num_wings, num_motors;
-    int phi_chan, theta_chan, psi_chan, throttle_chan; 
+    int phi_chan, theta_chan, psi_chan, throttle_chan;
     float roll_input, pitch_input, yaw_input, thrust_input;
     float new_roll_input, new_pitch_input, new_yaw_input, new_thrust_input;
+    float b, l, d;
 
     // variables for PD controller algorithm
     float prev_roll_error, prev_pitch_error, prev_yaw_error, prev_alt_error;
     float altitude, yaw_direction;
     float dt;
-    float b, l, d;
 
 public:
     Controller();
-    void chan2signal(last_letter_2_msgs::joystick_input msg);
+    void chan2signal(last_letter_2_msgs::channels msg);
     void storeStates(const last_letter_2_msgs::model_states msg);
     bool returnControlInputs(last_letter_2_msgs::get_control_inputs_srv::Request &req,
-                               last_letter_2_msgs::get_control_inputs_srv::Response &res);
+                             last_letter_2_msgs::get_control_inputs_srv::Response &res);
     void initControllerVariables();
     void channelFunctions();
 
@@ -85,14 +85,14 @@ Controller::Controller()
 }
 
 //Store new joystick values
-void Controller::chan2signal(last_letter_2_msgs::joystick_input msg)
+void Controller::chan2signal(last_letter_2_msgs::channels msg)
 {
     channels = msg;
 
     //Keep basic signals
-    roll_input = channels.value[phi_chan];         // roll angle signal
-    pitch_input = channels.value[theta_chan];       // pitch angle signal
-    yaw_input = channels.value[psi_chan];           // yaw angle signal
+    roll_input = channels.value[phi_chan];                  // roll angle signal
+    pitch_input = channels.value[theta_chan];               // pitch angle signal
+    yaw_input = channels.value[psi_chan];                   // yaw angle signal
     thrust_input = (channels.value[throttle_chan] + 1) / 2; // throttle signal
     channelFunctions();
 }
@@ -103,10 +103,11 @@ void Controller::storeStates(const last_letter_2_msgs::model_states msg)
     model_states = msg;
 }
 
+// calculate and send back to Model class new control model inputs
 bool Controller::returnControlInputs(last_letter_2_msgs::get_control_inputs_srv::Request &req,
-                                       last_letter_2_msgs::get_control_inputs_srv::Response &res)
+                                     last_letter_2_msgs::get_control_inputs_srv::Response &res)
 {
-    //check for model_states update. If previous model_states, call storeState clb for new onces and then continue
+    //check for model_states update. If previous model_states, spin once to call storeState clb for new onces and then continue
     if (req.header.seq != model_states.header.seq)
         ros::spinOnce();
 
@@ -117,8 +118,8 @@ bool Controller::returnControlInputs(last_letter_2_msgs::get_control_inputs_srv:
 
     //Call Controller
     PD();
-    
-    //Convert PD outputs to motor inputs
+
+    //Convert PD outputs to motor inputs using quadcopter matrix
     commands(0) = new_thrust_input; //thrust
     commands(1) = new_roll_input;   //roll
     commands(2) = new_pitch_input;  //pitch
@@ -126,7 +127,7 @@ bool Controller::returnControlInputs(last_letter_2_msgs::get_control_inputs_srv:
     input_signal_vector = multirotor_matrix_inverse * commands;
     for (i = 0; i < num_motors; i++)
     {
-        res.channels[i] = input_signal_vector[i]; // store calculated motor inputs 
+        res.channels[i] = input_signal_vector[i]; // store calculated motor inputs
     }
     return true;
 }
@@ -144,7 +145,7 @@ void Controller::initControllerVariables()
     pitch_input = 0;
     yaw_input = 0;
     thrust_input = 0;
-    
+
     altitude = 0;
     yaw_direction = 0;
     prev_roll_error = 0;
@@ -158,22 +159,18 @@ void Controller::initControllerVariables()
     commands.resize(4);
     input_signal_vector.resize(6);
 
-    // Read the thrust constant
-    if (!ros::param::getCached("model/b", b)) { ROS_FATAL("Invalid parameters for -model/b- in param server!"); ros::shutdown(); }
-    // Read the motor distance to center of gravity
-    if (!ros::param::getCached("model/l", l)) { ROS_FATAL("Invalid parameters for -model/l- in param server!"); ros::shutdown(); }
-    // Read the drag factor
-    if (!ros::param::getCached("model/d", d)) { ROS_FATAL("Invalid parameters for -model/d- in param server!"); ros::shutdown(); }
-   
+    b = 0.3;
+    l = 3;
+    d = 0.6;
+
     //Built hexacopter matrix
-    multirotor_matrix << b,    b,           b,          b,    b,          b,            //thrust row 
-                         0,   -b*l*1.73/2, -b*l*1.73/2, 0,    b*l*1.73/2, b*l*1.73/2,   //roll row
-                         b*l,  b*l/2,      -b*l/2,     -b*l, -b*l/2,      b*l/2,        //pitch row
-                        -d,    d,          -d,          d,   -d,          d;            //yaw row
+    multirotor_matrix <<    b,      b,                  b,                  b,      b,                  b,                   //thrust row
+                            0,     -b * l * 1.73 / 2,  -b * l * 1.73 / 2,   0,      b * l * 1.73 / 2,   b * l * 1.73 / 2,   //roll row
+                            b * l,  b * l / 2,         -b * l / 2,         -b * l, -b * l / 2,          b * l / 2,          //pitch row
+                           -d,      d,                 -d,                  d,     -d,                  d;                  //yaw row
 
     //calculate inverse of hexacopter matrix. Usefull for future calculations
     multirotor_matrix_inverse = multirotor_matrix.completeOrthogonalDecomposition().pseudoInverse();
-
 }
 
 //PD controller
@@ -189,7 +186,7 @@ void Controller::PD()
     d_error = (error - prev_roll_error) / dt;
     prev_roll_error = error; // Keep current data for next step
     new_roll_input = kp * error + kd * d_error;
-    new_roll_input=std::max(std::min((double)new_roll_input, 1.0), -1.0); // keep in range [-1, 1]
+    new_roll_input = std::max(std::min((double)new_roll_input, 1.0), -1.0); // keep in range [-1, 1]
 
     //stabilize pitch
     kp = 0.13;
@@ -198,7 +195,7 @@ void Controller::PD()
     d_error = (error - prev_pitch_error) / dt;
     prev_pitch_error = error; // Keep current data for next step
     new_pitch_input = kp * error + kd * d_error;
-    new_pitch_input=std::max(std::min((double)new_pitch_input, 1.0), -1.0); // keep in range [-1, 1]
+    new_pitch_input = std::max(std::min((double)new_pitch_input, 1.0), -1.0); // keep in range [-1, 1]
 
     //yaw direction control
     kp = 0.14;
@@ -216,7 +213,7 @@ void Controller::PD()
     d_error = (error - prev_yaw_error) / dt;
     prev_yaw_error = error; // Keep current data for next step
     new_yaw_input = kp * error + kd * d_error;
-    new_yaw_input=std::max(std::min((double)new_yaw_input, 1.0), -1.0); // keep in range [-1, 1]
+    new_yaw_input = std::max(std::min((double)new_yaw_input, 1.0), -1.0); // keep in range [-1, 1]
 
     //altitude control
     kp = 0.31;
@@ -226,23 +223,23 @@ void Controller::PD()
     d_error = (error - prev_alt_error) / dt;
     prev_alt_error = error; // Keep current data for next step
     new_thrust_input = kp * error + kd * d_error;
-    new_thrust_input=std::max(std::min((double)new_thrust_input, 1.0), 0.0); // keep in range [0, 1]
+    new_thrust_input = std::max(std::min((double)new_thrust_input, 1.0), 0.0); // keep in range [0, 1]
 }
 
-// do the button functions
+// Method to use channel signals for extra functions
 void Controller::channelFunctions()
 {
     int button_num;
-    button_num = 3;
-    if (channels.value[5 + button_num] == 1)
-    {
-        std::cout << "function: button No" << button_num << std::endl;
-    }
-    button_num = 4;
-    if (channels.value[5 + button_num] == 1)
-    {
-        std::cout << "function: button No" << button_num << std::endl;
-    }
+    // button_num = 3;
+    // if (channels.value[5 + button_num] == 1)
+    // {
+    //     std::cout << "function: button No" << button_num << std::endl;
+    // }
+    // button_num = 4;
+    // if (channels.value[5 + button_num] == 1)
+    // {
+    //     std::cout << "function: button No" << button_num << std::endl;
+    // }
 }
 
 int main(int argc, char **argv)

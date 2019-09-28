@@ -1,42 +1,43 @@
-#include <XmlRpcValue.h>
+// A class that creates Aerodynamics, Propulsion and Polynomial classes
 
-//build and return an aerodynamics object based on aerodynamicsType of the airfoil
+// Build and return pointer to Aerodynamics object based on aerodynamicsType of the airfoil
 Aerodynamics *Factory::buildAerodynamics(Model *parent, int id)
 {
     char paramMsg[50];
     int type;
-    sprintf(paramMsg, "airfoil%i/aerodynamicsType", id+1);
+    sprintf(paramMsg, "airfoil%i/aerodynamicsType", id + 1);
     if (!ros::param::getCached(paramMsg, type)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     switch (type)
     {
     case 0:
-        return new NoAerodynamics(parent,id+1);
+        return new NoAerodynamics(parent, id + 1);
     case 1:
-        return new StdLinearAero(parent,id+1);
+        return new StdLinearAero(parent, id + 1);
     case 2:
-        return new polyAero(parent,id+1);
+        return new polyAero(parent, id + 1);
     }
 }
 
-//build and return a propulsion object based on propulsioType of the motor
+// Build and return pointer to Propulsion object based on propulsionType of the motor
 Propulsion *Factory::buildPropulsion(Model *parent, int id)
 {
     char paramMsg[50];
     int type;
-    sprintf(paramMsg, "motor%i/motorType", id+1);
+    sprintf(paramMsg, "motor%i/motorType", id + 1);
     if (!ros::param::getCached(paramMsg, type)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown(); }
     switch (type)
     {
     case 0:
-        return new NoEngine(parent, id+1);
+        return new NoEngine(parent, id + 1);
     case 1:
-        return new genericEngine(parent, id+1);
+        return new genericEngine(parent, id + 1);
     case 2:
         return new electricEngine(parent, id + 1);
     }
 }
 
-// // Build a new polynomial, reading from the paramter server
+// Build and return pointer to polynomial
+// 1D polynomials, 2D polynomials and cubic splines
 Polynomial *Factory::buildPolynomial(char *baseParam)
 {
     int i;

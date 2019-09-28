@@ -1,18 +1,19 @@
+// genericEngine class
 genericEngine::genericEngine(Model *parent, int id) : Propulsion(parent, id)
 {
     initParam(id);
-    printf("motor:%i generic engine built\n",id);
+    printf("motor%i type: genericEngine\n", id);
 }
 
 void genericEngine::calcThrust()
 {
-    float rho=model->airdata.density;
+    float rho = model->airdata.density;
     prop_wrenches.thrust = 1.0 / 2.0 * rho * s_prop * c_prop * (pow(motor_input * k_motor, 2) - pow(airspeed, 2));
 }
 
 void genericEngine::calcTorque()
 {
-    float rho=model->airdata.density;
+    float rho = model->airdata.density;
     prop_wrenches.torque = -k_t_p * pow((k_omega * motor_input), 2) * rotationDir;
 }
 

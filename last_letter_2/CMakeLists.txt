@@ -24,13 +24,11 @@ generate_dynamic_reconfigure_options(
 catkin_package(DEPENDS
   CATKIN_DEPENDS 
   std_msgs
- # INCLUDE_DIRS include
 )
 
 include_directories(
   include
- # include/propulsion
- ${catkin_INCLUDE_DIRS} ${GAZEBO_INCLUDE_DIRS} ${Boost_INCLUDE_DIR}
+  ${catkin_INCLUDE_DIRS} ${GAZEBO_INCLUDE_DIRS} ${Boost_INCLUDE_DIR}
  )
 
 add_executable(joy2chan_node src/joy2chan_node.cpp) 
@@ -53,6 +51,3 @@ target_link_libraries(quadcopter_contr_node ${catkin_LIBRARIES})
 target_link_libraries(plane_contr_node ${catkin_LIBRARIES})
 target_link_libraries(core_node ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
 target_link_libraries(chan2srv_node ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
-
-
-

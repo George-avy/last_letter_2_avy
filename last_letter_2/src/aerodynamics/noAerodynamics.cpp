@@ -1,8 +1,8 @@
 
-// Class NoAero contructor
+// Class NoAerodynamics
 NoAerodynamics::NoAerodynamics(Model *parent, int id) : Aerodynamics(parent, id)
-{   
-    printf("wing:%i no aerodynamics built\n", id);
+{
+    printf("airfoil%i type: noAerodynamics\n", id);
 }
 
 void NoAerodynamics::calcForces()

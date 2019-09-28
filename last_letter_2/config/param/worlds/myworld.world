@@ -5,7 +5,7 @@
       <uri>model://sun</uri>
     </include>
 
-     <gui>
+    <gui>
       <camera name="user_camera">
          <track_visual>
           <name>my_model</name>
@@ -25,7 +25,7 @@
       </sky>
     </scene>
 
-     <model name="ground_plane">
+    <model name="ground_plane">
       <static>true</static>
       <link name="link">
         <collision name="collision">
@@ -77,36 +77,23 @@
             </script>
           </material>
         </visual>
-
       </link>
     </model>
-    
-    <!-- <model name="airport">
-      <static>true</static>
-      <link name="airport">
-        <visual name="airport">
-          <pose>0 200 -3 1.57 0 0</pose>
-          <cast_shadows>false</cast_shadows>
-          <geometry>
-             <mesh><uri>file:///home/me/catkin_ws/src/last_letter_2/last_letter_2/config/param/meshes/huge_airport.dae</uri></mesh>
-          </geometry>
-         </visual>
-      </link>
-    </model> -->
   
-  <model name="csl">
+    <model name="csl_logo">
       <static>true</static>
       <link name="csl">
         <visual name="csl">
           <pose>400 0 0  0 0 1.57</pose>
           <cast_shadows>false</cast_shadows>
           <geometry>
-             <mesh><uri>file:///home/me/catkin_ws/src/last_letter_2/last_letter_2/config/param/meshes/csl_plane/csl_plane.dae</uri></mesh>
+             <mesh><uri>file:///home/me/catkin_ws/src/last_letter_2/last_letter_2/config/param/meshes/csl_logo/csl_logo.dae</uri></mesh>
           </geometry>
          </visual>
       </link>
     </model>
-    <!-- reference to your plugin -->
+
+    <!-- gazebo plugin -->
     <plugin name="world_plugin" filename="libworld_plugin.so"/>
 
   </world>

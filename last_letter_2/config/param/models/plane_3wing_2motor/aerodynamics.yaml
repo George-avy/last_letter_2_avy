@@ -1,5 +1,6 @@
 #airfoil Aerodynamic Parameters
 #aerodynamicsType: 0:NoAerodynamics, 1:StdLinearAero 2:polyAero
+
 nWings: 3
 
 airfoil1/aerodynamicsType: 1
@@ -7,11 +8,19 @@ airfoil1/s: 0.45   #wing surface = b*c
 airfoil1/b: 1.88   #wingspan
 airfoil1/c: 0.24   #wing mean cord
 
+airfoil1/deltax_max: 0.3491  #max deflections in radians
+airfoil1/deltay_max: 0
+airfoil1/deltaz_max: 0
+
+airfoil1/input_x_chan: 0 
+airfoil1/input_y_chan: -1
+airfoil1/input_z_chan: -1
+
 airfoil1/c_lift_0: 0.35
 airfoil1/c_lift_input_y: 0.0
 airfoil1/c_lift_a: 6.9
 airfoil1/c_lift_q: -1
-airfoil1/mcoeff: 50         # no idea
+airfoil1/mcoeff: 50
 airfoil1/oswald: 0.9
 airfoil1/alpha_stall: 0.4712
 airfoil1/c_drag_q: 0.0
@@ -43,21 +52,19 @@ airfoil1/c_n_r: -1
 airfoil1/c_n_input_x: 0.00
 airfoil1/c_n_input_z: 0.1 #opposite sign than c_y_input_z
 
-airfoil1/deltax_max: 0.3491  #max deflections in radians
-airfoil1/deltay_max: 0
-airfoil1/deltaz_max: 0
-
-#0 if airfoil is not affect for move (relative to airfoil), else 1,2,3 for which of the input signals the airfoil listens to
-#0-nothing, 1-aileron, 2-elevator, 3-rudder  (input signals)
-airfoil1/input_x_chan: 0      #airfoil1 affects only roll and listens to aileron signal
-airfoil1/input_y_chan: -1      #airfoil1 not affects pitch move
-airfoil1/input_z_chan: -1      #airfoil1 not affects yaw move
-
 # airfoil 2
 airfoil2/aerodynamicsType: 1
 airfoil2/s: 0.12   #wing surface = b*c
-airfoil2/b: 0.5   #wingspan
+airfoil2/b: 0.5    #wingspan
 airfoil2/c: 0.24   #wing mean cord
+
+airfoil2/deltax_max: 0       #max deflections in radians
+airfoil2/deltay_max: 0.3491
+airfoil2/deltaz_max: 0
+
+airfoil2/input_x_chan: -1  
+airfoil2/input_y_chan:  1
+airfoil2/input_z_chan: -1
 
 airfoil2/c_lift_0: 0.56 #0.56
 airfoil2/c_lift_input_y: -1.0
@@ -95,20 +102,19 @@ airfoil2/c_n_r: -1
 airfoil2/c_n_input_x: 0.00
 airfoil2/c_n_input_z: 0.1 #opposite sign than c_y_input_z
 
-airfoil2/deltax_max: 0       #max deflections in radians
-airfoil2/deltay_max: 0.3491
-airfoil2/deltaz_max: 0
-
-#0 if airfoil is not affect for move (relative to airfoil), else 1,2,3 for which of the input signals the airfoil listens to
-airfoil2/input_x_chan: -1   #0-nothing, 1-aileron, 2-elevator, 3-rudder  (input signals)
-airfoil2/input_y_chan: 1
-airfoil2/input_z_chan: -1
-
 # airfoil 3
 airfoil3/aerodynamicsType: 1
 airfoil3/s: 0.072   #wing surface = b*c
 airfoil3/b: 0.3   #wingspan
 airfoil3/c: 0.24   #wing mean cord
+
+airfoil3/deltax_max: 0       #max deflections in radians
+airfoil3/deltay_max: 0.3491
+airfoil3/deltaz_max: 0
+
+airfoil3/input_x_chan: -1  
+airfoil3/input_y_chan:  2
+airfoil3/input_z_chan: -1
 
 airfoil3/c_lift_0: 0
 airfoil3/c_lift_input_y: -2.0
@@ -145,12 +151,3 @@ airfoil3/c_n_p: 0
 airfoil3/c_n_r: 0
 airfoil3/c_n_input_x: 0.00
 airfoil3/c_n_input_z: 0 #opposite sign than c_y_input_z
-
-airfoil3/deltax_max: 0       #max deflections in radians
-airfoil3/deltay_max: 0.3491
-airfoil3/deltaz_max: 0
-
-#0 if airfoil is not affect the move (relative to airfoil), else 1,2,3 for which of the input signals the airfoil listens to
-airfoil3/input_x_chan: -1   #0-nothing, 1-aileron, 2-elevator, 3-rudder  (input signals)
-airfoil3/input_y_chan: 2
-airfoil3/input_z_chan: -1

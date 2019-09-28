@@ -1,6 +1,6 @@
 #Physics Parameters
 
-#Simulation calculation rate (frame rate)
+#Simulation calculation rate 
 /updatePhysics/simRate: 500
 
 #Simulation time-step

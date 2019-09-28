@@ -17,8 +17,8 @@ namespace gazebo
 {
 class world_plugin : public WorldPlugin
 {
+private:
   // Pointer to the World
-private: 
   physics::WorldPtr World;
 
   ///  A node use for ROS transport
@@ -26,16 +26,16 @@ private:
 
   double simRate;
   double deltaT;
-  
+
 public:
-  world_plugin() : WorldPlugin() //constructor
+  world_plugin() : WorldPlugin()
   {
   }
 
   void Load(physics::WorldPtr _World, sdf::ElementPtr _sdf) //Called when a Plugin is first created,
   {                                                         //and after the World has been loaded.Νot be blocking.
     this->World = _World;
-    ROS_INFO("world_plugin just started");
+    ROS_INFO("world_plugin started");
 
     this->rosNode = new ros::NodeHandle; //Create a ros node for transport
     while (!this->rosNode->ok())
@@ -43,16 +43,16 @@ public:
       ROS_INFO("Waiting for node to rise");
     }
 
-  if (!ros::param::getCached("updatePhysics/simRate", simRate)) { ROS_FATAL("No simulation Rate selected"); ros::shutdown();}
-  if (!ros::param::getCached("updatePhysics/deltaT", deltaT)) { ROS_FATAL("No time step selected"); ros::shutdown();}
+    if (!ros::param::getCached("updatePhysics/simRate", simRate)){ ROS_FATAL("No simulation Rate selected"); ros::shutdown(); }
+    if (!ros::param::getCached("updatePhysics/deltaT", deltaT)){ ROS_FATAL("No time step selected"); ros::shutdown(); }
 
-  this->World->Physics()->SetRealTimeUpdateRate(simRate);
-  this->World->Physics()->SetMaxStepSize(deltaT);
+    this->World->Physics()->SetRealTimeUpdateRate(simRate);
+    this->World->Physics()->SetMaxStepSize(deltaT);
 
-  publishWorldStaticFrames();
+    publishWorldStaticFrames();
   }
 
-  // publish the relation between the world static frames inertial_NWU-inertial_NED 
+  // publish the relation between the world static frames inertial_NWU and inertial_NED
   void publishWorldStaticFrames()
   {
     static tf2_ros::StaticTransformBroadcaster static_broadcaster;
@@ -73,7 +73,6 @@ public:
 
     static_broadcaster.sendTransform(static_transformStamped);
   }
-
 };
 // Register this plugin with the simulator
 GZ_REGISTER_WORLD_PLUGIN(world_plugin)

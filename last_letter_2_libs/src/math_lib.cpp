@@ -1,21 +1,11 @@
+// A Library of Classes, usefull for Simulator
 
 #include <last_letter_2_libs/math_lib.hpp>
 
-////////////////////
-// Class Definitions
-////////////////////
-
-////////////////////
-// Define Polynomial
-
 Polynomial::Polynomial(){};
-
 Polynomial::~Polynomial(){};
 
-//////////////////////
-// Define Polynomial1D
-
-// class constructor
+// Polynomial1D
 Polynomial1D::Polynomial1D(int maxOrder, double *coeffArray) : Polynomial()
 {
     int i;
@@ -28,7 +18,6 @@ Polynomial1D::Polynomial1D(int maxOrder, double *coeffArray) : Polynomial()
     }
 }
 
-// class destructor
 Polynomial1D::~Polynomial1D()
 {
     free(coeffs);
@@ -46,13 +35,10 @@ double Polynomial1D::evaluate(double x)
     return sum;
 }
 
-//////////////////////
 // Define Polynomial2D
 
-// class constructor
 Polynomial2D::Polynomial2D(int maxOrder1, int maxOrder2, double *coeffArray) : Polynomial()
 {
-    // Attention! maxOrder2 > maxOrder1. If not, swap the variables!
     int i;
     coeffNo1 = maxOrder1;
     coeffNo2 = maxOrder2;
@@ -65,7 +51,6 @@ Polynomial2D::Polynomial2D(int maxOrder1, int maxOrder2, double *coeffArray) : P
     }
 }
 
-// class destructor
 Polynomial2D::~Polynomial2D()
 {
     free(coeffs);
@@ -87,15 +72,12 @@ double Polynomial2D::evaluate(double x, double y)
             }
         }
     }
-    // std::cout << "2DPoly: " << x << " " << y << " " << sum << std::endl; // Sanity check output
     return sum;
 }
 
-/////////////////
 // Define Spline3
 // Cubic spline, 4 parameters per variable interval
 
-// class constructor
 Spline3::Spline3(int breaksNoIn, double *breaksIn, double *coeffsIn) : Polynomial()
 {
     int i;
@@ -114,7 +96,6 @@ Spline3::Spline3(int breaksNoIn, double *breaksIn, double *coeffsIn) : Polynomia
     }
 }
 
-// class destructor
 Spline3::~Spline3()
 {
     free(breaks);

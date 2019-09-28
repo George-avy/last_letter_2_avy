@@ -9,17 +9,15 @@
 #include <last_letter_2_msgs/apply_model_wrenches_srv.h>
 #include <tf2_ros/transform_listener.h>
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <ros/transport_hints.h>
 #include <std_msgs/String.h>
 #include <std_srvs/Empty.h>
-#include <tf2/convert.h>
-#include <kdl_parser/kdl_parser.hpp>
+// #include <kdl_parser/kdl_parser.hpp>
+#include <XmlRpcValue.h>
 #include <math.h>
 #include <ctime>
 #include <string>
 #include <iostream>
 #include <Eigen/Dense>
-#include <tf2_eigen/tf2_eigen.h>
 
 class Aerodynamics;
 class Propulsion;

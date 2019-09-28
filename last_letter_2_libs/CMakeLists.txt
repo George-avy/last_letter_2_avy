@@ -5,9 +5,6 @@ project(last_letter_2_libs)
 find_package(catkin REQUIRED 
   COMPONENTS
   roscpp
-  rosgraph_msgs
-  std_srvs
-  geometry_msgs
 )
 find_package(Boost REQUIRED)
 
@@ -24,7 +21,6 @@ include_directories(include
 add_library(math_lib src/math_lib.cpp)
 
 target_link_libraries(math_lib ${catkin_LIBRARIES})
-
 
 install(TARGETS math_lib
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}

@@ -1,36 +1,25 @@
-///////////////////////////
-// Electric hobby engine //
-///////////////////////////
 class electricEngine : public Propulsion
 {
-  public:
-    ////////////////
-    // Variables //
-    ////////////////
-    double omegaMin, omegaMax;
-    double propDiam, engInertia, rho;
-    double Kv, Rm, I0;
-    double maxThrust;
-    // Battery specification
-    double omega; // motor angular speed in rad/s
-    int Cells;          // Number of LiPo cells
-    double Rs;          // Battery internal resistance
-    double rotationDir; // motor direction of rotation
+public:
+  double omegaMin, omegaMax;
+  double propDiam, engInertia, rho;
+  double Kv, Rm, I0;
+  double maxThrust;
 
-    // ros::Publisher pub;
+  double Ei, Im, engPower, advRatio, propPower;
+  double npCoeff, fadeFactor, staticThrust, deltaT, omegaDot;
+  // Battery specification
+  double omega;       // motor angular speed in rad/s
+  int Cells;          // Number of LiPo cells
+  double Rs;          // Battery internal resistance
+  double rotationDir; // motor direction of rotation
 
-    //////////////
-    // Members //
-    //////////////
-    Polynomial *engPowerPoly, *npPoly, *propPowerPoly;
+  Polynomial *engPowerPoly, *npPoly, *propPowerPoly;
 
-    ////////////////
-    // Functions //
-    ////////////////
-    electricEngine(Model * parent,int id);
-    ~electricEngine();
+  electricEngine(Model *parent, int id);
+  ~electricEngine();
 
-    void calcThrust();
-    void calcTorque();
-    void calcOmega();
+  void calcThrust();
+  void calcTorque();
+  void calcOmega();
 };

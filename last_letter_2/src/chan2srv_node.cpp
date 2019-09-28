@@ -1,15 +1,14 @@
-// A node to serve some of the button functions, that use gazebo services (eg. reset_simulation, spawn_model, delete_model).
-// It's neccessary to call gazebo services from a node that runs continues and do not wait gazebo.
-// In other case, it stucks
+// A node to call gazebo services (eg. reset_simulation, spawn_model, delete_model)
+// It's neccessary gazebo services to be called from node that runs independently and do not wait gazebo.
+// In other case, it hangs
 
 #include <ros/ros.h>
-#include <last_letter_2_msgs/joystick_input.h>
+#include <last_letter_2_msgs/channels.h>
 #include <gazebo_msgs/SpawnModel.h>
 #include <gazebo_msgs/DeleteModel.h>
 #include <std_srvs/Empty.h>
 
 ros::ServiceClient pauseGazebo;
-ros::ServiceClient resetSimulation;
 ros::ServiceClient spawnModel;
 ros::ServiceClient deleteModel;
 gazebo_msgs::SpawnModel spawn_model;
@@ -18,20 +17,11 @@ gazebo_msgs::DeleteModel delete_model;
 std_srvs::Empty emptySrv;
 std::string spawn_model_name;
 char name_temp[30];
-int i, j, prev_j;
+int i, j, prev_j, button_num;
 
 // Manage channel functions. Mainly for calling defalut gazebo services
-void srvServer(last_letter_2_msgs::joystick_input channels)
+void srvServer(last_letter_2_msgs::channels channels)
 {
-    int button_num;
-
-    //reset simulation
-    button_num = 12;
-    if (channels.value[5 + button_num] == 1)
-    {
-        resetSimulation.call(emptySrv);
-    }
-
     //spawn a small cube under the multirotor
     button_num = 1;
     if (channels.value[5 + button_num] == 1)
@@ -66,20 +56,18 @@ int main(int argc, char **argv)
 
     ros::NodeHandle n;
 
-    //Init Subscriber
+    // Subscriber
     ros::Subscriber sub = n.subscribe("last_letter_2/channels", 1, srvServer, ros::TransportHints().tcpNoDelay());
 
-    //Init Services
+    // Services
     ros::service::waitForService("/gazebo/pause_physics"); //pause gazebo
     pauseGazebo = n.serviceClient<std_srvs::Empty>("/gazebo/pause_physics");
-    ros::service::waitForService("/gazebo/reset_simulation"); //restart simulation
-    resetSimulation = n.serviceClient<std_srvs::Empty>("/gazebo/reset_simulation");
     ros::service::waitForService("/gazebo/spawn_urdf_model"); //spanw a model in gazebo world
     spawnModel = n.serviceClient<gazebo_msgs::SpawnModel>("/gazebo/spawn_urdf_model");
     ros::service::waitForService("/gazebo/delete_model"); //delete a model from gazebo world
     deleteModel = n.serviceClient<gazebo_msgs::DeleteModel>("/gazebo/delete_model");
 
-    //get can model (urdf) from parameter server
+    // get the urdf of can model from parameter server
     if (!ros::param::getCached("can", spawn_model.request.model_xml))
     {
         ROS_INFO("No model for spawning selected");
@@ -88,11 +76,9 @@ int main(int argc, char **argv)
     i = 0;
     j = 0;
     prev_j = 0;
-    
-    // Enter spin
-    while (ros::ok())
-    {
-        ros::spin();
-    }
+
+    // start spin
+    ros::spin();
+
     return 0;
 }

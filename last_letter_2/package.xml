@@ -2,13 +2,12 @@
 <package format="2">
     <name>last_letter_2</name>
     <version>0.0.0</version>
-    <description>Last_letter simulator New code for plane-multirotor simulation</description>
+    <description>The basic pkg of Simulator. Containes all the ROS nodes</description>
 
     <maintainer email="tailwhipx4@gmail.com">George Zogopoulos-Papaliakos</maintainer>
-
+    <maintainer email="milistefanos@hotmail.com">Stefanos Miliotis</maintainer>
 
     <license>GPL-3.0</license>
-
 
     <buildtool_depend>catkin</buildtool_depend>
     <build_depend>geometry_msgs</build_depend>
@@ -40,10 +39,4 @@
     <exec_depend>last_letter_2_libs</exec_depend>
     <exec_depend>kdl_parser</exec_depend>
     <exec_depend>tf2_geometry_msgs</exec_depend>
-
-    <!-- The export tag contains other, unspecified, tags -->
-    <export>
-        <!-- Other tools can request additional information be placed here -->
-        <!-- <gazebo_ros plugin_path="${prefix}/lib"	gazebo_media_path="${prefix}" /> -->
-    </export>
 </package>

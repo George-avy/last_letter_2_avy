@@ -12,7 +12,7 @@ find_package(catkin REQUIRED
 
 add_message_files(
   FILES
-  joystick_input.msg
+  channels.msg
   link_states.msg
   model_states.msg
   air_data.msg

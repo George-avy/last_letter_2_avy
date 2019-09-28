@@ -1,5 +1,6 @@
 #airfoil Aerodynamic Parameters
 #aerodynamicsType: 0:NoAerodynamics, 1:StdLinearAero 2:polyAero
+
 nWings: 1
 
 airfoil1/aerodynamicsType: 1
@@ -11,7 +12,7 @@ airfoil1/deltax_max: 0.3491  #max deflections in radians
 airfoil1/deltay_max: 0.3491
 airfoil1/deltaz_max: 0.3491
 
-airfoil1/input_x_chan: 0 #0-no input, 1-aileron, 2-elevator, 3-rudder
+airfoil1/input_x_chan: 0 
 airfoil1/input_y_chan: 1
 airfoil1/input_z_chan: 2
 
@@ -23,10 +24,10 @@ airfoil1/mcoeff: 50
 airfoil1/oswald: 0.9
 airfoil1/alpha_stall: 0.4712
 airfoil1/c_drag_q: 0.0
-airfoil1/c_drag_input_y: 0.0  #No documentation
+airfoil1/c_drag_input_y: 0.0
 airfoil1/c_drag_p: 0.0437
-airfoil1/c_drag_0: 0.03  #No documentation
-airfoil1/c_drag_a: 0.3  #No documentation
+airfoil1/c_drag_0: 0.03
+airfoil1/c_drag_a: 0.3
 airfoil1/c_y_0: 0
 airfoil1/c_y_b: -0.98
 airfoil1/c_y_p: 0

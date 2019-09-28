@@ -1,12 +1,10 @@
 class Propulsion
 {
 public:
-  ros::NodeHandle nh;
   int motor_number;
   double airspeed;
   double normalWind;
-  double rotationDir; // motor direction of rotation
-
+  double rotationDir;
   float motor_input;
   geometry_msgs::Vector3 relative_wind;
 
@@ -18,8 +16,7 @@ public:
   tf2::Stamped<KDL::Vector> v_out;
 
   Model *model;
-  Propulsion(Model* parent, int id);
-  // ~Propulsion();
+  Propulsion(Model *parent, int id);
   void calculationCycle();
   void getStates();
   void getInputSignals();
@@ -28,7 +25,7 @@ public:
   void calcWrench();
   virtual void calcThrust() = 0;
   virtual void calcTorque() = 0;
-  virtual void calcOmega()  = 0;
+  virtual void calcOmega() = 0;
 };
 
 #include "noEngine.hpp"

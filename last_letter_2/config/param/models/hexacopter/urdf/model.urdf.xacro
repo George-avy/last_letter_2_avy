@@ -3,7 +3,7 @@
 
 <xacro:property name="body_mass" value="3"/>
 
-<!-- body, airfoil sizes -->
+<!-- body, airfoil size -->
 <xacro:property name="body_s" value="1" />   
 
 <!-- body link parameters x, y, z, mass-->
@@ -29,7 +29,7 @@
         <inertial>
         <origin rpy="0 0 0"/>
             <mass value="${body_m}" />
-             <inertia    ixx="${1/12*body_m*body_h*body_h+1/4*body_m*body_r*body_r}" ixy="0" ixz="0" iyz="0"
+             <inertia   ixx="${1/12*body_m*body_h*body_h+1/4*body_m*body_r*body_r}" ixy="0" ixz="0" iyz="0"
                         iyy="${1/12*body_m*body_h*body_h+1/4*body_m*body_r*body_r}" 
                         izz="${1/2*body_m*body_r*body_r}" />
         </inertial> 
@@ -132,7 +132,7 @@
         <child link="arm3" />
     </joint>
 
-        <link name="arm4">
+    <link name="arm4">
         <visual>
         <origin xyz="${arm_x/2} 0 0"/>
             <geometry>
@@ -162,7 +162,7 @@
         <child link="arm4" />
     </joint>
 
-     <link name="arm5">
+    <link name="arm5">
         <visual>
         <origin xyz="${arm_x/2} 0 0"/>
             <geometry>
@@ -192,7 +192,7 @@
         <child link="arm5" />
     </joint>
 
-     <link name="arm6">
+    <link name="arm6">
         <visual>
         <origin xyz="${arm_x/2} 0 0"/>
             <geometry>
@@ -230,7 +230,7 @@
 <xacro:property name="motor_m" value="${0.1*body_m}" />
 
 <!-- only motor(Number_0f_Motor) acceptable name for motors -->
-     <link name="motor1">
+    <link name="motor1">
         <visual>
         <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
@@ -258,10 +258,10 @@
         <origin xyz="${arm_x-motor_r/2} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
         <parent link="arm1" />
         <child link="motor1" />
-        <limit effort="1000.0" velocity="0.5"/>  
+        <limit effort="1000.0" velocity="0.5"/>  --default limits upper=lower=0
     </joint>
 
-     <link name="motor2">
+    <link name="motor2">
         <visual>
         <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
@@ -289,10 +289,10 @@
         <origin xyz="${arm_x-motor_r/2} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
         <parent link="arm2" />
         <child link="motor2" />
-        <limit effort="1000.0" velocity="0.5"/>
+        <limit effort="1000.0" velocity="0.5"/>  --default limits upper=lower=0
     </joint>
 
-     <link name="motor3">
+    <link name="motor3">
         <visual>
         <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
@@ -320,10 +320,10 @@
         <origin xyz="${arm_x-motor_r/2} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
         <parent link="arm3" />
         <child link="motor3" />
-        <limit effort="1000.0" velocity="0.5"/>
+        <limit effort="1000.0" velocity="0.5"/>  --default limits upper=lower=0
     </joint>
          
-     <link name="motor4">
+    <link name="motor4">
         <visual>
         <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
@@ -351,7 +351,7 @@
         <origin xyz="${arm_x-motor_r/2} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
         <parent link="arm4" />
         <child link="motor4" />
-        <limit effort="1000.0" velocity="0.5"/>
+        <limit effort="1000.0" velocity="0.5"/>  --default limits upper=lower=0
     </joint>
 
          <link name="motor5">
@@ -382,10 +382,10 @@
         <origin xyz="${arm_x-motor_r/2} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
         <parent link="arm5" />
         <child link="motor5" />
-        <limit effort="1000.0" velocity="0.5"/>
+        <limit effort="1000.0" velocity="0.5"/>  --default limits upper=lower=0
     </joint>
 
-         <link name="motor6">
+    <link name="motor6">
         <visual>
         <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
@@ -413,7 +413,7 @@
         <origin xyz="${arm_x-motor_r/2} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
         <parent link="arm6" />
         <child link="motor6" />
-        <limit effort="1000.0" velocity="0.5"/>
+        <limit effort="1000.0" velocity="0.5"/>  --default limits upper=lower=0
     </joint>
  -------------------------------------------------------------- axles
 <!-- arm link -->
@@ -615,7 +615,7 @@
 <xacro:property name="propeller_y" value="${body_s/10}" />   
 <xacro:property name="propeller_z" value="${body_s/40}" />   
 
-   <link name="prop1">
+    <link name="prop1">
         <visual>
             <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
@@ -646,7 +646,7 @@
         <child link="prop1" />
     </joint>
     
-   <link name="prop2">
+    <link name="prop2">
         <visual>
             <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
@@ -677,7 +677,7 @@
         <child link="prop2" />
     </joint>
     
-   <link name="prop3">
+    <link name="prop3">
         <visual>
             <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
@@ -708,7 +708,7 @@
         <child link="prop3" />
     </joint>
     
-   <link name="prop4">
+    <link name="prop4">
         <visual>
             <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
@@ -739,7 +739,7 @@
         <child link="prop4" />
     </joint>
     
-   <link name="prop5">
+    <link name="prop5">
         <visual>
             <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
@@ -770,7 +770,7 @@
         <child link="prop5" />
     </joint>
     
-   <link name="prop6">
+    <link name="prop6">
         <visual>
             <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
@@ -801,14 +801,13 @@
         <child link="prop6" />
     </joint>
     
-     
-    --------------------------------------------------------------model plugins
+    <!-- model plugins -->
     <gazebo>
-    <plugin name="model_plugin" filename="libmodel_plugin.so"/>
-    <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
-        <jointName>arm1_to_motor1, arm2_to_motor2, arm3_to_motor3,arm4_to_motor4,arm5_to_motor5,arm6_to_motor6,motor1_to_axle1,motor2_to_axle2,motor3_to_axle3,motor4_to_axle4,motor5_to_axle5,motor6_to_axle6 </jointName>
-        <robotNamespace>last_letter_2</robotNamespace>
-        <updateRate>0</updateRate>
-    </plugin>
-  </gazebo>
+        <plugin name="model_plugin" filename="libmodel_plugin.so"/>
+        <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
+            <jointName>arm1_to_motor1, arm2_to_motor2, arm3_to_motor3,arm4_to_motor4,arm5_to_motor5,arm6_to_motor6,motor1_to_axle1,motor2_to_axle2,motor3_to_axle3,motor4_to_axle4,motor5_to_axle5,motor6_to_axle6 </jointName>
+            <robotNamespace>last_letter_2</robotNamespace>
+            <updateRate>0</updateRate>
+        </plugin>
+    </gazebo>
 </robot>

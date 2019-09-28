@@ -1,5 +1,3 @@
-#include <geometry_msgs/Quaternion.h>
-#include <geometry_msgs/Vector3.h>
 #include <cstdio>
 #include <cmath>
 

@@ -1,7 +1,8 @@
 
+// Class that calculates enviroment variables
 Environment::Environment(Model *parent)
 {
-    model=parent;
+    model = parent;
 
     //Init publisher
     air_data_pub = n.advertise<last_letter_2_msgs::air_data>("last_letter_2/air_data", 1);
@@ -18,7 +19,7 @@ Environment::Environment(Model *parent)
     if(!ros::param::getCached("/environment/L0", L0)) {ROS_FATAL("Invalid parameters for -/environment/L0- in param server!"); ros::shutdown();}
     if(!ros::param::getCached("/environment/gravity", grav0)) {ROS_FATAL("Invalid parameters for -/environment/grav- in param server!"); ros::shutdown();}
 
-   //Initialize bias wind engine
+    //Initialize bias wind engine
     if(!ros::param::getCached("/environment/windRef", windRef)) {ROS_FATAL("Invalid parameters for -/environment/windRef- in param server!"); ros::shutdown();}
     if(!ros::param::getCached("/environment/windRefAlt", windRefAlt)) {ROS_FATAL("Invalid parameters for -/environment/windRefAlt- in param server!"); ros::shutdown();}
     if(!ros::param::getCached("/environment/windDir", windDir)) {ROS_FATAL("Invalid parameters for -/environment/windDir- in param server!"); ros::shutdown();}
@@ -32,7 +33,7 @@ Environment::Environment(Model *parent)
     if(!ros::param::getCached("/environment/Dryden/sigmau", sigmau)) {ROS_FATAL("Invalid parameters for -/environment/Dryden/sigmau- in param server!"); ros::shutdown();}
     if(!ros::param::getCached("/environment/Dryden/sigmaw", sigmaw)) {ROS_FATAL("Invalid parameters for -/environment/Dryden/sigmaw- in param server!"); ros::shutdown();}
     windDistU = 0;
-    for (int i=0;i<2;i++)
+    for (int i = 0; i < 2; i++)
     {
         windDistV[i] = 0;
         windDistW[i] = 0;
@@ -41,7 +42,7 @@ Environment::Environment(Model *parent)
 
 void Environment::calculateAirdata()
 {
-    states = model->model_states.base_link_states;
+    states = model->model_states.base_link_states;  // Get states from Model class
     calcTemp();
     calcWind();
     calcDens();
@@ -52,11 +53,11 @@ void Environment::calculateAirdata()
 //Calculate temperature
 void Environment::calcTemp()
 {
-    double altitude = abs(states.z);   // z-axis down
+    double altitude = abs(states.z); // z-axis down
     airdata.temperature = T0 + altitude / 1000.0 * L0;
 }
 
-//Calculat Wind Vectors
+//Calculate Wind Vectors
 void Environment::calcWind()
 {
     //Call functions
@@ -108,9 +109,7 @@ void Environment::calcWind()
         ros::shutdown();
     }
 
-    // environment.wind = Reb/wind; //Rotate bias wind in body axes
-
-    airdata.wind_x += windDistU; // add turbulence
+    airdata.wind_x += windDistU;    // add turbulence
     airdata.wind_y += windDistV[0];
     airdata.wind_z += windDistW[0];
     if (isnan(airdata.wind_x) || isnan(airdata.wind_y) || isnan(airdata.wind_z))
@@ -121,10 +120,10 @@ void Environment::calcWind()
     }
 }
 
-//Calculate air Density
+//Calculate air density
 void Environment::calcDens()
 {
-    double altitude = abs(states.z);  // z-axis down
+    double altitude = abs(states.z); // z-axis down
     double Hb = 0, Tb = T0, Pb = P0, L = L0;
     double alt2pressRatio = (Pb / P0) * pow(1 - (L / Tb) * (altitude / 1000.0 - Hb), ((1000.0 * grav0) / (Rd * L))); //Corrected to 1 - (L/...)
     double alt2tempRatio = airdata.temperature / T0;
@@ -135,7 +134,7 @@ void Environment::calcDens()
 //Calculate barometric pressure
 void Environment::calcPres()
 {
-    double altitude = abs(states.z);  // z-axis down
+    double altitude = abs(states.z); // z-axis down
     double pressure;
     double Hb = 0, Tb = T0, Pb = P0, L = L0;
     pressure = Pb * pow(1 - (L / Tb) * (altitude / 1000.0 - Hb), ((1000.0 * grav0) / (Rd * L))); //Corrected to 1 - (L/...)

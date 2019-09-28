@@ -1,8 +1,4 @@
-////////////////////////
-// Electric engine model
-////////////////////////
-
-// Constructor
+// Electric engine class
 electricEngine::electricEngine(Model *parent, int id) : Propulsion(parent,id)
 {
     XmlRpc::XmlRpcValue list;
@@ -48,68 +44,55 @@ electricEngine::electricEngine(Model *parent, int id) : Propulsion(parent,id)
     prop_wrenches.thrust = 0.0;
     prop_wrenches.torque = 0.0;
 
-    // sprintf(paramMsg, "propulsion%i", id);
-    ros::NodeHandle n;
+    printf("motor%i type: electricEngine\n", id);
 }
 
-// Destructor
 electricEngine::~electricEngine()
 {
     delete npPoly;
     delete propPowerPoly;
 }
 
-// Update motor rotational speed and calculate thrust
+// calculate thrust
 void electricEngine::calcThrust()
 {
     rho = model->airdata.density;
-    double inputMotor = motor_input;
-    double Ei = std::fabs(omega) / 2 / M_PI / Kv;
-    // double Ei = rotationDir * omega/2/M_PI/Kv;
-    double Im = (Cells * 4.0 * inputMotor - Ei) / (Rs * inputMotor + Rm);
-    // Im = std::max(Im,0.0); // Current cannot return to the ESC
-    // Im = std::max(Im,-1.0); // Allow limited current back to the ESC
-    double engPower = Ei * (Im - I0);
-    double advRatio = normalWind / (std::fabs(omega) / 2.0 / M_PI) / propDiam; // Convert advance ratio to dimensionless units, not 1/rad
-    // advRatio = std::max(advRatio, 0.0); // thrust advance ratio above zero, in lack of a better propeller model
-    double propPower = propPowerPoly->evaluate(advRatio) * rho * pow(std::fabs(omega) / 2.0 / M_PI, 3) * pow(propDiam, 5);
+    Ei = std::fabs(omega) / 2 / M_PI / Kv;
+    Im = (Cells * 4.0 * motor_input - Ei) / (Rs * motor_input + Rm);
+    engPower = Ei * (Im - I0);
+    advRatio = normalWind / (std::fabs(omega) / 2.0 / M_PI) / propDiam; // Convert advance ratio to dimensionless units, not 1/rad
+    propPower = propPowerPoly->evaluate(advRatio) * rho * pow(std::fabs(omega) / 2.0 / M_PI, 3) * pow(propDiam, 5);
+    npCoeff = npPoly->evaluate(advRatio);
 
-    double npCoeff = npPoly->evaluate(advRatio);
     prop_wrenches.thrust = propPower * std::fabs(npCoeff / (normalWind + 1.0e-10)); // Added epsilon for numerical stability
 
-    double fadeFactor = (exp(-normalWind * 3 / 12));
-    double staticThrust = 0.9 * fadeFactor * pow(M_PI / 2.0 * propDiam * propDiam * rho * engPower * engPower, 1.0 / 3); //static thrust fades at 5% at 12m/s
+    fadeFactor = (exp(-normalWind * 3 / 12));
+    staticThrust = 0.9 * fadeFactor * pow(M_PI / 2.0 * propDiam * propDiam * rho * engPower * engPower, 1.0 / 3); //static thrust fades at 5% at 12m/s
     prop_wrenches.thrust = prop_wrenches.thrust + staticThrust;
-    // Constrain propeller thrust to [0,maxThrust] 
+    // Constrain propeller thrust to [0,maxThrust]
     prop_wrenches.thrust = std::max(std::min(double(prop_wrenches.thrust), maxThrust), 0.0);
-    prop_wrenches.torque = propPower / omega;
-    if (inputMotor < 0.01)
-    {
-        prop_wrenches.thrust = 0;
-        prop_wrenches.torque = 0;
-    } // To avoid aircraft rolling and turning on the ground while throttle is off
-    // double deltaP = model->kinematics.thrustInput.x * model->states.velocity.linear.x / npCoeff;
-    double deltaT = (engPower - propPower) / std::fabs(omega);
-    double omegaDot = 1 / engInertia * deltaT;
-
-    omega += rotationDir * omegaDot * motor_input;
-
-    omega = rotationDir * std::max(std::min(std::fabs(omega), omegaMax), omegaMin); // Constrain omega to working range
-    if (!std::isfinite(prop_wrenches.thrust)) { ROS_FATAL("propulsion.cpp: State NaN in prop_wrenches.thrust"); ros::shutdown(); }
-     // model->states.rotorspeed[0]=std::fabs(omega); // Write engine speed to states message
+    if (motor_input < 0.01) { prop_wrenches.thrust = 0; }
 }
 
-// Calculate motor Torque
+// Calculate motor torque
 void electricEngine::calcTorque()
 {
-    if (!std::isfinite(prop_wrenches.torque))
+    prop_wrenches.torque = propPower / omega;
+    if (motor_input < 0.01)
     {
-        ROS_FATAL("propulsion.cpp: State NaN in prop_wrenches.torque");
-        ros::shutdown();
+        prop_wrenches.torque = 0;
     }
+    if (!std::isfinite(prop_wrenches.torque)) { ROS_FATAL("propulsion.cpp: State NaN in prop_wrenches.torque"); ros::shutdown();}
 }
 
+// Calculate omega
 void electricEngine::calcOmega()
 {
+    deltaT = (engPower - propPower) / std::fabs(omega);
+    omegaDot = 1 / engInertia * deltaT;
+    omega += rotationDir * omegaDot * motor_input;
+    omega = rotationDir * std::max(std::min(std::fabs(omega), omegaMax), omegaMin); // Constrain omega to working range
+    if (!std::isfinite(prop_wrenches.thrust)) { ROS_FATAL("propulsion.cpp: State NaN in prop_wrenches.thrust"); ros::shutdown(); }
+    
     prop_wrenches.omega = omega;
 }

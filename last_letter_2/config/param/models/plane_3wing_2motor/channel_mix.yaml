@@ -1,4 +1,4 @@
-# choose the channels for the basic moves
+#Basic moves channel declaration
 
 channels/phi_chan: 0
 channels/theta_chan: 1

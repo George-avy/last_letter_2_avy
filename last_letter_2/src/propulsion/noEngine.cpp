@@ -1,6 +1,6 @@
 NoEngine::NoEngine(Model *parent, int id) : Propulsion(parent, id)
 {
-    printf("motor:%i No engine built\n",id);
+    printf("motor%i type: noEngine\n", id);
 }
 
 void NoEngine::calcThrust()

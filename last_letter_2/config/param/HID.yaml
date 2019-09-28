@@ -1,6 +1,5 @@
 # HID configuration parameters
-# All arrays must be 11 elements long
-# Aileron, Elevator, Throttle and Rudder commands correspond to the positions 0, 1, 2 and 3 respectively.
+# All arrays must be 20 elements long
 
 # Logitech Extreme 3D Pro joystick
 # Channel     [0      1     2     3     4     5     6     7     8     9     10    11    12    13    14    15    16    17    18    19]

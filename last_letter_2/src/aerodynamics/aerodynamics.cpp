@@ -6,10 +6,10 @@
 Aerodynamics::Aerodynamics(Model *parent, int id)
 {
     model = parent;
-    airfoil_number = id;   //airfoil ID number
+    airfoil_number = id; //airfoil ID number
 }
 
-//calculation steps
+// calculation steps
 void Aerodynamics::calculationCycle()
 {
     getStates();
@@ -19,13 +19,13 @@ void Aerodynamics::calculationCycle()
     calcWrench();
 }
 
-//get Link States from model plugin
+// get Link States from model plugin
 void Aerodynamics::getStates()
 {
-    airfoil_states=model->model_states.airfoil_states[airfoil_number-1];
+    airfoil_states = model->model_states.airfoil_states[airfoil_number - 1];
 }
 
-// load airfoil input signals from model
+// load airfoil input signals from model class
 void Aerodynamics::getInputSignals()
 {
     airfoil_inputs.x = model->airfoil_input[airfoil_number - 1].x;
@@ -33,7 +33,7 @@ void Aerodynamics::getInputSignals()
     airfoil_inputs.z = model->airfoil_input[airfoil_number - 1].z;
 }
 
-// rotate wind vector from body to airfoil Link
+// rotate wind vector from inertial_NWU to airfoil_FLU Link
 void Aerodynamics::rotateWind()
 {
     char name_temp[20];
@@ -42,30 +42,25 @@ void Aerodynamics::rotateWind()
     sprintf(name_temp, "airfoil%i", airfoil_number);
     airfoil_link_name.assign(name_temp);
 
-    // Transform wing vector from inertial_NWU to airfoil_FLU frame
-    transformation_matrix = KDL::Frame(KDL::Rotation::EulerZYX( airfoil_states.psi,
-                                                                airfoil_states.theta,
-                                                                airfoil_states.phi),
-                                                                KDL::Vector(0, 0, 0));
-    v_out = tf2::Stamped<KDL::Vector>(transformation_matrix.Inverse() * KDL::Vector(model->airdata.wind_x,model->airdata.wind_y,model->airdata.wind_z), ros::Time::now(), "airfoil_FLU");
+    transformation_matrix = KDL::Frame(KDL::Rotation::EulerZYX(airfoil_states.psi,
+                                                               airfoil_states.theta,
+                                                               airfoil_states.phi),
+                                       KDL::Vector(0, 0, 0));
+    v_out = tf2::Stamped<KDL::Vector>(transformation_matrix.Inverse() * KDL::Vector(model->airdata.wind_x, model->airdata.wind_y, model->airdata.wind_z), ros::Time::now(), "airfoil_FLU");
 
-    relative_wind.x=v_out[0];
-    relative_wind.y=v_out[1];
-    relative_wind.z=v_out[2];
-
-    // std::cout<<"wind airfoil"<<airfoil_number<<std::endl;
-    // std::cout<<relative_wind<<std::endl<<std::endl;
+    relative_wind.x = v_out[0];
+    relative_wind.y = v_out[1];
+    relative_wind.z = v_out[2];
 }
 
-//calculate essential values (airspeed, alpha, beta)
+// calculate essential values (airspeed, alpha, beta)
 void Aerodynamics::calcTriplet()
 {
-    // airspeed, alpha, beta relative to airfoil
-    float u_r = airfoil_states.u - relative_wind.x;    //relative speeds
+    float u_r = airfoil_states.u - relative_wind.x; //relative speeds
     float v_r = airfoil_states.v - relative_wind.y;
     float w_r = airfoil_states.w - relative_wind.z;
-    // Transform relative speed from airfoil_FLU to airfoil_FRD for calculations
-    FLUtoFRD(u_r, v_r, w_r);
+    FLUtoFRD(u_r, v_r, w_r); // Transform relative speed vectors from airfoil_FLU to airfoil_FRD
+                             // Calculations need vectors at FRD frames of links
     airspeed = sqrt(pow(u_r, 2) + pow(v_r, 2) + pow(w_r, 2));
     alpha = atan2(w_r, u_r);
     if (u_r == 0)

@@ -1,4 +1,5 @@
-# Basic model states
+# 12 state variable of a link
+
 Header header
 float32 x
 float32 y
