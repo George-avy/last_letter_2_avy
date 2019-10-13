@@ -27,7 +27,6 @@ airfoil1/c_drag_q: 0.0
 airfoil1/c_drag_input_y: 0.0
 airfoil1/c_drag_p: 0.0437
 airfoil1/c_drag_0: 0.03
-airfoil1/c_drag_a: 0.3
 airfoil1/c_y_0: 0
 airfoil1/c_y_b: -0.98
 airfoil1/c_y_p: 0

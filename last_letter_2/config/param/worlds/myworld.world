@@ -10,7 +10,7 @@
          <track_visual>
           <name>my_model</name>
           <static>true</static>
-          <xyz>-20 0 3</xyz>
+          <xyz>-5 0 0.5</xyz>
           <inherit_yaw>true</inherit_yaw>
           <min_dist>15</min_dist>
           <max_dist>30</max_dist>
@@ -45,7 +45,7 @@
           </surface>
         </collision>
         <visual name="runway">
-          <pose>130 0 0.005 0 0 0</pose>
+          <pose>130 0 0.01 0 0 0</pose>
           <cast_shadows>false</cast_shadows>
           <geometry>
             <plane>
@@ -62,7 +62,7 @@
         </visual>
 
         <visual name="grass">
-          <pose>0 0 -0.1 0 0 0</pose>
+          <pose>0 0 -0.01 0 0 0</pose>
           <cast_shadows>false</cast_shadows>
           <geometry>
             <plane>
@@ -84,10 +84,10 @@
       <static>true</static>
       <link name="csl">
         <visual name="csl">
-          <pose>400 0 0  0 0 1.57</pose>
+          <pose>400 0 0.01  0 0 1.57</pose>
           <cast_shadows>false</cast_shadows>
           <geometry>
-             <mesh><uri>package://last_letter_2/config/param/meshes/csl_logo/csl_logo.dae</uri></mesh>
+             <mesh><uri>model://config/param/meshes/csl_logo/csl_logo.dae</uri></mesh>
           </geometry>
          </visual>
       </link>

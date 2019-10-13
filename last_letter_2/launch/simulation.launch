@@ -1,4 +1,5 @@
 <launch>
+  <env name="GAZEBO_MODEL_PATH" value="$(find last_letter_2)"/>
 
   <!-- choose a model to simulate -->
   <!-- <arg name="uav_name" default="plane_1wing"/> -->
@@ -44,7 +45,7 @@
   <rosparam command="load" file="$(find last_letter_2)/config/param/updatePhysics.yaml" />
   <rosparam command="load" file="$(find last_letter_2)/config/param/HID.yaml" />
 
-   <!-- push robot_description to factory and spawn model in gazebo -->
+  <!-- push robot_description to factory and spawn model in gazebo -->
   <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
          args="-z 1 -urdf -model my_model -param robot_description" respawn="false" output="screen">
   </node> 

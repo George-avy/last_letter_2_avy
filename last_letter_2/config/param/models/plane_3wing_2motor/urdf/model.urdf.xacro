@@ -7,8 +7,8 @@
 <xacro:property name="body_s" value="1" />   
 
 <!-- body link , body_height, body_rad, body_mass -->
-<xacro:property name="body_h" value="${2.5*body_s}" />
-<xacro:property name="body_r" value="${0.5*body_s}" />
+<xacro:property name="body_h" value="${body_s}" />
+<xacro:property name="body_r" value="${0.14*body_s}" />
 <xacro:property name="body_m" value="${0.3*mass}" />
 
     <!-- only body_FLU acceptable name for base_link -->
@@ -36,12 +36,13 @@
         </inertial>
     </link>
 
+
     ----------------------------------------------------------------------------  airfoils
-<!-- airfoil1 link parameters x, y, z, mass-->
-<xacro:property name="airfoil_x" value="${body_s/2}" />
-<xacro:property name="airfoil_y" value="${body_s*6}" />
-<xacro:property name="airfoil_z" value="${body_s/10}"/>
-<xacro:property name="airfoil_m" value="${0.3*mass}" />              
+<!-- airfoil1 link parameters , x, y, z, mass-->
+<xacro:property name="airfoil_x" value="${0.15*body_s}" />
+<xacro:property name="airfoil_y" value="${2*body_s}" />
+<xacro:property name="airfoil_z" value="${0.04*body_s}"/>
+<xacro:property name="airfoil_m" value="${0.2*mass}" /> 
     
     <!-- only airfoil(Number_0f_Airfoil) acceptable name for airfoils -->
     <link name="airfoil1">
@@ -66,18 +67,18 @@
     </link>
     
     <joint name="body_FLU_to_airfoil1" type="revolute">
-        <origin xyz="${body_h/15} 0 ${body_r-airfoil_z/2}" rpy ="0 0 0"/>
+        <origin xyz="0 0 0" rpy ="0 0 0"/>
         <parent link="body_FLU" />
         <child link="airfoil1" />
         <limit effort="1000.0" velocity="0.5"/>   ---default limits upper=lower=0
     </joint>
 
    
- <!-- airfoil2 link parameters x, y, z, mass-->
-<xacro:property name="airfoil2_x" value="${0.3*body_s}" />
-<xacro:property name="airfoil2_y" value="${2*body_s}" />
-<xacro:property name="airfoil2_z" value="${0.1*body_s}"/>
-<xacro:property name="airfoil2_m" value="${0.01*mass}" />               ----airfoil2 mass
+ airfoil2 link parameters x, y, z, mass
+<xacro:property name="airfoil2_x" value="${0.1*body_s}" />
+<xacro:property name="airfoil2_y" value="${0.8*body_s}" />
+<xacro:property name="airfoil2_z" value="${0.02*body_s}"/>
+<xacro:property name="airfoil2_m" value="${0.05*mass}" />               ----airfoil2 mass
     
     <!-- only airfoil(Number_0f_Airfoil) acceptable name for airfoils -->
     <link name="airfoil2">
@@ -109,10 +110,10 @@
     </joint>
     
 <!-- airfoil3 link parameters x, y, z, mass-->
-<xacro:property name="airfoil3_x" value="${0.3*body_s}" />
-<xacro:property name="airfoil3_y" value="${0.5*body_s}" />
-<xacro:property name="airfoil3_z" value="${0.1*body_s}"/>
-<xacro:property name="airfoil3_m" value="${0.01*mass}" />               ----airfoil3 mass
+<xacro:property name="airfoil3_x" value="${0.1*body_s}" />
+<xacro:property name="airfoil3_y" value="${0.15*body_s}" />
+<xacro:property name="airfoil3_z" value="${0.02*body_s}"/>
+<xacro:property name="airfoil3_m" value="${0.05*mass}" />               ----airfoil3 mass
     
     <!-- only airfoil(Number_0f_Airfoil) acceptable name for airfoils -->
     <link name="airfoil3">
@@ -146,11 +147,11 @@
 
 ----------------------------------------------------------------------------------- motors
 <!-- motor link -->
-<!-- motor parameters x, y, z, mass -->
-<xacro:property name="motor_x" value="${body_s/10}" />
-<xacro:property name="motor_y" value="${body_s/5}" />
-<xacro:property name="motor_z" value="${body_s/5}" />
-<xacro:property name="motor_m" value="${0.3*mass}" />
+<!-- motor parameters , x, y, z, mass -->
+<xacro:property name="motor_x" value="${0.02*body_s}" />
+<xacro:property name="motor_y" value="${0.04*body_s}" />
+<xacro:property name="motor_z" value="${0.04*body_s}" />
+<xacro:property name="motor_m" value="${0.15*mass}" />
 
 <!-- only motor(Number_0f_Motor) acceptable name for motors -->
     <link name="motor1">
@@ -217,8 +218,8 @@
 
  -----------------------------------------------------------------------------------propeller
 <!-- axle link parameters height, rad, mass-->
-<xacro:property name="axle_h" value="${body_h/12}" />
-<xacro:property name="axle_r" value="${body_r/10}" />
+<xacro:property name="axle_h" value="${0.02*body_s}" />
+<xacro:property name="axle_r" value="${0.01*body_s}" />
 <xacro:property name="axle_m" value="${0.005*mass}" />
     
     <link name="axle1">
@@ -284,17 +285,17 @@
     </joint>
 
 <!-- propeller link parameters x, y, z, mass -->
-<xacro:property name="propeller_x" value="${1.3*body_s}" />
-<xacro:property name="propeller_y" value="${0.2*body_s}" />
-<xacro:property name="propeller_z" value="${0.05*body_s}" />
+<xacro:property name="propeller_x" value="${0.26*body_s}" />
+<xacro:property name="propeller_y" value="${0.04*body_s}" />
+<xacro:property name="propeller_z" value="${0.01*body_s}" />
 <xacro:property name="propeller_m" value="${0.015*mass}" />
 
     
-    <link name="prop1">
+   <link name="prop1">
         <visual>
-        <origin xyz="0 -0.149 0.01" rpy="0 0 0" />
+        <origin xyz="0 -0.03 0" rpy="0 0 0" />
             <geometry>
-               <mesh filename="package://last_letter_2/config/param/meshes/propeller.dae"/>
+               <mesh filename="package://last_letter_2/config/param/meshes/propeller.dae" scale="${0.2*body_s} ${0.2*body_s} ${0.2*body_s}"/>
             </geometry>
         </visual>
 
@@ -320,9 +321,9 @@
 
     <link name="prop2">
         <visual>
-        <origin xyz="0 -0.149 0.01" rpy="0 0 0" />
+        <origin xyz="0 -0.03 0" rpy="0 0 0" />
             <geometry>
-               <mesh filename="package://last_letter_2/config/param/meshes/propeller.dae"/>
+               <mesh filename="package://last_letter_2/config/param/meshes/propeller.dae" scale="${0.2*body_s} ${0.2*body_s} ${0.2*body_s}"/>
             </geometry>
         </visual>
 
@@ -349,9 +350,9 @@
      ---------------------------------------------------------------------------front wheels
      
      <!-- wheel_base_link parameters, x, y, z, mass-->
-<xacro:property name="wheel_base_x" value="${0.05*body_s}" />
-<xacro:property name="wheel_base_y" value="${2*body_s}" />
-<xacro:property name="wheel_base_z" value="${0.05*body_s}" />
+<xacro:property name="wheel_base_x" value="${0.01*body_s}" />
+<xacro:property name="wheel_base_y" value="${0.5*body_s}" />
+<xacro:property name="wheel_base_z" value="${0.01*body_s}" />
 <xacro:property name="wheel_base_m" value="${0.05*mass}" />
 
     <link name="wheel_base">
@@ -376,16 +377,15 @@
     </link>
 
     <joint name=" body_FLU_to_wheel_base" type="fixed">
-        <origin xyz="${0.4*body_h} 0 -${body_r}" rpy="0 0 0" />
+        <origin xyz="${0.3*body_h} 0 -${body_r}" rpy="0 0 0" />
         <parent link="body_FLU" />
         <child link="wheel_base" />
     </joint>
 
 <!-- left wheel link parameters, rad, height, mass-->
-<xacro:property name="left_wheel_r" value="${0.3*body_s}" />
-<xacro:property name="left_wheel_h" value="${0.1*body_s}" />
+<xacro:property name="left_wheel_r" value="${0.06*body_s}" />
+<xacro:property name="left_wheel_h" value="${0.02*body_s}" />
 <xacro:property name="left_wheel_m" value="${0.01*mass}" />
-
     <link name="left_wheel">
         <visual>
             <origin xyz="0 0 ${left_wheel_h/2}" />
@@ -455,8 +455,8 @@
 
     ------------------------------------------------------------------------------------ rear sphere wheel
 <!-- rear wheel link parameters, rad, mass -->
+<xacro:property name="rear_wheel_r" value="${body_r*0.2}" />
 <xacro:property name="rear_wheel_m" value="${body_m/2}" />
-<xacro:property name="rear_wheel_r" value="${0.01*mass}" />
 
     <link name="rear_wheel">
         <visual>

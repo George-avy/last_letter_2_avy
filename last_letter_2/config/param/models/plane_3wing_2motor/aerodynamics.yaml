@@ -4,9 +4,9 @@
 nWings: 3
 
 airfoil1/aerodynamicsType: 1
-airfoil1/s: 0.45   #wing surface = b*c
-airfoil1/b: 1.88   #wingspan
-airfoil1/c: 0.24   #wing mean cord
+airfoil1/s: 0.3   #wing surface = b*c
+airfoil1/b: 2     #wingspan
+airfoil1/c: 0.15  #wing mean cord
 
 airfoil1/deltax_max: 0.3491  #max deflections in radians
 airfoil1/deltay_max: 0
@@ -16,10 +16,10 @@ airfoil1/input_x_chan: 0
 airfoil1/input_y_chan: -1
 airfoil1/input_z_chan: -1
 
-airfoil1/c_lift_0: 0.35
+airfoil1/c_lift_0: 0.56
 airfoil1/c_lift_input_y: 0.0
 airfoil1/c_lift_a: 6.9
-airfoil1/c_lift_q: -1
+airfoil1/c_lift_q: 0
 airfoil1/mcoeff: 50
 airfoil1/oswald: 0.9
 airfoil1/alpha_stall: 0.4712
@@ -27,89 +27,87 @@ airfoil1/c_drag_q: 0.0
 airfoil1/c_drag_input_y: 0.0
 airfoil1/c_drag_p: 0.0437
 airfoil1/c_drag_0: 0.03
-airfoil1/c_drag_a: 0.3
 airfoil1/c_y_0: 0
 airfoil1/c_y_b: -0.98
 airfoil1/c_y_p: 0
 airfoil1/c_y_r: 0
 airfoil1/c_y_input_x: 0
-airfoil1/c_y_input_z: -0.2 #opposite sign than c_n_input_z
+airfoil1/c_y_input_z: 0 #opposite sign than c_n_input_z
 
 airfoil1/c_l_0: 0
 airfoil1/c_l_p: -1.0
 airfoil1/c_l_b: -0.12
 airfoil1/c_l_r: 0.14
-airfoil1/c_l_input_x: 0.15 #0.25
-airfoil1/c_l_input_z: -0.037
-airfoil1/c_m_0: 0.30
-airfoil1/c_m_a: -0.7
-airfoil1/c_m_q: -20
-airfoil1/c_m_input_y: 1.0
+airfoil1/c_l_input_x: 0.20
+airfoil1/c_l_input_z: 0
+airfoil1/c_m_0: 0
+airfoil1/c_m_a: 0
+airfoil1/c_m_q: 0
+airfoil1/c_m_input_y: 0.0
 airfoil1/c_n_0: 0
 airfoil1/c_n_b: 0.25
 airfoil1/c_n_p: 0.022
 airfoil1/c_n_r: -1
 airfoil1/c_n_input_x: 0.00
-airfoil1/c_n_input_z: 0.1 #opposite sign than c_y_input_z
+airfoil1/c_n_input_z: 0 #opposite sign than c_y_input_z
 
 # airfoil 2
 airfoil2/aerodynamicsType: 1
-airfoil2/s: 0.12   #wing surface = b*c
-airfoil2/b: 0.5    #wingspan
-airfoil2/c: 0.24   #wing mean cord
+airfoil2/s: 0.08  #wing surface = b*c
+airfoil2/b: 0.8   #wingspan
+airfoil2/c: 0.1   #wing mean cord
 
-airfoil2/deltax_max: 0       #max deflections in radians
-airfoil2/deltay_max: 0.3491
+airfoil2/deltax_max: 0   #max deflections in radians
+airfoil2/deltay_max: 0.4
 airfoil2/deltaz_max: 0
 
-airfoil2/input_x_chan: -1  
+airfoil2/input_x_chan: -1
 airfoil2/input_y_chan:  1
 airfoil2/input_z_chan: -1
 
-airfoil2/c_lift_0: 0.56 #0.56
-airfoil2/c_lift_input_y: -1.0
-airfoil2/c_lift_a: 6.9
+airfoil2/c_lift_0: 0.27
+airfoil2/c_lift_input_y: -0.3
+airfoil2/c_lift_a: 3.5
 airfoil2/c_lift_q: 0
 airfoil2/mcoeff: 50
 airfoil2/oswald: 0.9
 airfoil2/alpha_stall: 0.4712
-airfoil2/c_drag_q: 0.0
-airfoil2/c_drag_input_y: 0.0
-airfoil2/c_drag_p: 0.0437
+airfoil2/c_drag_q: 0.02
+airfoil2/c_drag_input_y: 0
+airfoil2/c_drag_p: 0
 airfoil2/c_drag_0: 0.03
-airfoil2/c_drag_a: 0.3
 airfoil2/c_y_0: 0
-airfoil2/c_y_b: -0.98
+airfoil2/c_y_b: 0
 airfoil2/c_y_p: 0
 airfoil2/c_y_r: 0
 airfoil2/c_y_input_x: 0
 airfoil2/c_y_input_z: 0 #opposite sign than c_n_input_z
 
 airfoil2/c_l_0: 0
-airfoil2/c_l_p: -1.0
-airfoil2/c_l_b: -0.12
-airfoil2/c_l_r: 0.14
+airfoil2/c_l_p: 0
+airfoil2/c_l_b: 0
+airfoil2/c_l_r: 0
 airfoil2/c_l_input_x: 0
-airfoil2/c_l_input_z: -0.037
-airfoil2/c_m_0: 0.045
-airfoil2/c_m_a: -0.7
-airfoil2/c_m_q: -20
-airfoil2/c_m_input_y: 1.0
+airfoil2/c_l_input_z: 0
+airfoil2/c_m_0: 0.02
+airfoil2/c_m_a: 0
+airfoil2/c_m_q: 0
+airfoil2/c_m_input_y: 0
 airfoil2/c_n_0: 0
-airfoil2/c_n_b: 0.25
-airfoil2/c_n_p: 0.022
-airfoil2/c_n_r: -1
-airfoil2/c_n_input_x: 0.00
-airfoil2/c_n_input_z: 0.1 #opposite sign than c_y_input_z
+airfoil2/c_n_b: 0
+airfoil2/c_n_p: 0
+airfoil2/c_n_r: 0
+airfoil2/c_n_input_x: 0
+airfoil2/c_n_input_z: 0 #opposite sign than c_y_input_z
 
 # airfoil 3
 airfoil3/aerodynamicsType: 1
-airfoil3/s: 0.072   #wing surface = b*c
-airfoil3/b: 0.3   #wingspan
-airfoil3/c: 0.24   #wing mean cord
+airfoil3/s: 0.015  #wing surface = b*c
+airfoil3/b: 0.15   #wingspan
+airfoil3/c: 0.1    #wing mean cord
 
-airfoil3/deltax_max: 0       #max deflections in radians
-airfoil3/deltay_max: 0.3491
+airfoil3/deltax_max: 0     #max deflections in radians
+airfoil3/deltay_max: 0.6
 airfoil3/deltaz_max: 0
 
 airfoil3/input_x_chan: -1  
@@ -117,23 +115,22 @@ airfoil3/input_y_chan:  2
 airfoil3/input_z_chan: -1
 
 airfoil3/c_lift_0: 0
-airfoil3/c_lift_input_y: -2.0
-airfoil3/c_lift_a: 6.9
+airfoil3/c_lift_input_y: -0.3
+airfoil3/c_lift_a: 0.5
 airfoil3/c_lift_q: 0
 airfoil3/mcoeff: 50
 airfoil3/oswald: 0.9
 airfoil3/alpha_stall: 0.4712
-airfoil3/c_drag_q: 0.0
-airfoil3/c_drag_input_y: 0.0
-airfoil3/c_drag_p: 0.0437
+airfoil3/c_drag_q: 0
+airfoil3/c_drag_input_y: 0.01
+airfoil3/c_drag_p: 0
 airfoil3/c_drag_0: 0.03
-airfoil3/c_drag_a: 0.3
 airfoil3/c_y_0: 0
 airfoil3/c_y_b: 0
 airfoil3/c_y_p: 0
 airfoil3/c_y_r: 0
 airfoil3/c_y_input_x: 0
-airfoil3/c_y_input_z: -0.2 #opposite sign than c_n_input_z
+airfoil3/c_y_input_z: 0 #opposite sign than c_n_input_z
 
 airfoil3/c_l_0: 0
 airfoil3/c_l_p: 0
@@ -142,12 +139,12 @@ airfoil3/c_l_r: 0
 airfoil3/c_l_input_x: 0
 airfoil3/c_l_input_z: 0
 airfoil3/c_m_0: 0
-airfoil3/c_m_a: 0
+airfoil3/c_m_a: 2
 airfoil3/c_m_q: 0
-airfoil3/c_m_input_y: 0
+airfoil3/c_m_input_y: 10
 airfoil3/c_n_0: 0
 airfoil3/c_n_b: 0
 airfoil3/c_n_p: 0
 airfoil3/c_n_r: 0
-airfoil3/c_n_input_x: 0.00
+airfoil3/c_n_input_x: 0
 airfoil3/c_n_input_z: 0 #opposite sign than c_y_input_z

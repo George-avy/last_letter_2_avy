@@ -3,7 +3,7 @@
 
 #Initial State
 #Caution. Always in doulbe style (with dot)
-init/position: [0.0, 0.0, 10.0] #NWU frame
+init/position: [0.0, 0.0, 1.0] #NWU frame
 init/orientation:  [0.0, 0.0, 0.0] #NWU frame as RPY
-init/velLin:   [50.0, 0.0, 0.0] #body frame
+init/velLin:   [10.0, 0.0, 0.0] #body frame
 init/velAng: [0.0, 0.0, 0.0] #body frame
