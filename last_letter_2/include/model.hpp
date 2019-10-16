@@ -27,8 +27,8 @@ public:
   Environment environment;
   Dynamics dynamics;
 
-  float motor_input[6];
-  geometry_msgs::Vector3 airfoil_input[3];
+  float motor_input[10];
+  geometry_msgs::Vector3 airfoil_input[10];
   geometry_msgs::Vector3 body_wind;
   KDL::Frame transformation_matrix;
   tf2::Stamped<KDL::Vector> v_out;

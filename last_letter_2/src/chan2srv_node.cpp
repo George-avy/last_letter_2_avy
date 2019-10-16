@@ -1,4 +1,4 @@
-// A node to call gazebo services (eg. reset_simulation, spawn_model, delete_model)
+// A node to call gazebo services (eg. spawn_model, delete_model)
 // It's neccessary gazebo services to be called from node that runs independently and do not wait gazebo.
 // In other case, it hangs
 
@@ -8,7 +8,6 @@
 #include <gazebo_msgs/DeleteModel.h>
 #include <std_srvs/Empty.h>
 
-ros::ServiceClient pauseGazebo;
 ros::ServiceClient spawnModel;
 ros::ServiceClient deleteModel;
 gazebo_msgs::SpawnModel spawn_model;
@@ -58,8 +57,6 @@ int main(int argc, char **argv)
     ros::Subscriber sub = n.subscribe("last_letter_2/channels", 1, srvServer, ros::TransportHints().tcpNoDelay());
 
     // Services
-    ros::service::waitForService("/gazebo/pause_physics"); //pause gazebo
-    pauseGazebo = n.serviceClient<std_srvs::Empty>("/gazebo/pause_physics");
     ros::service::waitForService("/gazebo/spawn_urdf_model"); //spanw a model in gazebo world
     spawnModel = n.serviceClient<gazebo_msgs::SpawnModel>("/gazebo/spawn_urdf_model");
     ros::service::waitForService("/gazebo/delete_model"); //delete a model from gazebo world

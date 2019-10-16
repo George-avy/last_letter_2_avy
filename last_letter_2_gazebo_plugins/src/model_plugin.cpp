@@ -54,8 +54,8 @@ private:
     std::mutex m;
 
     last_letter_2_msgs::link_states base_link_states;
-    last_letter_2_msgs::link_states airfoil_states[3];
-    last_letter_2_msgs::link_states motor_states[6];
+    last_letter_2_msgs::link_states airfoil_states[10];
+    last_letter_2_msgs::link_states motor_states[10];
     last_letter_2_msgs::model_states model_states;
     ignition::math::Vector3d relLinVel;
     ignition::math::Vector3d rotation;
