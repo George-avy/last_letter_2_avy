@@ -7,9 +7,9 @@
 <xacro:property name="body_s" value="1" />   
 
 <!-- body link parameters x, y, z, mass-->
-<xacro:property name="body_r" value="${body_s/2}" />
-<xacro:property name="body_h" value="${body_s/8}" />
-<xacro:property name="body_m" value="${body_mass}" />
+<xacro:property name="body_r" value="${0.05*body_s}" />
+<xacro:property name="body_h" value="${0.03*body_s}" />
+<xacro:property name="body_m" value="${0.5*body_mass}" />
 
     <link name="body_FLU">
         <visual>
@@ -37,10 +37,10 @@
     </link>
 
 ---------------------------------------------------------- 6 quadcopter arms
-<xacro:property name="arm_x" value="${2*body_s}" />
-<xacro:property name="arm_y" value="${0.1*body_s}" />
-<xacro:property name="arm_z" value="${0.1*body_s}" />
-<xacro:property name="arm_m" value="${0.1*body_m}" />
+<xacro:property name="arm_x" value="${0.3*body_s}" />
+<xacro:property name="arm_y" value="${0.01*body_s}" />
+<xacro:property name="arm_z" value="${0.02*body_s}" />
+<xacro:property name="arm_m" value="${0.05*body_m}" />
 
     <link name="arm1">
         <visual>
@@ -225,28 +225,28 @@
     -------------------------------------------------------------------------- motors
 
 
-<xacro:property name="motor_r" value="${body_s/10}" />
-<xacro:property name="motor_h" value="${body_s/10}" />
-<xacro:property name="motor_m" value="${0.1*body_m}" />
+<xacro:property name="motor_r" value="${0.01*body_s}" />
+<xacro:property name="motor_h" value="${0.005*body_s}" />
+<xacro:property name="motor_m" value="${0.03*body_m}" />
 
 <!-- only motor(Number_0f_Motor) acceptable name for motors -->
     <link name="motor1">
         <visual>
-        <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+        <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <cylinder radius="${motor_r}" length="${motor_h}" />
             </geometry>
         </visual>
 
         <collision>
-            <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <cylinder radius="${motor_r}" length="${motor_h}" />
             </geometry>
         </collision>
         
         <inertial>
-            <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <mass value="${motor_m}" />
             <inertia    ixx="${1/12*motor_m*motor_h*motor_h+1/4*motor_m*motor_r*motor_r}" ixy="0" ixz="0" iyz="0"
                         iyy="${1/12*motor_m*motor_h*motor_h+1/4*motor_m*motor_r*motor_r}" 
@@ -255,7 +255,7 @@
     </link>
 
     <joint name="arm1_to_motor1" type="revolute">
-        <origin xyz="${arm_x-motor_r/2} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
+        <origin xyz="${arm_x-motor_r} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
         <parent link="arm1" />
         <child link="motor1" />
         <limit effort="1000.0" velocity="0.5"/>  --default limits upper=lower=0
@@ -263,21 +263,21 @@
 
     <link name="motor2">
         <visual>
-        <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+        <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <cylinder radius="${motor_r}" length="${motor_h}" />
             </geometry>
         </visual>
 
         <collision>
-            <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <cylinder radius="${motor_r}" length="${motor_h}" />
             </geometry>
         </collision>
         
         <inertial>
-            <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <mass value="${motor_m}" />
             <inertia    ixx="${1/12*motor_m*motor_h*motor_h+1/4*motor_m*motor_r*motor_r}" ixy="0" ixz="0" iyz="0"
                         iyy="${1/12*motor_m*motor_h*motor_h+1/4*motor_m*motor_r*motor_r}" 
@@ -286,7 +286,7 @@
     </link>
 
     <joint name="arm2_to_motor2" type="revolute">
-        <origin xyz="${arm_x-motor_r/2} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
+        <origin xyz="${arm_x-motor_r} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
         <parent link="arm2" />
         <child link="motor2" />
         <limit effort="1000.0" velocity="0.5"/>  --default limits upper=lower=0
@@ -294,21 +294,21 @@
 
     <link name="motor3">
         <visual>
-        <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+        <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <cylinder radius="${motor_r}" length="${motor_h}" />
             </geometry>
         </visual>
 
         <collision>
-            <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <cylinder radius="${motor_r}" length="${motor_h}" />
             </geometry>
         </collision>
         
         <inertial>
-            <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <mass value="${motor_m}" />
             <inertia    ixx="${1/12*motor_m*motor_h*motor_h+1/4*motor_m*motor_r*motor_r}" ixy="0" ixz="0" iyz="0"
                         iyy="${1/12*motor_m*motor_h*motor_h+1/4*motor_m*motor_r*motor_r}" 
@@ -317,7 +317,7 @@
     </link>
 
     <joint name="arm3_to_motor3" type="revolute">
-        <origin xyz="${arm_x-motor_r/2} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
+        <origin xyz="${arm_x-motor_r} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
         <parent link="arm3" />
         <child link="motor3" />
         <limit effort="1000.0" velocity="0.5"/>  --default limits upper=lower=0
@@ -325,21 +325,21 @@
          
     <link name="motor4">
         <visual>
-        <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+        <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <cylinder radius="${motor_r}" length="${motor_h}" />
             </geometry>
         </visual>
 
         <collision>
-            <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <cylinder radius="${motor_r}" length="${motor_h}" />
             </geometry>
         </collision>
         
         <inertial>
-            <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <mass value="${motor_m}" />
             <inertia    ixx="${1/12*motor_m*motor_h*motor_h+1/4*motor_m*motor_r*motor_r}" ixy="0" ixz="0" iyz="0"
                         iyy="${1/12*motor_m*motor_h*motor_h+1/4*motor_m*motor_r*motor_r}" 
@@ -348,7 +348,7 @@
     </link>
 
     <joint name="arm4_to_motor4" type="revolute">
-        <origin xyz="${arm_x-motor_r/2} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
+        <origin xyz="${arm_x-motor_r} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
         <parent link="arm4" />
         <child link="motor4" />
         <limit effort="1000.0" velocity="0.5"/>  --default limits upper=lower=0
@@ -356,21 +356,21 @@
 
          <link name="motor5">
         <visual>
-        <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+        <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <cylinder radius="${motor_r}" length="${motor_h}" />
             </geometry>
         </visual>
 
         <collision>
-            <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <cylinder radius="${motor_r}" length="${motor_h}" />
             </geometry>
         </collision>
         
         <inertial>
-            <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <mass value="${motor_m}" />
             <inertia    ixx="${1/12*motor_m*motor_h*motor_h+1/4*motor_m*motor_r*motor_r}" ixy="0" ixz="0" iyz="0"
                         iyy="${1/12*motor_m*motor_h*motor_h+1/4*motor_m*motor_r*motor_r}" 
@@ -379,7 +379,7 @@
     </link>
 
     <joint name="arm5_to_motor5" type="revolute">
-        <origin xyz="${arm_x-motor_r/2} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
+        <origin xyz="${arm_x-motor_r} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
         <parent link="arm5" />
         <child link="motor5" />
         <limit effort="1000.0" velocity="0.5"/>  --default limits upper=lower=0
@@ -387,21 +387,21 @@
 
     <link name="motor6">
         <visual>
-        <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+        <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <cylinder radius="${motor_r}" length="${motor_h}" />
             </geometry>
         </visual>
 
         <collision>
-            <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <cylinder radius="${motor_r}" length="${motor_h}" />
             </geometry>
         </collision>
         
         <inertial>
-            <origin xyz="${motor_r/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${motor_h/2} 0 0" rpy="0 ${pi/2} 0"/>
             <mass value="${motor_m}" />
             <inertia    ixx="${1/12*motor_m*motor_h*motor_h+1/4*motor_m*motor_r*motor_r}" ixy="0" ixz="0" iyz="0"
                         iyy="${1/12*motor_m*motor_h*motor_h+1/4*motor_m*motor_r*motor_r}" 
@@ -410,16 +410,16 @@
     </link>
 
     <joint name="arm6_to_motor6" type="revolute">
-        <origin xyz="${arm_x-motor_r/2} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
+        <origin xyz="${arm_x-motor_r} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
         <parent link="arm6" />
         <child link="motor6" />
         <limit effort="1000.0" velocity="0.5"/>  --default limits upper=lower=0
     </joint>
- -------------------------------------------------------------- axles
+ -------------------------------------------------------------------------------------------------- axles
 <!-- arm link -->
-<xacro:property name="axle_m" value="${body_m/20}" />
-<xacro:property name="axle_r" value="${body_s/40}" />
-<xacro:property name="axle_h" value="${body_s/40}" />
+<xacro:property name="axle_r" value="${0.003*body_s}" />
+<xacro:property name="axle_h" value="${0.001*body_s}" />
+<xacro:property name="axle_m" value="${0.001*body_m}" />
     
     <link name="axle1">
         <visual>
@@ -446,7 +446,7 @@
     </link>
 
     <joint name="motor1_to_axle1" type="continuous">
-        <origin xyz="${motor_r} 0 0" rpy="0 0 0"/>
+        <origin xyz="${motor_h+axle_h/2} 0 0" rpy="0 0 0"/>
         <axis xyz="1 0 0" />
         <parent link="motor1" />
         <child link="axle1" />
@@ -477,7 +477,7 @@
     </link>
 
     <joint name="motor2_to_axle2" type="continuous">
-        <origin xyz="${motor_r} 0 0" rpy="0 0 0"/>
+        <origin xyz="${motor_h} 0 0" rpy="0 0 0"/>
         <axis xyz="1 0 0" />
         <parent link="motor2" />
         <child link="axle2" />
@@ -508,7 +508,7 @@
     </link>
 
     <joint name="motor3_to_axle3" type="continuous">
-        <origin xyz="${motor_r} 0 0" rpy="0 0 0"/>
+        <origin xyz="${motor_h} 0 0" rpy="0 0 0"/>
         <axis xyz="1 0 0" />
         <parent link="motor3" />
         <child link="axle3" />
@@ -539,7 +539,7 @@
     </link>
 
     <joint name="motor4_to_axle4" type="continuous">
-        <origin xyz="${motor_r} 0 0" rpy="0 0 0"/>
+        <origin xyz="${motor_h} 0 0" rpy="0 0 0"/>
         <axis xyz="1 0 0" />
         <parent link="motor4" />
         <child link="axle4" />
@@ -570,7 +570,7 @@
     </link>
 
     <joint name="motor5_to_axle5" type="continuous">
-        <origin xyz="${motor_r} 0 0" rpy="0 0 0"/>
+        <origin xyz="${motor_h} 0 0" rpy="0 0 0"/>
         <axis xyz="1 0 0" />
         <parent link="motor5" />
         <child link="axle5" />
@@ -601,37 +601,37 @@
     </link>
 
     <joint name="motor6_to_axle6" type="continuous">
-        <origin xyz="${motor_r} 0 0" rpy="0 0 0"/>
+        <origin xyz="${motor_h} 0 0" rpy="0 0 0"/>
         <axis xyz="1 0 0" />
         <parent link="motor6" />
         <child link="axle6" />
     </joint>
 
 
-  ------------------------------------------- propellers
+  ----------------------------------------------------------------------------------------------------- propellers
 <!-- propeller links -->
-<xacro:property name="propeller_m" value="${body_m/20}" />
-<xacro:property name="propeller_x" value="${1.5*body_s}" />
-<xacro:property name="propeller_y" value="${body_s/10}" />   
-<xacro:property name="propeller_z" value="${body_s/40}" />   
+<xacro:property name="propeller_x" value="${0.2*body_s}" />
+<xacro:property name="propeller_y" value="${0.015*body_s}" />   
+<xacro:property name="propeller_z" value="${0.002*body_s}" />   
+<xacro:property name="propeller_m" value="${0.001*body_m}" />
 
     <link name="prop1">
         <visual>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
             </geometry>
         </visual>
 
         <collision>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
             </geometry>
         </collision>
         
         <inertial>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <mass value="${propeller_m}" />
             <inertia    ixx="${1/12*propeller_m*(propeller_y*propeller_y+propeller_z*propeller_z)}" ixy="0" ixz="0" iyz="0"
                         iyy="${1/12*propeller_m*(propeller_x*propeller_x+propeller_z*propeller_z)}" 
@@ -648,21 +648,21 @@
     
     <link name="prop2">
         <visual>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
             </geometry>
         </visual>
 
         <collision>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
             </geometry>
         </collision>
         
         <inertial>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <mass value="${propeller_m}" />
             <inertia    ixx="${1/12*propeller_m*(propeller_y*propeller_y+propeller_z*propeller_z)}" ixy="0" ixz="0" iyz="0"
                         iyy="${1/12*propeller_m*(propeller_x*propeller_x+propeller_z*propeller_z)}" 
@@ -679,21 +679,21 @@
     
     <link name="prop3">
         <visual>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
             </geometry>
         </visual>
 
         <collision>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
             </geometry>
         </collision>
         
         <inertial>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <mass value="${propeller_m}" />
             <inertia    ixx="${1/12*propeller_m*(propeller_y*propeller_y+propeller_z*propeller_z)}" ixy="0" ixz="0" iyz="0"
                         iyy="${1/12*propeller_m*(propeller_x*propeller_x+propeller_z*propeller_z)}" 
@@ -710,21 +710,21 @@
     
     <link name="prop4">
         <visual>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
             </geometry>
         </visual>
 
         <collision>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
             </geometry>
         </collision>
         
         <inertial>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <mass value="${propeller_m}" />
             <inertia    ixx="${1/12*propeller_m*(propeller_y*propeller_y+propeller_z*propeller_z)}" ixy="0" ixz="0" iyz="0"
                         iyy="${1/12*propeller_m*(propeller_x*propeller_x+propeller_z*propeller_z)}" 
@@ -741,21 +741,21 @@
     
     <link name="prop5">
         <visual>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
             </geometry>
         </visual>
 
         <collision>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
             </geometry>
         </collision>
         
         <inertial>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <mass value="${propeller_m}" />
             <inertia    ixx="${1/12*propeller_m*(propeller_y*propeller_y+propeller_z*propeller_z)}" ixy="0" ixz="0" iyz="0"
                         iyy="${1/12*propeller_m*(propeller_x*propeller_x+propeller_z*propeller_z)}" 
@@ -772,21 +772,21 @@
     
     <link name="prop6">
         <visual>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
             </geometry>
         </visual>
 
         <collision>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <geometry>
                 <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
             </geometry>
         </collision>
         
         <inertial>
-            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <origin xyz="${propeller_z/2} 0 0" rpy="0 ${pi/2} 0"/>
             <mass value="${propeller_m}" />
             <inertia    ixx="${1/12*propeller_m*(propeller_y*propeller_y+propeller_z*propeller_z)}" ixy="0" ixz="0" iyz="0"
                         iyy="${1/12*propeller_m*(propeller_x*propeller_x+propeller_z*propeller_z)}" 

@@ -27,7 +27,7 @@ void srvServer(last_letter_2_msgs::channels channels)
         sprintf(name_temp, "can%i", i++);
         spawn_model_name.assign(name_temp);
         spawn_model.request.model_name = spawn_model_name;
-        spawn_model.request.initial_pose.position.z = -0.2;
+        spawn_model.request.initial_pose.position.z = -0.1;
         spawn_model.request.reference_frame = "my_model";
         spawnModel.call(spawn_model);
     }

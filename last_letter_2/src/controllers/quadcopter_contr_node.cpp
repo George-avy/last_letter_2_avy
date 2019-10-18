@@ -1,4 +1,4 @@
-// A node that runs the controller for quadcopter model
+// A node where the controller for quadcopter model runs
 
 #include <ros/ros.h>
 #include <last_letter_2_msgs/channels.h>
@@ -47,7 +47,6 @@ private:
     int roll_in_chan, pitch_in_chan, yaw_in_chan, throttle_in_chan;
     float roll_input, pitch_input, yaw_input, thrust_input;
     float new_roll_input, new_pitch_input, new_yaw_input, new_thrust_input;
-    float b, l, d, k;
 
     // variables for PD controller algorithm
     float prev_roll_error, prev_pitch_error, prev_yaw_error, prev_alt_error;
@@ -130,9 +129,9 @@ bool Controller::returnControlInputs(last_letter_2_msgs::get_control_inputs_srv:
     commands(2) = new_pitch_input;  //pitch
     commands(3) = new_yaw_input;    //yaw
     input_signal_vector = multirotor_matrix_inverse * commands;
-    for (i = 0; i < num_motors; i++)
+    for (i = 0; i < num_motors; i++) // store calculated motor inputs
     {
-        res.channels[i] = input_signal_vector[i]; // store calculated motor inputs
+        res.channels[i] = std::max(std::min((double)input_signal_vector[i], 1.0), 0.0); // keep motor singals in range [0, 1]
     }
     return true;
 }
@@ -149,8 +148,6 @@ void GainsCallback(last_letter_2::PD_gainsConfig &config, uint32_t level)
     alt_kp.data = config.alt_kp;
     alt_kd.data = config.alt_kd;
 }
-
-//Controller functions
 
 //initialize variables used in control
 void Controller::initControllerVariables()
@@ -177,16 +174,11 @@ void Controller::initControllerVariables()
     commands.resize(4);
     input_signal_vector.resize(4);
 
-    b = 0.25;
-    l = 2;
-    d = 0.6;
-    k = 0.6;
-
     //Built quadcopter matrix
-    multirotor_matrix <<    b,     b,      b,      b,      //thrust row
-                            0,    -l * k,  0,      l * k,  //roll row
-                            l * k, 0,     -l * k,  0,      //pitch row
-                           -d,     d,     -d,      d;      //yaw row
+    multirotor_matrix << 0.25, 0.25, 0.25, 0.25,    //thrust row
+                            0, -0.5,    0,  0.5,    //roll row
+                          0.5,    0, -0.5,    0,    //pitch row
+                        -0.25, 0.25,-0.25, 0.25;    //yaw row
 
     //calculate inverse of quadcopter matrix. Usefull for future calculations
     multirotor_matrix_inverse = multirotor_matrix.completeOrthogonalDecomposition().pseudoInverse();

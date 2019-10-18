@@ -113,7 +113,7 @@
       <child link="motor1" />
   </joint>
 
------------------------------------------------------------------------------------propeller
+-----------------------------------------------------------------------------------axle
 <!-- axle link parameters height, rad, mass-->
 <xacro:property name="axle_h" value="${0.02*body_s}" />
 <xacro:property name="axle_r" value="${0.01*body_s}" />
@@ -156,6 +156,7 @@
 <xacro:property name="propeller_z" value="${0.01*body_s}" />
 <xacro:property name="propeller_m" value="${0.015*mass}" />
 
+ -----------------------------------------------------------------------------------propeller
     
   <link name="prop1">
       <visual>

@@ -2,12 +2,12 @@
 <robot name="can" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
 <!-- body, airfoil sizes -->
-<xacro:property name="body_s" value="0.1" />   
+<xacro:property name="body_s" value="1" />   
 
 <!-- body link parameters x, y, z, mass-->
-<xacro:property name="body_x" value="${body_s}" />
-<xacro:property name="body_y" value="${body_s}" />
-<xacro:property name="body_z" value="${body_s}" />
+<xacro:property name="body_x" value="${0.05*body_s}" />
+<xacro:property name="body_y" value="${0.05*body_s}" />
+<xacro:property name="body_z" value="${0.05*body_s}" />
 <xacro:property name="body_m" value="1" />
 
     <link name="base_link">
