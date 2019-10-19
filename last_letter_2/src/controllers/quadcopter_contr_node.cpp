@@ -175,10 +175,10 @@ void Controller::initControllerVariables()
     input_signal_vector.resize(4);
 
     //Built quadcopter matrix
-    multirotor_matrix << 0.25, 0.25, 0.25, 0.25,    //thrust row
-                            0, -0.5,    0,  0.5,    //roll row
-                          0.5,    0, -0.5,    0,    //pitch row
-                        -0.25, 0.25,-0.25, 0.25;    //yaw row
+    multirotor_matrix << 0.25,  0.25,  0.25, 0.25,  //thrust row
+                        -0.25, -0.25,  0.25, 0.25,  //roll row
+                         0.25, -0.25, -0.25, 0.25,  //pitch row
+                        -0.25,  0.25, -0.25, 0.25;  //yaw row
 
     //calculate inverse of quadcopter matrix. Usefull for future calculations
     multirotor_matrix_inverse = multirotor_matrix.completeOrthogonalDecomposition().pseudoInverse();

@@ -150,10 +150,10 @@ void Controller::initControllerVariables()
     input_signal_vector.resize(6);
 
     //Built hexacopter matrix
-    multirotor_matrix <<    0.333,  0.333,  0.333,  0.333,  0.333, 0.333,   //thrust row
-                            0,     -0.288, -0.288,  0,      0.288, 0.288,   //roll row
-                            0.333,  0.167, -0.167, -0.333, -0.167, 0.167,   //pitch row
-                           -0.333,  0.333, -0.333,  0.333, -0.333, 0.333;   //yaw row
+   multirotor_matrix <<  0.1987,   0.1840,   0.1467,   0.1400,   0.1547,   0.1760,  //thrust row
+                         0.0480,  -0.2240,  -0.2800,  -0.0400,   0.2320,   0.2640,  //roll row
+                         0.3840,   0.2080,  -0.2400,  -0.3200,  -0.1440,   0.1120,  //pitch row
+                        -0.3267,   0.0800,  -0.0667,   0.3000,  -0.1067,   0.1200;  //yaw row   
 
     //calculate inverse of hexacopter matrix. Usefull for future calculations
     multirotor_matrix_inverse = multirotor_matrix.completeOrthogonalDecomposition().pseudoInverse();
@@ -172,8 +172,8 @@ void Controller::controlLaw()
     float kp, kd;
 
     //stabilize roll
-    kp = 0.08;
-    kd = 0.02;
+    kp = 0.9;
+    kd = 0.2;
     error = 0.8 * roll_input - model_states.base_link_states.phi;
     d_error = (error - prev_roll_error) / dt;
     prev_roll_error = error; // Keep current data for next step
@@ -181,8 +181,8 @@ void Controller::controlLaw()
     new_roll_input = std::max(std::min((double)new_roll_input, 1.0), -1.0); // keep in range [-1, 1]
 
     //stabilize pitch
-    kp = 0.06;
-    kd = 0.02;
+    kp = 0.9;
+    kd = 0.2;
     error = 0.8 * pitch_input + model_states.base_link_states.theta;
     d_error = (error - prev_pitch_error) / dt;
     prev_pitch_error = error; // Keep current data for next step
@@ -190,8 +190,8 @@ void Controller::controlLaw()
     new_pitch_input = std::max(std::min((double)new_pitch_input, 1.0), -1.0); // keep in range [-1, 1]
 
     //yaw direction control
-    kp = 0.06;
-    kd = 0.02;
+    kp = 0.11;
+    kd = 0.1;
     yaw_direction += yaw_input * 0.001;
     if (yaw_direction > 3.13)
         yaw_direction = -3.13;
@@ -208,8 +208,8 @@ void Controller::controlLaw()
     new_yaw_input = std::max(std::min((double)new_yaw_input, 1.0), -1.0); // keep in range [-1, 1]
 
     //altitude control
-    kp = 0.34;
-    kd = 0.22;
+    kp = 0.3;
+    kd = 0.26;
     altitude = 50 * thrust_input; //control altitude from thrust signal
     error = altitude - model_states.base_link_states.z;
     d_error = (error - prev_alt_error) / dt;

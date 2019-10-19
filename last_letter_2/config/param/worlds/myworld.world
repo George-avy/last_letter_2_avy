@@ -10,7 +10,7 @@
          <track_visual>
           <name>my_model</name>
           <static>true</static>
-          <xyz>-5 0 0.5</xyz>
+          <xyz>-4 0 0.4</xyz>
           <inherit_yaw>true</inherit_yaw>
           <min_dist>15</min_dist>
           <max_dist>30</max_dist>

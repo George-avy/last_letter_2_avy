@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <robot name="hexacopter" xmlns:xacro="http://www.ros.org/wiki/xacro">
 
-<xacro:property name="body_mass" value="3"/>
+<xacro:property name="body_mass" value="2"/>
 
 <!-- body, airfoil size -->
 <xacro:property name="body_s" value="1" />   
@@ -610,7 +610,7 @@
 
   ----------------------------------------------------------------------------------------------------- propellers
 <!-- propeller links -->
-<xacro:property name="propeller_x" value="${0.2*body_s}" />
+<xacro:property name="propeller_x" value="${0.15*body_s}" />
 <xacro:property name="propeller_y" value="${0.015*body_s}" />   
 <xacro:property name="propeller_z" value="${0.002*body_s}" />   
 <xacro:property name="propeller_m" value="${0.001*body_m}" />
