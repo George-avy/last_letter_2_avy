@@ -471,7 +471,7 @@
       </ray>
       <plugin name="gazebo_ros_laser_scanner_controller" filename="libgazebo_ros_laser.so">
         <topicName>last_letter_2/sensors/laser</topicName>
-        <frameName>laser_frame</frameName>
+        <frameName>laser_link</frameName>
       </plugin>
     </sensor>
   </gazebo>

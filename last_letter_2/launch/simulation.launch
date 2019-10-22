@@ -4,9 +4,9 @@
   <!-- choose a model to simulate -->
   <!-- <arg name="uav_name" default="plane_1wing"/> -->
   <!-- <arg name="uav_name" default="plane_1wing_sensors"/> -->
-  <!-- <arg name="uav_name" default="plane_3wing_2motor"/> -->
+  <arg name="uav_name" default="plane_3wing_2motor"/>
   <!-- <arg name="uav_name" default="quadcopter"/> -->
-  <arg name="uav_name" default="hexacopter"/>
+  <!-- <arg name="uav_name" default="hexacopter"/> -->
 
   <!-- gazebo node parameters -->
   <arg name="gui" default="true" />
