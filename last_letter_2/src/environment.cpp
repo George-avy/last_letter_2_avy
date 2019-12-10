@@ -109,7 +109,7 @@ void Environment::calcWind()
         ros::shutdown();
     }
 
-    // Rotate turbulence from bodu_FLU that calculated to inertial_NWU before added to wind vector
+    // Rotate turbulence from body_FLU that calculated to inertial_NWU before added to wind vector
     transformation_matrix = KDL::Frame(KDL::Rotation::EulerZYX(-states.psi,
                                                                -states.theta,
                                                                -states.phi),

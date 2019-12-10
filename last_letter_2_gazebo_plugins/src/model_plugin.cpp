@@ -98,7 +98,7 @@ public:
 
         // Service server
         ros::AdvertiseServiceOptions so = (ros::AdvertiseServiceOptions::create<last_letter_2_msgs::apply_model_wrenches_srv>("last_letter_2/apply_model_wrenches_srv",
-                                                                                                                              boost::bind(&model_plugin::applyWrenchOnModel, this, _1, _2), ros::VoidPtr(), &this->wrenches_rosQueue));
+                                                                                                                              boost::bind(&model_plugin::applyWrenchesOnModel, this, _1, _2), ros::VoidPtr(), &this->wrenches_rosQueue));
         this->apply_wrenches_server = this->rosNode->advertiseService(so);
 
         //Subscriber
@@ -191,7 +191,7 @@ public:
     }
 
     // service that apply the calculated aerodynamic and propulsion wrenches on relative links of model
-    bool applyWrenchOnModel(last_letter_2_msgs::apply_model_wrenches_srv::Request &req,
+    bool applyWrenchesOnModel(last_letter_2_msgs::apply_model_wrenches_srv::Request &req,
                             last_letter_2_msgs::apply_model_wrenches_srv::Response &res)
     {
         std::lock_guard<std::mutex> lk(m);

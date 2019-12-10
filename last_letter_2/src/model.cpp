@@ -146,12 +146,12 @@ void Model::getAirdata()
     airdata.pressure = environment.airdata.pressure;
     airdata.temperature = environment.airdata.temperature;
 
-    // Rotate wind vector from inertial_NWU frame to bodu_FLU
+    // Rotate wind vector from inertial_NWU frame to body_FLU
     transformation_matrix = KDL::Frame(KDL::Rotation::EulerZYX(model_states.base_link_states.psi,
                                                                model_states.base_link_states.theta,
                                                                model_states.base_link_states.phi),
                                        KDL::Vector(0, 0, 0));
-    v_out = tf2::Stamped<KDL::Vector>(transformation_matrix.Inverse() * KDL::Vector(airdata.wind_x, airdata.wind_y, airdata.wind_z), ros::Time::now(), "bodu_FLU");
+    v_out = tf2::Stamped<KDL::Vector>(transformation_matrix.Inverse() * KDL::Vector(airdata.wind_x, airdata.wind_y, airdata.wind_z), ros::Time::now(), "body_FLU");
 
     body_wind.x = v_out[0];
     body_wind.y = v_out[1];

@@ -10,6 +10,7 @@
 #include <tf2_geometry_msgs/tf2_geometry_msgs.h>
 #include <std_srvs/Empty.h>
 #include <Eigen/Dense>
+#include <stdlib.h>
 
 class Aerodynamics;
 class Propulsion;

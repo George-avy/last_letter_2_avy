@@ -1,10 +1,10 @@
 #Physics Parameters
 
 #Simulation calculation rate 
-/updatePhysics/simRate: 500
+/updatePhysics/simRate: 400
 
 #Simulation time-step
-/updatePhysics/deltaT: 0.002
+/updatePhysics/deltaT: 0.0025
 
 # realTimeFactor = simRate * deltaT
 # For real time simulation simRate * deltaT = 1
