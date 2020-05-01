@@ -10,10 +10,10 @@ motor1/input_chan: 0
 
 #features for generic Engine
 motor1/s_prop: 0.017
-motor1/k_motor: 157
-motor1/k_t_p: 0.000462 
+motor1/k_motor: 30
+motor1/k_t_p: 0.0000462 
 motor1/k_omega: 157
-motor1/c_prop: 0.074
+motor1/c_prop: 2.0266
 
 #motor 2
 motor2/motorType: 1
@@ -22,10 +22,10 @@ motor2/input_chan: 1
 
 #features for generic Engine
 motor2/s_prop: 0.017
-motor2/k_motor: 157
+motor2/k_motor: 30
 motor2/k_t_p: 0.0000462 
 motor2/k_omega: 157
-motor2/c_prop: 0.074
+motor2/c_prop: 2.0266
 
 #motor 3
 motor3/motorType: 1
@@ -34,10 +34,10 @@ motor3/input_chan: 2
 
 #features for generic Engine
 motor3/s_prop: 0.017
-motor3/k_motor: 157
+motor3/k_motor: 30
 motor3/k_t_p: 0.0000462 
 motor3/k_omega: 157
-motor3/c_prop: 0.074
+motor3/c_prop: 2.0266
 
 #motor 4
 motor4/motorType: 1
@@ -46,7 +46,7 @@ motor4/input_chan: 3
 
 #features for generic Engine
 motor4/s_prop: 0.017
-motor4/k_motor: 157
+motor4/k_motor: 30
 motor4/k_t_p: 0.0000462 
 motor4/k_omega: 157
-motor4/c_prop: 0.074
+motor4/c_prop: 2.0266
