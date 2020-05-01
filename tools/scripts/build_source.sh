@@ -7,4 +7,4 @@ source /home/ros/catkin_ws/devel/setup.bash
 # source ~/.bashrc
 cd /home/ros/catkin_ws
 # . /opt/ros/melodic/setup.bash && \
-catkin_make
+catkin build

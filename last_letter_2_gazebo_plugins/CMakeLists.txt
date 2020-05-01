@@ -7,6 +7,7 @@ find_package(catkin REQUIRED
   roscpp
   last_letter_2_msgs
   tf2_ros
+  kdl_parser
 )
 find_package(Boost REQUIRED)
 find_package(gazebo REQUIRED)
