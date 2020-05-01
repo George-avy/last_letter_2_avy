@@ -1,0 +1,4 @@
+#airfoil Aerodynamic Parameters
+#aerodynamicsType: 0:NoAerodynamics, 1:StdLinearAero 2:polyAero
+
+nWings: 0

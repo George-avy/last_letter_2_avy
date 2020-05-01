@@ -1,0 +1,9 @@
+#Channel declaration
+
+channels/roll_in_chan: 0
+channels/pitch_in_chan: 1
+channels/yaw_in_chan: 2
+channels/throttle_in_chan: 3
+channels/spawn_can_chan: 6    # use channel correspond to joystick button, range [0, 1]
+channels/despawn_cans_chan: 7 # use channel correspond to joystick button, range [0, 1]
+channels/reset_sim_chan: 17   # use channel correspond to joystick button, range [0, 1]

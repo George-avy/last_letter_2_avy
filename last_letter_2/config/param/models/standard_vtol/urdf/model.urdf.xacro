@@ -1,0 +1,566 @@
+<?xml version="1.0"?>
+<robot name="standard_vtol" xmlns:xacro="http://www.ros.org/wiki/xacro">
+
+<xacro:property name="body_mass" value="4.5"/>
+
+<!-- body, airfoil size -->
+<xacro:property name="body_s" value="1.667" />   
+
+<!-- body link parameters x, y, z, mass-->
+<xacro:property name="body_x" value="${0.1*body_s}" />
+<xacro:property name="body_y" value="${0.1*body_s}" />
+<xacro:property name="body_z" value="${0.02*body_s}" />
+<xacro:property name="body_m" value="${0.3*body_mass}" />
+
+    <link name="body_FLU">
+        <visual>
+        <origin xyz="0.53 -1.072 0.0" rpy="1.57 0 3.14159"/>
+            <geometry>
+                <mesh filename="package://last_letter_2/config/param/models/standard_vtol/meshes/x8_wing.dae" scale="0.001 0.001 0.001"/>
+            </geometry>
+        </visual>
+
+        <collision>
+            <geometry>
+               <box size="0.55 2.144 0.05" />
+            </geometry>
+        </collision>
+        
+        <inertial>
+            <mass value="5"/>
+            <inertia   ixx="0.477708333333" ixy="0" ixz="0" iyz="0"
+                    iyy="0.341666666667" 
+                    izz="0.811041666667" />
+        </inertial> 
+    </link>
+
+---------------------------------------------------------- 4 quadcopter arms
+<xacro:property name="arm_x" value="${0.3*body_s}" />
+<xacro:property name="arm_y" value="${0.02*body_s}" />
+<xacro:property name="arm_z" value="${0.02*body_s}" />
+<xacro:property name="arm_m" value="${0.12*body_m}" />
+
+    <link name="arm1">
+        <visual>
+        <origin xyz="${arm_x/2} 0 0"/>
+            <geometry>
+               <box size="${arm_x} ${arm_y} ${arm_z}" />
+            </geometry>
+        </visual>
+
+        <collision>
+        <origin xyz="${arm_x/2} 0 0"/>
+            <geometry>
+               <box size="${arm_x} ${arm_y} ${arm_z}" />
+            </geometry>
+        </collision>
+        
+        <inertial>
+            <origin xyz="${arm_x/2} 0 0"/>
+            <mass value="${arm_m}" />
+            <inertia    ixx="${1/12*arm_m*(arm_y*arm_y+arm_z*arm_z)}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*arm_m*(arm_x*arm_x+arm_z*arm_z)}" 
+                        izz="${1/12*arm_m*(arm_x*arm_x+arm_y*arm_y)}" />
+        </inertial> 
+    </link>
+
+    <joint name="body_FLU_to_arm1" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 ${7/4*pi}"/>
+        <parent link="body_FLU" />
+        <child link="arm1" />
+    </joint>
+    
+    <link name="arm2">
+        <visual>
+        <origin xyz="${arm_x/2} 0 0"/>
+            <geometry>
+                <box size="${arm_x} ${arm_y} ${arm_z}" />
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin xyz="${arm_x/2} 0 0"/>
+            <geometry>
+                <box size="${arm_x} ${arm_y} ${arm_z}" />
+            </geometry>
+        </collision>
+        
+        <inertial>
+            <origin xyz="${arm_x/2} 0 0"/>
+            <mass value="${arm_m}" />
+            <inertia    ixx="${1/12*arm_m*(arm_y*arm_y+arm_z*arm_z)}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*arm_m*(arm_x*arm_x+arm_z*arm_z)}" 
+                        izz="${1/12*arm_m*(arm_x*arm_x+arm_y*arm_y)}" />
+        </inertial> 
+    </link>
+
+    <joint name="body_FLU_to_arm2" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 ${5/4*pi}"/>
+        <parent link="body_FLU" />
+        <child link="arm2" />
+    </joint>
+
+    <link name="arm3">
+        <visual>
+        <origin xyz="${arm_x/2} 0 0"/>
+            <geometry>
+                <box size="${arm_x} ${arm_y} ${arm_z}" />
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin xyz="${arm_x/2} 0 0"/>
+            <geometry>
+                <box size="${arm_x} ${arm_y} ${arm_z}" />
+            </geometry>
+        </collision>
+        
+        <inertial>
+            <origin xyz="${arm_x/2} 0 0"/>
+            <mass value="${arm_m}" />
+            <inertia    ixx="${1/12*arm_m*(arm_y*arm_y+arm_z*arm_z)}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*arm_m*(arm_x*arm_x+arm_z*arm_z)}" 
+                        izz="${1/12*arm_m*(arm_x*arm_x+arm_y*arm_y)}" />
+        </inertial> 
+    </link>
+
+    <joint name="body_FLU_to_arm3" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 ${3/4*pi}"/>
+        <parent link="body_FLU" />
+        <child link="arm3" />
+    </joint>
+
+    <link name="arm4">
+        <visual>
+        <origin xyz="${arm_x/2} 0 0"/>
+            <geometry>
+                <box size="${arm_x} ${arm_y} ${arm_z}" />
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin xyz="${arm_x/2} 0 0"/>
+            <geometry>
+                <box size="${arm_x} ${arm_y} ${arm_z}" />
+            </geometry>
+        </collision>
+        
+        <inertial>
+            <origin xyz="${arm_x/2} 0 0"/>
+            <mass value="${arm_m}" />
+            <inertia    ixx="${1/12*arm_m*(arm_y*arm_y+arm_z*arm_z)}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*arm_m*(arm_x*arm_x+arm_z*arm_z)}" 
+                        izz="${1/12*arm_m*(arm_x*arm_x+arm_y*arm_y)}" />
+        </inertial> 
+    </link>
+
+    <joint name="body_FLU_to_arm4" type="fixed">
+        <origin xyz="0 0 0" rpy="0 0 ${1/4*pi}"/>
+        <parent link="body_FLU" />
+        <child link="arm4" />
+    </joint>
+
+    ------------------------------------------------------------------ motors
+
+
+<xacro:property name="motor_x" value="${0.01*body_s}" />
+<xacro:property name="motor_y" value="${0.02*body_s}" />
+<xacro:property name="motor_z" value="${0.02*body_s}" />
+<xacro:property name="motor_m" value="${0.05*body_m}" />
+
+<!-- only motor(Number_0f_Motor) acceptable name for motors -->
+    <link name="motor1">
+        <visual>
+            <origin xyz="${motor_x/2} 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="${motor_x} ${motor_y} ${motor_z}" />
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin xyz="${motor_x/2} 0 0" rpy="0 0 0"/>
+            <geometry>
+                <box size="${motor_x} ${motor_y} ${motor_z}" />
+            </geometry>
+        </collision>
+        
+        <inertial>
+            <origin xyz="${motor_x/2} 0 0" rpy="0 0 0"/>
+            <mass value="${motor_m}" />
+            <inertia    ixx="${1/12*motor_m*(motor_y*motor_y+motor_z*motor_z)}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*motor_m*(motor_x*motor_x+motor_z*motor_z)}" 
+                        izz="${1/12*motor_m*(motor_x*motor_x+motor_y*motor_y)}" />
+        </inertial> 
+    </link>
+
+    <joint name="arm1_to_motor1" type="revolute">
+        <origin xyz="${arm_x-motor_z/2} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
+        <parent link="arm1" />
+        <child link="motor1" />
+        <limit effort="1000.0" velocity="0.5"/>  --default limits upper=lower=0
+    </joint>
+
+    <link name="motor2">
+        <visual>
+        <origin xyz="${motor_x/2} 0 0"/>
+            <geometry>
+                <box size="${motor_x} ${motor_y} ${motor_z}" />
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin xyz="${motor_x/2} 0 0"/>
+            <geometry>
+                <box size="${motor_x} ${motor_y} ${motor_z}" />
+            </geometry>
+        </collision>
+        
+        <inertial>
+            <origin xyz="${motor_x/2} 0 0"/>
+            <mass value="${motor_m}" />
+            <inertia    ixx="${1/12*motor_m*(motor_y*motor_y+motor_z*motor_z)}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*motor_m*(motor_x*motor_x+motor_z*motor_z)}" 
+                        izz="${1/12*motor_m*(motor_x*motor_x+motor_y*motor_y)}" />
+        </inertial> 
+    </link>
+
+    <joint name="arm2_to_motor2" type="revolute">
+        <origin xyz="${arm_x-motor_z/2} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
+        <parent link="arm2" />
+        <child link="motor2" />
+        <limit effort="1000.0" velocity="0.5"/>  --default limits upper=lower=0
+    </joint>
+
+    <link name="motor3">
+        <visual>
+        <origin xyz="${motor_x/2} 0 0"/>
+            <geometry>
+                <box size="${motor_x} ${motor_y} ${motor_z}" />
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin xyz="${motor_x/2} 0 0"/>
+            <geometry>
+                <box size="${motor_x} ${motor_y} ${motor_z}" />
+            </geometry>
+        </collision>
+        
+        <inertial>
+            <origin xyz="${motor_x/2} 0 0"/>
+            <mass value="${motor_m}" />
+            <inertia    ixx="${1/12*motor_m*(motor_y*motor_y+motor_z*motor_z)}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*motor_m*(motor_x*motor_x+motor_z*motor_z)}" 
+                        izz="${1/12*motor_m*(motor_x*motor_x+motor_y*motor_y)}" />
+        </inertial> 
+    </link>
+
+    <joint name="arm3_to_motor3" type="revolute">
+        <origin xyz="${arm_x-motor_z/2} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
+        <parent link="arm3" />
+        <child link="motor3" />
+        <limit effort="1000.0"  velocity="0.5"/>  --default limits upper=lower=0
+    </joint>
+
+    <link name="motor4">
+        <visual>
+        <origin xyz="${motor_x/2} 0 0"/>
+            <geometry>
+                <box size="${motor_x} ${motor_y} ${motor_z}" />
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin xyz="${motor_x/2} 0 0"/>
+            <geometry>
+                <box size="${motor_x} ${motor_y} ${motor_z}" />
+            </geometry>
+        </collision>
+        
+        <inertial>
+            <origin xyz="${motor_x/2} 0 0"/>
+            <mass value="${motor_m}" />
+            <inertia    ixx="${1/12*motor_m*(motor_y*motor_y+motor_z*motor_z)}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*motor_m*(motor_x*motor_x+motor_z*motor_z)}" 
+                        izz="${1/12*motor_m*(motor_x*motor_x+motor_y*motor_y)}" />
+        </inertial> 
+    </link>
+
+    <joint name="arm4_to_motor4" type="revolute">
+        <origin xyz="${arm_x-motor_z/2} 0 ${arm_z/2}" rpy="0 -1.57 0"/>
+        <parent link="arm4" />
+        <child link="motor4" />
+        <limit effort="1000.0" velocity="0.5"/>  --default limits upper=lower=0
+    </joint>
+
+ ------------------------------------------------------------------------------------- axles
+<!-- arm link -->
+<xacro:property name="axle_r" value="${0.002*body_s}" />
+<xacro:property name="axle_h" value="${0.003*body_s}" />
+<xacro:property name="axle_m" value="${0.001*body_m}" />
+    
+    <link name="axle1">
+        <visual>
+            <origin xyz="${axle_h/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <cylinder radius="${axle_r}" length="${axle_h}" />
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin xyz="${axle_h/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <cylinder radius="${axle_r}" length="${axle_h}" />
+            </geometry>
+        </collision>
+
+        <inertial>
+            <origin xyz="${axle_h/2} 0 0" />
+            <mass value="${axle_m}" />
+            <inertia    ixx="${1/12*axle_m*axle_h*axle_h+1/4*axle_m*axle_r*axle_r}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*axle_m*axle_h*axle_h+1/4*axle_m*axle_r*axle_r}" 
+                        izz="${1/2*axle_m*axle_r*axle_r}" />
+        </inertial>
+    </link>
+
+    <joint name="motor1_to_axle1" type="continuous">
+        <origin xyz="${motor_x} 0 0" rpy="0 0 0"/>
+        <axis xyz="1 0 0" />
+        <parent link="motor1" />
+        <child link="axle1" />
+    </joint>
+
+    <link name="axle2">
+        <visual>
+            <origin xyz="${axle_h/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <cylinder radius="${axle_r}" length="${axle_h}" />
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin xyz="${axle_h/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <cylinder radius="${axle_r}" length="${axle_h}" />
+            </geometry>
+        </collision>
+
+        <inertial>
+            <origin xyz="${axle_h/2} 0 0" />
+            <mass value="${axle_m}" />
+            <inertia    ixx="${1/12*axle_m*axle_h*axle_h+1/4*axle_m*axle_r*axle_r}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*axle_m*axle_h*axle_h+1/4*axle_m*axle_r*axle_r}" 
+                        izz="${1/2*axle_m*axle_r*axle_r}" />
+        </inertial>
+    </link>
+
+    <joint name="motor2_to_axle2" type="continuous">
+        <origin xyz="${motor_x} 0 0" rpy="0 0 0"/>
+        <axis xyz="1 0 0" />
+        <parent link="motor2" />
+        <child link="axle2" />
+    </joint>
+
+    <link name="axle3">
+        <visual>
+            <origin xyz="${axle_h/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <cylinder radius="${axle_r}" length="${axle_h}" />
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin xyz="${axle_h/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <cylinder radius="${axle_r}" length="${axle_h}" />
+            </geometry>
+        </collision>
+
+        <inertial>
+            <origin xyz="${axle_h/2} 0 0" />
+            <mass value="${axle_m}" />
+            <inertia    ixx="${1/12*axle_m*axle_h*axle_h+1/4*axle_m*axle_r*axle_r}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*axle_m*axle_h*axle_h+1/4*axle_m*axle_r*axle_r}" 
+                        izz="${1/2*axle_m*axle_r*axle_r}" />
+        </inertial>
+    </link>
+
+    <joint name="motor3_to_axle3" type="continuous">
+        <origin xyz="${motor_x} 0 0" rpy="0 0 0"/>
+        <axis xyz="1 0 0" />
+        <parent link="motor3" />
+        <child link="axle3" />
+    </joint>
+
+    <link name="axle4">
+        <visual>
+            <origin xyz="${axle_h/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <cylinder radius="${axle_r}" length="${axle_h}" />
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin xyz="${axle_h/2} 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <cylinder radius="${axle_r}" length="${axle_h}" />
+            </geometry>
+        </collision>
+
+        <inertial>
+            <origin xyz="${axle_h/2} 0 0" />
+            <mass value="${axle_m}" />
+            <inertia    ixx="${1/12*axle_m*axle_h*axle_h+1/4*axle_m*axle_r*axle_r}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*axle_m*axle_h*axle_h+1/4*axle_m*axle_r*axle_r}" 
+                        izz="${1/2*axle_m*axle_r*axle_r}" />
+        </inertial>
+    </link>
+
+    <joint name="motor4_to_axle4" type="continuous">
+        <origin xyz="${motor_x} 0 0" rpy="0 0 0"/>
+        <axis xyz="1 0 0" />
+        <parent link="motor4" />
+        <child link="axle4" />
+    </joint>
+
+ ------------------------------------------------------------------------------------- propellers
+<!-- propeller links -->
+<xacro:property name="propeller_x" value="${0.15*body_s}" />
+<xacro:property name="propeller_y" value="${0.015*body_s}" />   
+<xacro:property name="propeller_z" value="${0.002*body_s}" />   
+<xacro:property name="propeller_m" value="${0.001*body_m}" />
+
+    <link name="prop1">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
+            </geometry>
+        </collision>
+        
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <mass value="${propeller_m}" />
+            <inertia    ixx="${1/12*propeller_m*(propeller_y*propeller_y+propeller_z*propeller_z)}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*propeller_m*(propeller_x*propeller_x+propeller_z*propeller_z)}" 
+                        izz="${1/12*propeller_m*(propeller_x*propeller_x+propeller_y*propeller_y)}" />
+        </inertial> 
+    </link>
+
+    <joint name="axle1_to_prop1" type="fixed">
+        <origin xyz="${axle_h} 0 0" rpy="0 0 0"/>
+        <axis xyz="1 0 0" />
+        <parent link="axle1" />
+        <child link="prop1" />
+    </joint>
+    
+    <link name="prop2">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
+            </geometry>
+        </collision>
+        
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <mass value="${propeller_m}" />
+            <inertia    ixx="${1/12*propeller_m*(propeller_y*propeller_y+propeller_z*propeller_z)}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*propeller_m*(propeller_x*propeller_x+propeller_z*propeller_z)}"
+                        izz="${1/12*propeller_m*(propeller_x*propeller_x+propeller_y*propeller_y)}" />
+        </inertial> 
+    </link>
+
+    <joint name="axle2_to_prop2" type="fixed">
+        <origin xyz="${axle_h} 0 0" rpy="0 0 0"/>
+        <axis xyz="1 0 0" />
+        <parent link="axle2" />
+        <child link="prop2" />
+    </joint>
+
+    <link name="prop3">
+        <visual>
+            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
+            </geometry>
+        </collision>
+        
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <mass value="${propeller_m}" />
+            <inertia    ixx="${1/12*propeller_m*(propeller_y*propeller_y+propeller_z*propeller_z)}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*propeller_m*(propeller_x*propeller_x+propeller_z*propeller_z)}" 
+                        izz="${1/12*propeller_m*(propeller_x*propeller_x+propeller_y*propeller_y)}" />
+        </inertial> 
+    </link>
+
+    <joint name="axle3_to_prop3" type="fixed">
+        <origin xyz="${axle_h} 0 0" rpy="0 0 0"/>
+        <axis xyz="1 0 0" />
+        <parent link="axle3" />
+        <child link="prop3" />
+    </joint>
+
+    <link name="propeller4">
+        <visual>
+        <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
+            </geometry>
+        </visual>
+
+        <collision>
+            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <geometry>
+                <box size="${propeller_x} ${propeller_y} ${propeller_z}" />
+            </geometry>
+        </collision>
+        
+        <inertial>
+            <origin xyz="0 0 0" rpy="0 ${pi/2} 0"/>
+            <mass value="${propeller_m}" />
+            <inertia    ixx="${1/12*propeller_m*(propeller_y*propeller_y+propeller_z*propeller_z)}" ixy="0" ixz="0" iyz="0"
+                        iyy="${1/12*propeller_m*(propeller_x*propeller_x+propeller_z*propeller_z)}" 
+                        izz="${1/12*propeller_m*(propeller_x*propeller_x+propeller_y*propeller_y)}" />
+        </inertial> 
+    </link>
+
+    <joint name="axle4_to_prop4" type="fixed">
+        <origin xyz="${axle_h} 0 0" rpy="0 0 0"/>
+        <axis xyz="1 0 0" />
+        <parent link="axle4" />
+        <child link="propeller4" />
+    </joint>
+
+<!-- model plugins -->
+    <gazebo>
+        <plugin name="model_plugin" filename="libmodel_plugin.so"/>
+        <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
+            <jointName>arm1_to_motor1, arm2_to_motor2, arm3_to_motor3,arm4_to_motor4,motor1_to_axle1,motor2_to_axle2,motor3_to_axle3,motor4_to_axle4 </jointName>
+            <robotNamespace>last_letter_2</robotNamespace>
+            <updateRate>0</updateRate>
+        </plugin>
+    </gazebo>
+</robot>

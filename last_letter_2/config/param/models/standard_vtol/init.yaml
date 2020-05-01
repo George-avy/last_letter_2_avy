@@ -1,0 +1,9 @@
+#Parameters for quadcopter airframe
+#All units are in S.I. unless otherwise stated
+
+#Initial State
+#Caution. Always in doulbe style (with dot)
+init/position: [0.0, 0.0, 0.3] #NWU frame
+init/orientation:  [0.0, 0.0, 0.0] #NWU frame as RPY
+init/velLin:   [0.0, 0.0, 0.0] #body frame
+init/velAng: [0.0, 0.0, 0.0] #body frame
