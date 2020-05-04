@@ -52,3 +52,4 @@ CATKIN_IGNORE
 
 # vscode files
 .vscode/**
+**.code-workspace
