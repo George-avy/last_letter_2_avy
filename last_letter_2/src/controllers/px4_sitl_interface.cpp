@@ -2,12 +2,13 @@
 // Based on https://github.com/PX4/sitl_gazebo/blob/master/src/gazebo_mavlink_interface.cpp
 
 #include <px4_sitl_interface.hpp>
+#include <last_letter_2_libs/geo_mag_declination.hpp>
 
 Controller::Controller()
 {
     //Init Subscribers
     // TODO: Establish UDP sockets to SITL
-    sub_chan = n.subscribe("last_letter_2/channels", 1, &Controller::chan2signal, this, ros::TransportHints().tcpNoDelay());
+    sub_chan = n.subscribe("last_letter_2/channels", 1, &Controller::chan_2_signal, this, ros::TransportHints().tcpNoDelay());
     sub_mod_st = n.subscribe("last_letter_2/model_states", 1, &Controller::storeStates, this, ros::TransportHints().tcpNoDelay());
 
     //Init service
@@ -32,6 +33,8 @@ Controller::Controller()
     sprintf(paramMsg, "channels/throttle_in_chan");
     if (!ros::param::getCached(paramMsg, throttle_in_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
 
+    last_imu_time_ = ros::Time::now();
+
     initControllerVariables();
 }
 
@@ -39,20 +42,20 @@ Controller::Controller()
 //Store new joystick values
 void Controller::chan_2_signal(last_letter_2_msgs::channels msg)
 {
-    channels = msg;
+    channels_ = msg;
 
     //Keep basic signals
-    roll_input = channels.value[roll_in_chan];                 // roll angle signal
-    pitch_input = channels.value[pitch_in_chan];               // pitch angle signal
-    yaw_input = channels.value[yaw_in_chan];                   // yaw angle signal
-    thrust_input = (channels.value[throttle_in_chan] + 1) / 2; // throttle signal
+    roll_input = channels_.value[roll_in_chan];                 // roll angle signal
+    pitch_input = channels_.value[pitch_in_chan];               // pitch angle signal
+    yaw_input = channels_.value[yaw_in_chan];                   // yaw angle signal
+    thrust_input = (channels_.value[throttle_in_chan] + 1) / 2; // throttle signal
     channelFunctions();
 }
 
-// store the model_states published by gazebo
+// store the model_states_ published by gazebo
 void Controller::store_states(const last_letter_2_msgs::model_states msg)
 {
-    model_states = msg;
+    model_states_ = msg;
 }
 
 // TODO: Insert UDP query to PX4 SITL inputs
@@ -61,33 +64,48 @@ void Controller::store_states(const last_letter_2_msgs::model_states msg)
 bool Controller::return_control_inputs(last_letter_2_msgs::get_control_inputs_srv::Request &req,
                                      last_letter_2_msgs::get_control_inputs_srv::Response &res)
 {
-    previous_states_seq = model_states.seq();
+    previous_states_seq = model_states_.seq();
     // Always run at 250 Hz. At 500 Hz, the skip factor should be 2, at 1000 Hz 4.
     if (!(previous_imu_seq_ % update_skip_factor_ == 0)) {
         return;
     }
 
-    ros::Time current_time = ros::Time::now();
+    ros::Time current_time_ = ros::Time::now();
 
     close_conn_ = false;
     poll_for_mavlink_messages();
 
+    send_sensor_message();
+    send_gps_message();
+    send_ground_truth();
+    send_rc_inputs_message();
 
-    //check for model_states update. If previous model_states, spin once to call storeState clb for new onces and then continue
-    if (req.header.seq != model_states.header.seq)
+    if (close_conn_) { // close connection if required
+        close();
+    }
+
+    //check for model_states_ update. If previous model_states_, spin once to call storeState clb for new onces and then continue
+    if (req.header.seq != model_states_.header.seq)
         ros::spinOnce();
 
-
-    //Convert PD outputs to motor inputs using quadcopter matrix
-    commands(0) = new_thrust_input; //thrust
-    commands(1) = new_roll_input;   //roll
-    commands(2) = new_pitch_input;  //pitch
-    commands(3) = new_yaw_input;    //yaw
-    input_signal_vector = multirotor_matrix_inverse * commands;
-    for (i = 0; i < num_motors; i++) // store calculated motor inputs
-    {
-        res.channels[i] = std::max(std::min((double)input_signal_vector[i], 1.0), 0.0); // keep motor singals in range [0, 1]
+    // Build actuator controls
+    if (received_first_actuator_) {
+        for (i = 0; i < num_motors; i++) // store calculated motor inputs
+        {
+            res.channels[i] = std::max(std::min((double)input_reference_[i], 1.0), -1.0); // keep motor singals in range [-1, 1]
+        }
     }
+    else
+    {
+        for (i = 0; i < num_motors; i++) // store calculated motor inputs
+        {
+            res.channels[i] = 0.0;
+        }
+    }
+
+
+    last_imu_time_ = current_time;
+
     return true;
 }
 
@@ -327,6 +345,213 @@ void Controller::poll_for_mavlink_messages()
             //  && IsRunning() // Only if the simulation is running, TODO: implement
              && !got_sig_int_ // Until a SIGINT is received
              );
+}
+
+void Controller::send_sensor_message()
+{
+    // Get the current time
+    dt = current_time_ - last_imu_time_;
+
+    // Construct the orientation quaternion
+    Eigen::Quaterniond q_gr;
+    q_gr = Eigen::AngleAxisd(model_states_.base_link_states.phi, Eigen::Vector3d::UnitX())
+           * Eigen::AngleAxisd(model_states_.base_link_states.theta, Eigen::Vector3d::UnitY())
+           * Eigen::AngleAxisd(model_states_.base_link_states.psi, Eigen::Vector3d::UnitZ());
+ 
+    // Create and stamp the sensor MAVLink message
+    mavlink_hil_sensor_t sensor_msg;
+    sensor_msg.time_usec = current_time_.toSec() * 1e6;
+
+    // Insert acceleration information. Gravity component needs to be removed, i.e. real-world accelerometer reading is expected.
+    // Needs conversion from FLU to Body-frame
+    sensor_msg.xacc = model_states_.base_link_states.acc_x,
+    sensor_msg.yacc = -model_states_.base_link_states.acc_y,
+    sensor_msg.zacc = -model_states_.base_link_states.acc_z,
+
+    // Insert angular velocity information
+    // Needs conversion from FLU to Body-frame
+    sensor_msg.xgyro = model_states_.base_link_states.p;
+    sensor_msg.ygyro = -model_states_.base_link_states.q;
+    sensor_msg.zgyro = -model_states_.base_link_states.r;
+
+    // Insert magnetometer information
+    // Magnetic field data from WMM2018 (10^5xnanoTesla (N, E D) n-frame), using the geo_mag_declination library
+
+    // Magnetic declination and inclination (radians)
+    float declination_rad = get_mag_declination(home_lat_deg_, home_lon_deg_) * M_PI / 180;
+    float inclination_rad = get_mag_inclination(home_lat_deg_, home_lon_deg_) * M_PI / 180;
+
+    // Magnetic strength (10^5xnanoTesla)
+    float strength_ga = 0.01f * get_mag_strength(home_lat_deg_, home_lon_deg_);
+
+    // Magnetic filed components are calculated by http://geomag.nrcan.gc.ca/mag_fld/comp-en.php
+    float H = strength_ga * cosf(inclination_rad);
+    float mag_Z = tanf(inclination_rad) * H;
+    float mag_X = H * cosf(declination_rad);
+    float mag_Y = H * sinf(declination_rad);
+
+    sensor_msg.xmag = mag_X;
+    sensor_msg.ymag = mag_Y;
+    sensor_msg.zmag = mag_Z;
+
+    // Insert barometer information
+    float pose_n_z = -model_states_.base_link_states.z; // convert Z-component from ENU to NED
+
+    // calculate abs_pressure using an ISA model for the tropsphere (valid up to 11km above MSL)
+    const float lapse_rate = 0.0065f; // reduction in temperature with altitude (Kelvin/m)
+    const float temperature_msl = 288.0f; // temperature at MSL (Kelvin)
+    float alt_msl = -pose_n_z; // TODO: initialize with correct home altitude
+    float temperature_local = temperature_msl - lapse_rate * alt_msl;
+    float pressure_ratio = powf((temperature_msl/temperature_local), 5.256f);
+    const float pressure_msl = 101325.0f; // pressure at MSL
+    float absolute_pressure = pressure_msl / pressure_ratio;
+
+    // convert to hPa
+    absolute_pressure *= 0.01f;
+
+    // calculate density using an ISA model for the tropsphere (valid up to 11km above MSL)
+    const float density_ratio = powf((temperature_msl/temperature_local) , 4.256f);
+    float rho = 1.225f / density_ratio;
+
+    // calculate pressure altitude
+    float pressure_altitude = alt_msl;
+
+    // calculate temperature in Celsius
+    baro_msg_.set_temperature(temperature_local - 273.0f);
+
+    sensor_msg.temperature = temperature_;
+    sensor_msg.abs_pressure = absolute_pressure;
+    sensor_msg.pressure_alt = pressure_altitude;
+
+    // Insert differential pressure information
+    sensor_msg.diff_pressure = 0.005f * rho * powf(model_states_.base_link_states.u, 2.0);
+
+    // Tick which fields have been filled
+    sensor_msg.fields_updated = SensorSource::ACCEL
+                                | SensorSource::GYRO
+                                | SensorSource::MAG
+                                | SensorSource::BARO
+                                | SensorSource::DIFF_PRESS;
+
+
+
+
+    mavlink_message_t msg;
+    mavlink_msg_hil_sensor_encode_chan(1, 200, MAVLINK_COMM_0, &msg, &sensor_msg);
+    send_mavlink_message(&msg);
+}
+
+void Controller::send_gps_message() {
+
+    // Construct the orientation quaternion
+    Eigen::Quaterniond q_gr;
+    q_gr = Eigen::AngleAxisd(model_states_.base_link_states.phi, Eigen::Vector3d::UnitX())
+           * Eigen::AngleAxisd(model_states_.base_link_states.theta, Eigen::Vector3d::UnitY())
+           * Eigen::AngleAxisd(model_states_.base_link_states.psi, Eigen::Vector3d::UnitZ());
+
+    // fill HIL GPS Mavlink msg
+    mavlink_hil_gps_t hil_gps_msg;
+    hil_gps_msg.time_usec = current_time_.toSec() * 1e6;
+    hil_gps_msg.fix_type = 3;
+    // Insert coordinate information
+    // Small-angle approximation of the coordinates around the home location
+    hil_gps_msg.lat = home_lat_deg + (model_states_.base_link_states.x*180/M_PI*1e7/6378137.0);
+    hil_gps_msg.lon = home_lon_deg + (-model_states_.base_link_states.y*180/M_PI*1e7/6378137.0);
+    hil_gps_msg.alt = model_states_base_link_states.z * 1000;
+    hil_gps_msg.eph = 100.0;
+    hil_gps_msg.epv = 100.0;
+
+    // Insert inertial velocity information
+    Eigen::Vector3d v_B = Eigen::Vector3d(
+        model_states_.base_link_states_.u,
+        model_states_.base_link_states_.v,
+        model_states_.base_link_states_.w
+    );
+    Eigen::Vector3d v_I = q_gr.conjugate()*v_B;
+    hil_gps_msg.vn = v_I.x() * 100;
+    hil_gps_msg.ve = v_I.y() * 100;
+    hil_gps_msg.vd = -v_I.z() * 100;
+    hil_gps_msg.vel = v_I.norm() * 100.0;
+
+    double cog{atan2(v_I.y(), v_I.x())};
+    hil_gps_msg.cog = static_cast<uint16_t>(wrap_to_360(cog*180/M_PI) * 100.0);
+    hil_gps_msg.satellites_visible = 10;
+
+    // send HIL_GPS Mavlink msg
+    mavlink_message_t msg;
+    mavlink_msg_hil_gps_encode_chan(1, 200, MAVLINK_COMM_0, &msg, &hil_gps_msg);
+    send_mavlink_message(&msg);
+}
+
+void Controller::send_ground_truth()
+{
+    // Construct the orientation quaternion
+    Eigen::Quaterniond q_gr;
+    q_gr = Eigen::AngleAxisd(model_states_.base_link_states.phi, Eigen::Vector3d::UnitX())
+           * Eigen::AngleAxisd(model_states_.base_link_states.theta, Eigen::Vector3d::UnitY())
+           * Eigen::AngleAxisd(model_states_.base_link_states.psi, Eigen::Vector3d::UnitZ());
+
+    mavlink_hil_state_quaternion_t hil_state_quat;
+
+    // Insert time information.
+    hil_state_quat.time_usec = current_time_.toSec() * 1e6;
+
+    // Insert attitude information.
+    hil_state_quat.attitude_quaternion[0] = q_gr.w();
+    hil_state_quat.attitude_quaternion[1] = q_gr.x();
+    hil_state_quat.attitude_quaternion[2] = q_gr.y();
+    hil_state_quat.attitude_quaternion[3] = q_gr.z();
+
+    // Insert angular velocity information.
+    // Needs conversion from FLU to Body-frame
+    hil_state_quat.rollspeed = model_states_.base_link_states.p,
+    hil_state_quat.pitchspeed = -model_states_.base_link_states.q,
+    hil_state_quat.yawspeed = -model_states_.base_link_states.r
+
+    // Insert coordinate information
+    // Small-angle approximation of the coordinates around the home location
+    hil_state_quat.lat = home_lat_deg + (model_states_.base_link_states.x*180/M_PI*1e7/6378137.0);
+    hil_state_quat.lon = home_lon_deg + (-model_states_.base_link_states.y*180/M_PI*1e7/6378137.0);
+    hil_state_quat.alt = model_states_base_link_states.z * 1000;
+
+    // Insert inertial velocity information
+    Eigen::Vector3d v_B = Eigen::Vector3d(
+        model_states_.base_link_states_.u,
+        model_states_.base_link_states_.v,
+        model_states_.base_link_states_.w
+    );
+    Eigen::Vector3d v_I = q_gr.conjugate()*v_B;
+    hil_state_quat.vx = v_I.x() * 100;
+    hil_state_quat.vy = v_I.y() * 100;
+    hil_state_quat.vz = v_I.z() * 100;
+
+    // Insert airspeed information
+    // assumed indicated airspeed due to flow aligned with pitot (body x)
+    hil_state_quat.ind_airspeed = v_B.x() * 100;
+    hil_state_quat.true_airspeed = hil_state_quat.ind_airspeed;
+
+    // Insert acceleration information
+    hil_state_quat.xacc = model_states_.base_link_states.acc_x * 1000 / 9.81,
+    hil_state_quat.yacc = -model_states_.base_link_states.acc_y * 1000 / 9.81,
+    hil_state_quat.zacc = -model_states_.base_link_states.acc_z * 1000 / 9.81,
+
+    mavlink_message_t msg;
+    mavlink_msg_hil_state_quaternion_encode_chan(1, 200, MAVLINK_COMM_0, &msg, &hil_state_quat);
+    send_mavlink_message(&msg);
+}
+
+void Controller::send_rc_inputs_message()
+{
+    mavlink_hil_rc_inputs_raw_t hil_rc_inputs_raw_msg;
+    hil_rc_inputs_raw_msg.time_usec = current_time_.toSec() * 1e6;
+    hil_rc_inputs_raw_msg.chan1_raw = channels_.value[0]*500 + 1500;
+    hil_rc_inputs_raw_msg.chan2_raw = channels_.value[1]*500 + 1500;
+    hil_rc_inputs_raw_msg.chan3_raw = channels_.value[2]*1000 + 1000;
+    hil_rc_inputs_raw_msg.chan4_raw = channels_.value[3]*500 + 1500;
+    hil_rc_inputs_raw.rssi = 254;
+    mavlink_message_t msg;
+    mavlink_msg_hil_gps_encode_chan(1, 200, MAVLINK_COMM_0, &msg, &hil_rc_inputs_raw_msg);
+    send_mavlink_message(&msg);
 }
 
 // Establish TCP connection
