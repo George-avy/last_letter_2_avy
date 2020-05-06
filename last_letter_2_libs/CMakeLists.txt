@@ -11,6 +11,7 @@ find_package(Boost REQUIRED)
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES math_lib
+  LIBRARIES geo_mag_declination
 )
 
 include_directories(include 
@@ -19,10 +20,18 @@ include_directories(include
 )
 
 add_library(math_lib src/math_lib.cpp)
+add_library(math_lib src/environment.cpp)
 
 target_link_libraries(math_lib ${catkin_LIBRARIES})
+target_link_libraries(geo_mag_declination ${catkin_LIBRARIES})
 
 install(TARGETS math_lib
+  ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
+  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
+
+install(TARGETS geo_mag_declination
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   LIBRARY DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
   RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
