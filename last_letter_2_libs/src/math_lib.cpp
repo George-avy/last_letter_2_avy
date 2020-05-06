@@ -131,3 +131,12 @@ void FRDtoFLU(float &x, float &y, float &z)
     y = -y;
     z = -z;
 }
+
+// Wrap an angle to the interval [0-360)
+double wrap_to_360(const double angle)
+{
+    double a = angle;
+    while (a < 0) a += 360.0;
+    while (a >= 360.0) a -= 360.0;
+    return a;
+}
