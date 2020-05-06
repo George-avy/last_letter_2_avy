@@ -60,6 +60,7 @@ private:
     ignition::math::Vector3d relLinVel;
     ignition::math::Vector3d rotation;
     ignition::math::Vector3d relAngVel;
+    ignition::math::Vector3d relLinAccel;
     ignition::math::Vector3d position;
     ignition::math::Vector3d force, torque;
     std::string link_name, joint_name;
@@ -342,6 +343,7 @@ public:
         rotation = model->GetLink("body_FLU")->WorldPose().Rot().Euler();
         relAngVel = model->GetLink("body_FLU")->RelativeAngularVel();
         position = model->GetLink("body_FLU")->WorldPose().Pos();
+        relLinAccel = model->GetLink("body_FLU")->RelativeLinearAccel();
 
         base_link_states.header.stamp = ros::Time::now();
         base_link_states.header.frame_id = "body_FLU";
@@ -357,6 +359,9 @@ public:
         base_link_states.p = relAngVel[0];
         base_link_states.q = relAngVel[1];
         base_link_states.r = relAngVel[2];
+        base_link_states.acc_x = relLinAccel[0];
+        base_link_states.acc_y = relLinAccel[1];
+        base_link_states.acc_z = relLinAccel[2];
 
         model_states.base_link_states = base_link_states;
 
@@ -368,6 +373,7 @@ public:
             rotation = model->GetLink(link_name)->WorldPose().Rot().Euler();
             relAngVel = model->GetLink(link_name)->RelativeAngularVel();
             position = model->GetLink(link_name)->WorldPose().Pos();
+            relLinAccel = model->GetLink(link_name)->RelativeLinearAccel();
 
             airfoil_states[i].header.stamp = ros::Time::now();
             airfoil_states[i].header.frame_id = link_name;
@@ -383,6 +389,9 @@ public:
             airfoil_states[i].p = relAngVel[0];
             airfoil_states[i].q = relAngVel[1];
             airfoil_states[i].r = relAngVel[2];
+            airfoil_states[i].acc_x = relLinAccel[0];
+            airfoil_states[i].acc_y = relLinAccel[1];
+            airfoil_states[i].acc_z = relLinAccel[2];
 
             model_states.airfoil_states[i] = airfoil_states[i];
         }
@@ -395,6 +404,7 @@ public:
             rotation = model->GetLink(link_name)->WorldPose().Rot().Euler();
             relAngVel = model->GetLink(link_name)->RelativeAngularVel();
             position = model->GetLink(link_name)->WorldPose().Pos();
+            relLinAccel = model->GetLink(link_name)->RelativeLinearAccel();
 
             motor_states[i].header.stamp = ros::Time::now();
             motor_states[i].header.frame_id = link_name;
@@ -410,6 +420,9 @@ public:
             motor_states[i].p = relAngVel[0];
             motor_states[i].q = relAngVel[1];
             motor_states[i].r = relAngVel[2];
+            motor_states[i].acc_x = relLinAccel[0];
+            motor_states[i].acc_y = relLinAccel[1];
+            motor_states[i].acc_z = relLinAccel[2];
 
             model_states.motor_states[i] = motor_states[i];
         }

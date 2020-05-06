@@ -13,3 +13,6 @@ float32 w
 float32 p
 float32 q
 float32 r
+float32 acc_x
+float32 acc_y
+float32 acc_z
