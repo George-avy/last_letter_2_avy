@@ -45,8 +45,8 @@
 #include <cstdint>
 #include <cmath>
 
-#include "common.h"
-#include "geo_mag_declination.h"
+// #include "common.h"
+#include "last_letter_2_libs/geo_mag_declination.hpp"
 
 /** set this always to the sampling in degrees for the table below */
 #define SAMPLING_RES		10.0f
@@ -108,6 +108,13 @@ static constexpr const int8_t strength_table[13][37] = \
 	{ 48,48,49,50,52,53,55,56,57,57,56,55,53,51,50,49,48,48,48,49,49,50,51,53,55,56,58,59,60,60,58,56,54,52,50,49,48 },
 	{ 54,54,54,55,56,57,58,58,59,58,58,57,56,54,53,52,51,51,51,51,52,53,54,55,57,58,60,61,62,61,61,59,58,56,55,54,54 },
 };
+
+// Imported from https://github.com/PX4/sitl_gazebo/blob/master/include/common.h
+// Returns scalar value constrained by (min_val, max_val)
+template<typename Scalar>
+static inline constexpr const Scalar &constrain(const Scalar &val, const Scalar &min_val, const Scalar &max_val) {
+    return (val < min_val) ? min_val : ((val > max_val) ? max_val : val);
+}
 
 static unsigned
 get_lookup_table_index(float *val, float min, float max)

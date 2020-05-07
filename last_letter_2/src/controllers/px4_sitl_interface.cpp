@@ -1,18 +1,21 @@
 // A node where the PX4 SITL interface runs
 // Based on https://github.com/PX4/sitl_gazebo/blob/master/src/gazebo_mavlink_interface.cpp
 
-#include <px4_sitl_interface.hpp>
 #include <last_letter_2_libs/geo_mag_declination.hpp>
+#include <signal.h>
+#include <ros/xmlrpc_manager.h>
+
+#include <controllers/px4_sitl_interface.hpp>
 
 Controller::Controller()
 {
     //Init Subscribers
     // TODO: Establish UDP sockets to SITL
     sub_chan = n.subscribe("last_letter_2/channels", 1, &Controller::chan_2_signal, this, ros::TransportHints().tcpNoDelay());
-    sub_mod_st = n.subscribe("last_letter_2/model_states", 1, &Controller::storeStates, this, ros::TransportHints().tcpNoDelay());
+    sub_mod_st = n.subscribe("last_letter_2/model_states", 1, &Controller::store_states, this, ros::TransportHints().tcpNoDelay());
 
     //Init service
-    get_control_inputs_service = n.advertiseService("last_letter_2/get_control_inputs_srv", &Controller::returnControlInputs, this);
+    get_control_inputs_service = n.advertiseService("last_letter_2/get_control_inputs_srv", &Controller::return_control_inputs, this);
 
     // TODO: Parameters are most likely unneeded
     //Read the number of airfoils
@@ -35,7 +38,7 @@ Controller::Controller()
 
     last_imu_time_ = ros::Time::now();
 
-    initControllerVariables();
+    init_controller_variables();
 }
 
 // TODO: Delete this 
@@ -49,7 +52,7 @@ void Controller::chan_2_signal(last_letter_2_msgs::channels msg)
     pitch_input = channels_.value[pitch_in_chan];               // pitch angle signal
     yaw_input = channels_.value[yaw_in_chan];                   // yaw angle signal
     thrust_input = (channels_.value[throttle_in_chan] + 1) / 2; // throttle signal
-    channelFunctions();
+    channel_functions();
 }
 
 // store the model_states_ published by gazebo
@@ -64,10 +67,15 @@ void Controller::store_states(const last_letter_2_msgs::model_states msg)
 bool Controller::return_control_inputs(last_letter_2_msgs::get_control_inputs_srv::Request &req,
                                      last_letter_2_msgs::get_control_inputs_srv::Response &res)
 {
-    previous_states_seq = model_states_.seq();
+    if (!ros::ok())
+    {
+        got_sig_int_ = true;
+    }
+
+    uint32_t previous_states_seq = model_states_.header.seq;
     // Always run at 250 Hz. At 500 Hz, the skip factor should be 2, at 1000 Hz 4.
-    if (!(previous_imu_seq_ % update_skip_factor_ == 0)) {
-        return;
+    if (!(previous_states_seq % update_skip_factor_ == 0)) {
+        return false;
     }
 
     ros::Time current_time_ = ros::Time::now();
@@ -104,7 +112,7 @@ bool Controller::return_control_inputs(last_letter_2_msgs::get_control_inputs_sr
     }
 
 
-    last_imu_time_ = current_time;
+    last_imu_time_ = current_time_;
 
     return true;
 }
@@ -120,7 +128,7 @@ void Controller::init_controller_variables()
 // Method to use channel signals for extra functions
 void Controller::channel_functions()
 {
-    int button_num;
+    // int button_num;
     // button_num = 3;
     // if (channels.value[5 + button_num] == 1)
     // {
@@ -262,9 +270,18 @@ void Controller::configure_ports()
         ROS_INFO("Using MAVLink protocol v1.0\n");
     }
     else {
-        ROS_ERROR("Unknown protocol version! using v%i by default\n", protocol_version_);
+        ROS_ERROR("Unknown protocol version! using v%g by default\n", protocol_version_);
     }
  
+}
+
+void Controller::close()
+{
+    ::close(fds_[CONNECTION_FD].fd);
+    fds_[CONNECTION_FD] = { 0, 0, 0 };
+    fds_[CONNECTION_FD].fd = -1;
+
+    received_first_actuator_ = false;
 }
 
 // Check for inbound MAVLink control messages
@@ -347,16 +364,61 @@ void Controller::poll_for_mavlink_messages()
              );
 }
 
+void Controller::send_mavlink_message(const mavlink_message_t *message)
+{
+    assert(message != nullptr);
+
+    if (got_sig_int_ || close_conn_) {
+        return;
+    }
+
+    uint8_t buffer[MAVLINK_MAX_PACKET_LEN];
+    int packetlen = mavlink_msg_to_send_buffer(buffer, message);
+
+    if (fds_[CONNECTION_FD].fd > 0) {
+        int timeout_ms = (received_first_actuator_ && enable_lockstep_) ? 1000 : 0;
+        int ret = ::poll(&fds_[0], N_FDS, timeout_ms);
+
+        if (ret < 0) {
+            ROS_ERROR("poll error: %s", strerror(errno));
+            return;
+        }
+
+        if (ret == 0 && timeout_ms > 0) {
+            ROS_ERROR("poll timeout");
+            return;
+        }
+
+        if (!(fds_[CONNECTION_FD].revents & POLLOUT)) {
+            ROS_ERROR("invalid events at fd: %i", fds_[CONNECTION_FD].revents);
+            return;
+        }
+
+        size_t len;
+        if (use_tcp_) {
+            len = send(fds_[CONNECTION_FD].fd, buffer, packetlen, 0);
+        } else {
+            len = sendto(fds_[CONNECTION_FD].fd, buffer, packetlen, 0, (struct sockaddr *)&remote_simulator_addr_, remote_simulator_addr_len_);
+        }
+        if (len < 0) {
+            ROS_ERROR("Failed sending mavlink message: %s", strerror(errno));
+            if (errno == ECONNRESET || errno == EPIPE) {
+                if (use_tcp_) { // udp socket remains alive
+                    ROS_ERROR("Closing connection.");
+                    close_conn_ = true;
+                }
+            }
+        }
+    }
+}
+
 void Controller::send_sensor_message()
 {
-    // Get the current time
-    dt = current_time_ - last_imu_time_;
-
     // Construct the orientation quaternion
-    Eigen::Quaterniond q_gr;
-    q_gr = Eigen::AngleAxisd(model_states_.base_link_states.phi, Eigen::Vector3d::UnitX())
-           * Eigen::AngleAxisd(model_states_.base_link_states.theta, Eigen::Vector3d::UnitY())
-           * Eigen::AngleAxisd(model_states_.base_link_states.psi, Eigen::Vector3d::UnitZ());
+    // Eigen::Quaterniond q_gr;
+    // q_gr = Eigen::AngleAxisd(model_states_.base_link_states.phi, Eigen::Vector3d::UnitX())
+    //        * Eigen::AngleAxisd(model_states_.base_link_states.theta, Eigen::Vector3d::UnitY())
+    //        * Eigen::AngleAxisd(model_states_.base_link_states.psi, Eigen::Vector3d::UnitZ());
  
     // Create and stamp the sensor MAVLink message
     mavlink_hil_sensor_t sensor_msg;
@@ -417,9 +479,8 @@ void Controller::send_sensor_message()
     float pressure_altitude = alt_msl;
 
     // calculate temperature in Celsius
-    baro_msg_.set_temperature(temperature_local - 273.0f);
+    sensor_msg.temperature = temperature_local - 273.0;
 
-    sensor_msg.temperature = temperature_;
     sensor_msg.abs_pressure = absolute_pressure;
     sensor_msg.pressure_alt = pressure_altitude;
 
@@ -455,17 +516,17 @@ void Controller::send_gps_message() {
     hil_gps_msg.fix_type = 3;
     // Insert coordinate information
     // Small-angle approximation of the coordinates around the home location
-    hil_gps_msg.lat = home_lat_deg + (model_states_.base_link_states.x*180/M_PI*1e7/6378137.0);
-    hil_gps_msg.lon = home_lon_deg + (-model_states_.base_link_states.y*180/M_PI*1e7/6378137.0);
-    hil_gps_msg.alt = model_states_base_link_states.z * 1000;
+    hil_gps_msg.lat = home_lat_deg_ + (model_states_.base_link_states.x*180/M_PI*1e7/6378137.0);
+    hil_gps_msg.lon = home_lon_deg_ + (-model_states_.base_link_states.y*180/M_PI*1e7/6378137.0);
+    hil_gps_msg.alt = model_states_.base_link_states.z * 1000;
     hil_gps_msg.eph = 100.0;
     hil_gps_msg.epv = 100.0;
 
     // Insert inertial velocity information
     Eigen::Vector3d v_B = Eigen::Vector3d(
-        model_states_.base_link_states_.u,
-        model_states_.base_link_states_.v,
-        model_states_.base_link_states_.w
+        model_states_.base_link_states.u,
+        model_states_.base_link_states.v,
+        model_states_.base_link_states.w
     );
     Eigen::Vector3d v_I = q_gr.conjugate()*v_B;
     hil_gps_msg.vn = v_I.x() * 100;
@@ -504,21 +565,21 @@ void Controller::send_ground_truth()
 
     // Insert angular velocity information.
     // Needs conversion from FLU to Body-frame
-    hil_state_quat.rollspeed = model_states_.base_link_states.p,
-    hil_state_quat.pitchspeed = -model_states_.base_link_states.q,
-    hil_state_quat.yawspeed = -model_states_.base_link_states.r
+    hil_state_quat.rollspeed = model_states_.base_link_states.p;
+    hil_state_quat.pitchspeed = -model_states_.base_link_states.q;
+    hil_state_quat.yawspeed = -model_states_.base_link_states.r;
 
     // Insert coordinate information
     // Small-angle approximation of the coordinates around the home location
-    hil_state_quat.lat = home_lat_deg + (model_states_.base_link_states.x*180/M_PI*1e7/6378137.0);
-    hil_state_quat.lon = home_lon_deg + (-model_states_.base_link_states.y*180/M_PI*1e7/6378137.0);
-    hil_state_quat.alt = model_states_base_link_states.z * 1000;
+    hil_state_quat.lat = home_lat_deg_ + (model_states_.base_link_states.x*180/M_PI*1e7/6378137.0);
+    hil_state_quat.lon = home_lon_deg_ + (-model_states_.base_link_states.y*180/M_PI*1e7/6378137.0);
+    hil_state_quat.alt = model_states_.base_link_states.z * 1000;
 
     // Insert inertial velocity information
     Eigen::Vector3d v_B = Eigen::Vector3d(
-        model_states_.base_link_states_.u,
-        model_states_.base_link_states_.v,
-        model_states_.base_link_states_.w
+        model_states_.base_link_states.u,
+        model_states_.base_link_states.v,
+        model_states_.base_link_states.w
     );
     Eigen::Vector3d v_I = q_gr.conjugate()*v_B;
     hil_state_quat.vx = v_I.x() * 100;
@@ -531,9 +592,9 @@ void Controller::send_ground_truth()
     hil_state_quat.true_airspeed = hil_state_quat.ind_airspeed;
 
     // Insert acceleration information
-    hil_state_quat.xacc = model_states_.base_link_states.acc_x * 1000 / 9.81,
-    hil_state_quat.yacc = -model_states_.base_link_states.acc_y * 1000 / 9.81,
-    hil_state_quat.zacc = -model_states_.base_link_states.acc_z * 1000 / 9.81,
+    hil_state_quat.xacc = model_states_.base_link_states.acc_x * 1000 / 9.81;
+    hil_state_quat.yacc = -model_states_.base_link_states.acc_y * 1000 / 9.81;
+    hil_state_quat.zacc = -model_states_.base_link_states.acc_z * 1000 / 9.81;
 
     mavlink_message_t msg;
     mavlink_msg_hil_state_quaternion_encode_chan(1, 200, MAVLINK_COMM_0, &msg, &hil_state_quat);
@@ -548,9 +609,9 @@ void Controller::send_rc_inputs_message()
     hil_rc_inputs_raw_msg.chan2_raw = channels_.value[1]*500 + 1500;
     hil_rc_inputs_raw_msg.chan3_raw = channels_.value[2]*1000 + 1000;
     hil_rc_inputs_raw_msg.chan4_raw = channels_.value[3]*500 + 1500;
-    hil_rc_inputs_raw.rssi = 254;
+    hil_rc_inputs_raw_msg.rssi = 254;
     mavlink_message_t msg;
-    mavlink_msg_hil_gps_encode_chan(1, 200, MAVLINK_COMM_0, &msg, &hil_rc_inputs_raw_msg);
+    mavlink_msg_hil_rc_inputs_raw_encode_chan(1, 200, MAVLINK_COMM_0, &msg, &hil_rc_inputs_raw_msg);
     send_mavlink_message(&msg);
 }
 
@@ -591,7 +652,7 @@ void Controller::handle_message(mavlink_message_t *msg, bool &received_actuator)
             last_actuator_time_ = ros::Time::now();
 
             // Fill in a linearly-increasing input_index array
-            for (unsigned int i = 0; i < n_out_max; i++) {
+            for (unsigned int i = 0; i < n_out_max_; i++) {
                 input_index_[i] = i;
             }
 
@@ -631,10 +692,10 @@ void Controller::shutdown_callback(XmlRpc::XmlRpcValue& params, XmlRpc::XmlRpcVa
         std::string reason = params[1];
         ROS_WARN("Shutdown request received. Reason: [%s]", reason.c_str());
         got_sig_int_ = true; // Set flag
+        ros::shutdown();
     }
     
     result = ros::xmlrpc::responseInt(1, "", 0);
-    ros::shutdown();
 }
 
 int main(int argc, char **argv)
@@ -645,12 +706,13 @@ int main(int argc, char **argv)
     //create the controller
     Controller controller;
 
-    // Bind the custom SIGINT handler
-    signal(SIGINT, controller.custom_sigint_handler);
+    // // Bind the custom SIGINT handler
+    // signal(SIGINT, controller.custom_sigint_handler);
 
     // Override XMLRPC shutdown
-    ros::XMLRPCManager::instance()->unbind("shutdown");
-    ros::XMLRPCManager::instance()->bind("shutdown", controller.shutdown_callback);
+    //TODO cannot get this to work, because bind() needs a static function, but we need to set the property got_sig_int_
+    // ros::XMLRPCManager::instance()->unbind("shutdown");
+    // ros::XMLRPCManager::instance()->bind("shutdown", controller.shutdown_callback);
 
     //Build a thread to spin for callbacks
     ros::AsyncSpinner spinner(1); // Use 1 threads

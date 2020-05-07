@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.10.2)
 project(last_letter_2)
 
+list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+
 find_package(catkin REQUIRED 
   COMPONENTS
   roscpp
@@ -9,7 +11,9 @@ find_package(catkin REQUIRED
   tf2_geometry_msgs
   dynamic_reconfigure
 )
+find_package(MAVLink REQUIRED)
 find_package(Boost REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 #add dynamic reconfigure api
 generate_dynamic_reconfigure_options(
@@ -20,9 +24,17 @@ catkin_package(DEPENDS
   CATKIN_DEPENDS 
 )
 
+catkin_package(
+  INCLUDE_DIRS include
+)
+
 include_directories(
   include
-  ${catkin_INCLUDE_DIRS} ${GAZEBO_INCLUDE_DIRS} ${Boost_INCLUDE_DIR}
+  ${catkin_INCLUDE_DIRS}
+  ${GAZEBO_INCLUDE_DIRS}
+  ${Boost_INCLUDE_DIR}
+  ${MAVLINK_INCLUDE_DIRS}
+  ${EIGEN3_INCLUDE_DIRS}
  )
 
 add_executable(joy2chan_node src/joy2chan_node.cpp) 
@@ -36,7 +48,7 @@ add_executable(chan2srv_node src/chan2srv_node.cpp)
 add_dependencies(joy2chan_node ${catkin_EXPORTED_TARGETS})
 add_dependencies(hexacopter_contr_node ${catkin_EXPORTED_TARGETS})
 add_dependencies(quadcopter_contr_node ${catkin_EXPORTED_TARGETS})
-add_dependencies(px4_sitl_interace_node ${catkin_EXPORTED_TARGETS})
+add_dependencies(px4_sitl_interface_node ${catkin_EXPORTED_TARGETS})
 add_dependencies(plane_contr_node ${catkin_EXPORTED_TARGETS})
 add_dependencies(core_node ${catkin_EXPORTED_TARGETS})
 add_dependencies(chan2srv_node ${catkin_EXPORTED_TARGETS})
