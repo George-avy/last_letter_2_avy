@@ -28,27 +28,31 @@ static const uint32_t kDefaultSDKUdpPort = 14540;
 
 //! Enumeration to use on the bitmask in HIL_SENSOR
 enum class SensorSource {
-  ACCEL		= 0b111,
-  GYRO		= 0b111000,
-  MAG		= 0b111000000,
-  BARO		= 0b1101000000000,
-  DIFF_PRESS	= 0b10000000000,
+  ACCEL      = 0b111,
+  GYRO	     = 0b111000,
+  MAG		 = 0b111000000,
+  BARO		 = 0b1101000000000,
+  DIFF_PRESS = 0b10000000000,
 };
 
-// //! OR operation for the enumeration and unsigned types that returns the bitmask
-// template<typename A, typename B>
-// static inline uint32_t operator |(A lhs, B rhs) {
-//   // make it type safe
-//   static_assert((std::is_same<A, uint32_t>::value || std::is_same<A, SensorSource>::value),
-// 		"first argument is not uint32_t or SensorSource enum type");
-//   static_assert((std::is_same<B, uint32_t>::value || std::is_same<B, SensorSource>::value),
-// 		"second argument is not uint32_t or SensorSource enum type");
+//! OR operation for the enumeration and unsigned types that returns the bitmask
+static inline uint32_t operator |(SensorSource lhs, SensorSource rhs)
+{
+    return static_cast<uint32_t>
+    (
+      static_cast<std::underlying_type<SensorSource>::type>(lhs) |
+      static_cast<std::underlying_type<SensorSource>::type>(rhs)
+    );
+}
 
-//   return static_cast<uint32_t> (
-//     static_cast<std::underlying_type<SensorSource>::type>(lhs) |
-//     static_cast<std::underlying_type<SensorSource>::type>(rhs)
-//   );
-// }
+static inline uint32_t operator |(uint32_t lhs, SensorSource rhs)
+{
+    return static_cast<uint32_t>
+    (
+      static_cast<std::underlying_type<SensorSource>::type>(lhs) |
+      static_cast<std::underlying_type<SensorSource>::type>(rhs)
+    );
+}
 
 class Controller
 {
