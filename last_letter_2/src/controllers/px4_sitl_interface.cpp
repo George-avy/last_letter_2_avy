@@ -10,7 +10,6 @@
 Controller::Controller()
 {
     //Init Subscribers
-    // TODO: Establish UDP sockets to SITL
     sub_chan = n.subscribe("last_letter_2/channels", 1, &Controller::chan_2_signal, this, ros::TransportHints().tcpNoDelay());
     sub_mod_st = n.subscribe("last_letter_2/model_states", 1, &Controller::store_states, this, ros::TransportHints().tcpNoDelay());
 
@@ -38,10 +37,10 @@ Controller::Controller()
 
     last_imu_time_ = ros::Time::now();
 
+    configure_ports();
     init_controller_variables();
 }
 
-// TODO: Delete this 
 //Store new joystick values
 void Controller::chan_2_signal(last_letter_2_msgs::channels msg)
 {
@@ -61,12 +60,12 @@ void Controller::store_states(const last_letter_2_msgs::model_states msg)
     model_states_ = msg;
 }
 
-// TODO: Insert UDP query to PX4 SITL inputs
 // Entry point for the model_node controls query
 // calculate and send back to Model class new control model inputs
 bool Controller::return_control_inputs(last_letter_2_msgs::get_control_inputs_srv::Request &req,
                                      last_letter_2_msgs::get_control_inputs_srv::Response &res)
 {
+    ROS_INFO("return_control_inputs service called");
     if (!ros::ok())
     {
         got_sig_int_ = true;
@@ -81,7 +80,7 @@ bool Controller::return_control_inputs(last_letter_2_msgs::get_control_inputs_sr
     ros::Time current_time_ = ros::Time::now();
 
     close_conn_ = false;
-    poll_for_mavlink_messages();
+    poll_for_mavlink_messages(); // Reads msgs from SITL, updates input_reference_.
 
     send_sensor_message();
     send_gps_message();
@@ -143,6 +142,7 @@ void Controller::channel_functions()
 
 void Controller::configure_ports()
 {
+    ROS_INFO("Configuring PX4_SITL network interface...");
     // Specify the outbound MAVLink address
     mavlink_addr_ = htonl(INADDR_ANY);
 
@@ -151,9 +151,11 @@ void Controller::configure_ports()
         // Configure outbound port
         local_simulator_addr_.sin_addr.s_addr = htonl(mavlink_addr_);
         local_simulator_addr_.sin_port = htons(mavlink_tcp_port_);
+        local_simulator_addr_len_ = sizeof(local_simulator_addr_);
         // Remote address not specified (will be established on connection?)
 
         // Open the socket
+        ROS_INFO("Creating TCP socket...");
         if ((simulator_socket_fd_ = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
             ROS_ERROR("Creating TCP socket failed: %s, aborting\n", strerror(errno));
             abort();
@@ -161,6 +163,7 @@ void Controller::configure_ports()
 
         // Set socket option, IPPROTO_TCP/TCP_NODELAY
         int yes = 1;
+        ROS_INFO("Configuring socket as TCP_NODELAY...");
         int result = setsockopt(simulator_socket_fd_, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
         if (result != 0) {
             ROS_ERROR("setsockopt failed: %s, aborting\n", strerror(errno));
@@ -171,6 +174,7 @@ void Controller::configure_ports()
         struct linger nolinger {};
         nolinger.l_onoff = 1;
         nolinger.l_linger = 0;
+        ROS_INFO("Configuring socket as NO_LINGER");
         result = setsockopt(simulator_socket_fd_, SOL_SOCKET, SO_LINGER, &nolinger, sizeof(nolinger));
         if (result != 0) {
             ROS_ERROR("setsockopt failed: %s, aborting\n", strerror(errno));
@@ -182,6 +186,7 @@ void Controller::configure_ports()
         // if the server is suddenly closed, for example, if the robot is deleted in gazebo.
         // Set socket option SOL_SOCKET/SO_RESUSEADDR
         int socket_reuse = 1;
+        ROS_INFO("Configuring socket for address reuse...");
         result = setsockopt(simulator_socket_fd_, SOL_SOCKET, SO_REUSEADDR, &socket_reuse, sizeof(socket_reuse));
         if (result != 0) {
             ROS_ERROR("setsockopt failed: %s, aborting\n", strerror(errno));
@@ -190,6 +195,7 @@ void Controller::configure_ports()
 
         // Set socket opiton SOL_SOCKET/SO_REUSEPORT
         // Same as above but for a given port
+        ROS_INFO("Configuring socket for port reuse...");
         result = setsockopt(simulator_socket_fd_, SOL_SOCKET, SO_REUSEPORT, &socket_reuse, sizeof(socket_reuse));
         if (result != 0) {
             ROS_ERROR("setsockopt failed: %s, aborting\n", strerror(errno));
@@ -197,6 +203,7 @@ void Controller::configure_ports()
         }
 
         // set socket to non-blocking
+        ROS_INFO("Setting socket as non-blocking...");
         result = fcntl(simulator_socket_fd_, F_SETFL, O_NONBLOCK);
         if (result == -1) {
             ROS_ERROR("setting socket to non-blocking failed: %s, aborting\n", strerror(errno));
@@ -204,6 +211,8 @@ void Controller::configure_ports()
         }
 
         // Bind the socket to the specified address
+        ROS_INFO("Binding TCP socket to %x:", local_simulator_addr_.sin_addr.s_addr);
+        // std::cout << inet_ntoa(local_simulator_addr_.sin_addr) << ":" << std::endl;
         if (bind(simulator_socket_fd_, (struct sockaddr *)&local_simulator_addr_, local_simulator_addr_len_) < 0) {
             ROS_ERROR("bind failed: %s, aborting\n", strerror(errno));
             abort();
@@ -227,10 +236,12 @@ void Controller::configure_ports()
         // Configure remote port 
         remote_simulator_addr_.sin_addr.s_addr = mavlink_addr_;
         remote_simulator_addr_.sin_port = htons(mavlink_udp_port_);
+        remote_simulator_addr_len_ = sizeof(remote_simulator_addr_);
 
         // Configure local port
         local_simulator_addr_.sin_addr.s_addr = htonl(INADDR_ANY);
         local_simulator_addr_.sin_port = htons(0);
+        local_simulator_addr_len_ = sizeof(local_simulator_addr_);
 
         // Create the socket
         if ((simulator_socket_fd_ = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -287,6 +298,7 @@ void Controller::close()
 // Check for inbound MAVLink control messages
 void Controller::poll_for_mavlink_messages()
 {
+    ROS_INFO("Polling for MAVLink msgs");
     // Do nothing if node is about to shut down
     if (got_sig_int_) {
         return;
@@ -345,6 +357,7 @@ void Controller::poll_for_mavlink_messages()
                 }
 
                 // data received
+                ROS_INFO("Data received from SITL");
                 int len = ret;
                 mavlink_message_t msg;
                 mavlink_status_t status;
@@ -716,7 +729,20 @@ int main(int argc, char **argv)
 
     //Build a thread to spin for callbacks
     ros::AsyncSpinner spinner(1); // Use 1 threads
-    spinner.start();
+    // spinner.start();
+    ros::Rate temp_spinner(1);
+
+    ROS_INFO("PX4-SITL interface spawned");
+    while (ros::ok())
+    {
+        temp_spinner.sleep();
+        controller.poll_for_mavlink_messages();
+        ROS_INFO("Sending msgs to SITL");
+        controller.send_sensor_message();
+        controller.send_gps_message();
+        controller.send_ground_truth();
+        controller.send_rc_inputs_message();
+    } 
     ros::waitForShutdown();
     return 0;
 }
