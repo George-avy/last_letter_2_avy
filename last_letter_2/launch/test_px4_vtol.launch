@@ -1,0 +1,73 @@
+<launch>
+  <env name="GAZEBO_MODEL_PATH" value="$(find last_letter_2)"/>
+
+  <!-- choose a model to simulate -->
+  <arg name="uav_name" default="standard_vtol"/>
+
+  <!-- gazebo node parameters -->
+  <arg name="gui" default="true" />
+  <arg name="paused" default="false"/>
+  <arg name="use_sim_time" default="true"/>
+  <arg name="headless" default="false"/>
+  <arg name="debug" default="false"/>
+  
+  <!-- choose a world for the simulation -->
+  <arg name="sim_world_name" default="$(find last_letter_2)/config/param/worlds/myworld.world"/>
+
+  <!-- load models that will be spawned -->
+  <arg name="model" default="$(find last_letter_2)/config/param/models/$(arg uav_name)/urdf/model.urdf.xacro"/>
+  <arg name="can_model" default="$(find last_letter_2)/config/param/objects/can/urdf/can_model.urdf.xacro"/>
+
+  <!-- start gazebo -->
+  <include file="$(find gazebo_ros)/launch/empty_world.launch" >
+    <arg name="world_name" value="$(arg sim_world_name)"/>
+    <arg name="debug" value="$(arg debug)" />
+    <arg name="gui" value="$(arg gui)" />
+    <arg name="paused" value="$(arg paused)"/>
+    <arg name="use_sim_time" value="$(arg use_sim_time)"/>
+    <arg name="headless" value="$(arg headless)"/>
+  </include>
+
+  <!-- export files of models in URDF format -->
+  <param name="robot_description" command="$(find xacro)/xacro '$(arg model)'"/>
+  <param name="can" command="$(find xacro)/xacro '$(arg can_model)'"/>
+
+  <!-- Load Parameter server  -->
+  <rosparam command="load" file="$(find last_letter_2)/config/param/models/$(arg uav_name)/aerodynamics.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/models/$(arg uav_name)/propulsion.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/models/$(arg uav_name)/init.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/models/$(arg uav_name)/channel_mix.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/environment.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/updatePhysics.yaml" />
+  <rosparam command="load" file="$(find last_letter_2)/config/param/HID.yaml" />
+
+  <!-- push robot_description to factory and spawn model in gazebo -->
+  <node name="urdf_spawner" pkg="gazebo_ros" type="spawn_model"
+         args="-z 1 -urdf -model my_model -param robot_description" respawn="false" output="screen">
+  </node> 
+  <!-- start joystick node to read Joystick to connect Joystick with simulator -->
+  <node pkg="joy" type="joy_node" name="joystick_node" output="screen" >
+    <param name="dev" value="/dev/input/js0" />
+    <param name="deadzone" value="0.01" />
+  </node>
+  <!-- Start basic nodes -->
+  <node pkg="last_letter_2" name="joy2chan_node" type="joy2chan_node" output="screen" />
+  <node pkg="last_letter_2" name="core_node" type="core_node" output="screen" />
+  <node pkg="last_letter_2" name="chan2srv_node" type="chan2srv_node" output="screen" />
+
+  <!-- Controller nodes. They are choosed based on model -->
+  <node pkg="last_letter_2" name="controller_node" type="px4_sitl_interface_node" output="screen" if="$(eval uav_name == 'standard_vtol')"/>
+  <!-- <node pkg="last_letter_2" name="controller_node" type="px4_sitl_interface_node" launch-prefix="gdb -ex run -args" output="screen" if="$(eval uav_name == 'standard_vtol')"/> -->
+ 
+  <!-- start rqt_reconfigure node for controller's tuning (optional)-->
+  <!-- <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" /> -->
+
+  <!-- start robot_state_publisher node to create tf transformation tree -->
+  <node pkg="robot_state_publisher" name="robot_state_publisher_node" type="robot_state_publisher">
+    <remap from="robot_description" to="robot_description"/>
+    <remap from="joint_states" to="last_letter_2/joint_states"/>
+    <param name="ignore_timestamp" value="true"/>
+  </node>
+</launch>
+    
+    

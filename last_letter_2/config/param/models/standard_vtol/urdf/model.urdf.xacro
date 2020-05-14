@@ -557,8 +557,9 @@
 <!-- model plugins -->
     <gazebo>
         <plugin name="model_plugin" filename="libmodel_plugin.so"/>
+
         <plugin name="joint_state_publisher" filename="libgazebo_ros_joint_state_publisher.so">
-            <jointName>arm1_to_motor1, arm2_to_motor2, arm3_to_motor3,arm4_to_motor4,motor1_to_axle1,motor2_to_axle2,motor3_to_axle3,motor4_to_axle4 </jointName>
+            <jointName>arm1_to_motor1, arm2_to_motor2, arm3_to_motor3,arm4_to_motor4, motor1_to_axle1, motor2_to_axle2, motor3_to_axle3, motor4_to_axle4 </jointName>
             <robotNamespace>last_letter_2</robotNamespace>
             <updateRate>0</updateRate>
         </plugin>

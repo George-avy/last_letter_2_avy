@@ -457,21 +457,15 @@ void Controller::send_sensor_message()
 
     // Insert acceleration information. Gravity component needs to be removed, i.e. real-world accelerometer reading is expected.
     // Needs conversion from FLU to Body-frame
-    // sensor_msg.xacc = model_states_.base_link_states.acc_x,
-    // sensor_msg.yacc = -model_states_.base_link_states.acc_y,
-    // sensor_msg.zacc = -model_states_.base_link_states.acc_z,
-    sensor_msg.xacc = 0;
-    sensor_msg.yacc = 0;
-    sensor_msg.zacc = -9.81;
+    sensor_msg.xacc = model_states_.base_link_states.acc_x,
+    sensor_msg.yacc = -model_states_.base_link_states.acc_y,
+    sensor_msg.zacc = -model_states_.base_link_states.acc_z,
 
     // Insert angular velocity information
     // Needs conversion from FLU to Body-frame
-    // sensor_msg.xgyro = model_states_.base_link_states.p;
-    // sensor_msg.ygyro = -model_states_.base_link_states.q;
-    // sensor_msg.zgyro = -model_states_.base_link_states.r;
-    sensor_msg.xgyro = 0;
-    sensor_msg.ygyro = 0;
-    sensor_msg.zgyro = 0;
+    sensor_msg.xgyro = model_states_.base_link_states.p;
+    sensor_msg.ygyro = -model_states_.base_link_states.q;
+    sensor_msg.zgyro = -model_states_.base_link_states.r;
 
     // Insert magnetometer information
     // Magnetic field data from WMM2018 (10^5xnanoTesla (N, E D) n-frame), using the geo_mag_declination library
@@ -758,22 +752,25 @@ int main(int argc, char **argv)
     // ros::XMLRPCManager::instance()->unbind("shutdown");
     // ros::XMLRPCManager::instance()->bind("shutdown", controller.shutdown_callback);
 
-    //Build a thread to spin for callbacks
-    // ros::AsyncSpinner spinner(1); // Use 1 threads
-    // spinner.start();
-    ros::WallRate temp_spinner(1);
-
     ROS_INFO("PX4-SITL interface spawned");
-    while (ros::ok())
-    {
-        temp_spinner.sleep();
-        controller.poll_for_mavlink_messages();
-        ROS_INFO("Sending msgs to SITL");
-        controller.send_sensor_message();
-        controller.send_gps_message();
-        controller.send_ground_truth();
-        controller.send_rc_inputs_message();
-    } 
+
+    //Build a thread to spin for callbacks
+    ros::AsyncSpinner spinner(1); // Use 1 threads
+    spinner.start();
+    ros::waitForShutdown();
+
+    // ros::WallRate temp_spinner(1);
+    // while (ros::ok())
+    // {
+    //     temp_spinner.sleep();
+    //     controller.poll_for_mavlink_messages();
+    //     ROS_INFO("Sending msgs to SITL");
+    //     controller.send_sensor_message();
+    //     controller.send_gps_message();
+    //     controller.send_ground_truth();
+    //     controller.send_rc_inputs_message();
+    // } 
+
     controller.close();
     return 0;
 }
