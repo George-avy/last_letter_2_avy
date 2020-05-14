@@ -335,14 +335,16 @@ void Controller::poll_for_mavlink_messages()
 
         // For each fds allocated
         for (int i = 0; i < N_FDS; i++) {
-            ROS_INFO("polled successfully");
+            ROS_INFO("Polled successfully");
             // If it has no return events, continue
             if (fds_[i].revents == 0) {
+                ROS_INFO("Didn't get any events");
                 continue;
             }
 
             // If only read events are present, continue
             if (!(fds_[i].revents & POLLIN)) {
+                ROS_INFO("Didn't get any POLLIN events");
                 continue;
             }
 
@@ -371,6 +373,7 @@ void Controller::poll_for_mavlink_messages()
                 // data received
                 ROS_INFO("Data received from SITL");
                 int len = ret;
+                ROS_INFO("%d bytes total", len);
                 mavlink_message_t msg;
                 mavlink_status_t status;
                 for (unsigned i = 0; i < len; ++i) {
@@ -426,7 +429,7 @@ void Controller::send_mavlink_message(const mavlink_message_t *message)
         } else {
             len = sendto(fds_[CONNECTION_FD].fd, buffer, packetlen, 0, (struct sockaddr *)&remote_simulator_addr_, remote_simulator_addr_len_);
         }
-        if (len < 0) {
+        if (len != packetlen) {
             ROS_ERROR("Failed sending mavlink message: %s", strerror(errno));
             if (errno == ECONNRESET || errno == EPIPE) {
                 if (use_tcp_) { // udp socket remains alive
@@ -448,19 +451,27 @@ void Controller::send_sensor_message()
  
     // Create and stamp the sensor MAVLink message
     mavlink_hil_sensor_t sensor_msg;
-    sensor_msg.time_usec = current_time_.toSec() * 1e6;
+    // sensor_msg.time_usec = current_time_.toSec() * 1e6;
+    msg_counter_ += deltat_us_;
+    sensor_msg.time_usec = msg_counter_;
 
     // Insert acceleration information. Gravity component needs to be removed, i.e. real-world accelerometer reading is expected.
     // Needs conversion from FLU to Body-frame
-    sensor_msg.xacc = model_states_.base_link_states.acc_x,
-    sensor_msg.yacc = -model_states_.base_link_states.acc_y,
-    sensor_msg.zacc = -model_states_.base_link_states.acc_z,
+    // sensor_msg.xacc = model_states_.base_link_states.acc_x,
+    // sensor_msg.yacc = -model_states_.base_link_states.acc_y,
+    // sensor_msg.zacc = -model_states_.base_link_states.acc_z,
+    sensor_msg.xacc = 0;
+    sensor_msg.yacc = 0;
+    sensor_msg.zacc = -9.81;
 
     // Insert angular velocity information
     // Needs conversion from FLU to Body-frame
-    sensor_msg.xgyro = model_states_.base_link_states.p;
-    sensor_msg.ygyro = -model_states_.base_link_states.q;
-    sensor_msg.zgyro = -model_states_.base_link_states.r;
+    // sensor_msg.xgyro = model_states_.base_link_states.p;
+    // sensor_msg.ygyro = -model_states_.base_link_states.q;
+    // sensor_msg.zgyro = -model_states_.base_link_states.r;
+    sensor_msg.xgyro = 0;
+    sensor_msg.ygyro = 0;
+    sensor_msg.zgyro = 0;
 
     // Insert magnetometer information
     // Magnetic field data from WMM2018 (10^5xnanoTesla (N, E D) n-frame), using the geo_mag_declination library
@@ -538,12 +549,14 @@ void Controller::send_gps_message() {
 
     // fill HIL GPS Mavlink msg
     mavlink_hil_gps_t hil_gps_msg;
-    hil_gps_msg.time_usec = current_time_.toSec() * 1e6;
+    // hil_gps_msg.time_usec = current_time_.toSec() * 1e6;
+    hil_gps_msg.time_usec = msg_counter_;
+
     hil_gps_msg.fix_type = 3;
     // Insert coordinate information
     // Small-angle approximation of the coordinates around the home location
-    hil_gps_msg.lat = home_lat_deg_ + (model_states_.base_link_states.x*180/M_PI*1e7/6378137.0);
-    hil_gps_msg.lon = home_lon_deg_ + (-model_states_.base_link_states.y*180/M_PI*1e7/6378137.0);
+    hil_gps_msg.lat = (home_lat_deg_ +  model_states_.base_link_states.x * 180/M_PI/6378137.0)*1e7;
+    hil_gps_msg.lon = (home_lon_deg_ + -model_states_.base_link_states.y * 180/M_PI/6378137.0)*1e7;
     hil_gps_msg.alt = model_states_.base_link_states.z * 1000;
     hil_gps_msg.eph = 100.0;
     hil_gps_msg.epv = 100.0;
@@ -581,7 +594,8 @@ void Controller::send_ground_truth()
     mavlink_hil_state_quaternion_t hil_state_quat;
 
     // Insert time information.
-    hil_state_quat.time_usec = current_time_.toSec() * 1e6;
+    // hil_state_quat.time_usec = current_time_.toSec() * 1e6;
+    hil_state_quat.time_usec = msg_counter_;
 
     // Insert attitude information.
     hil_state_quat.attitude_quaternion[0] = q_gr.w();
@@ -630,7 +644,8 @@ void Controller::send_ground_truth()
 void Controller::send_rc_inputs_message()
 {
     mavlink_hil_rc_inputs_raw_t hil_rc_inputs_raw_msg;
-    hil_rc_inputs_raw_msg.time_usec = current_time_.toSec() * 1e6;
+    // hil_rc_inputs_raw_msg.time_usec = current_time_.toSec() * 1e6;
+    hil_rc_inputs_raw_msg.time_usec = msg_counter_;
     hil_rc_inputs_raw_msg.chan1_raw = channels_.value[0]*500 + 1500;
     hil_rc_inputs_raw_msg.chan2_raw = channels_.value[1]*500 + 1500;
     hil_rc_inputs_raw_msg.chan3_raw = channels_.value[2]*1000 + 1000;
@@ -667,9 +682,11 @@ void Controller::accept_connections()
 // Decoder for incoming MAVLink messages
 void Controller::handle_message(mavlink_message_t *msg, bool &received_actuator)
 {
+    ROS_INFO("Handling MAVLink message with ID:%d", msg->msgid);
     switch (msg->msgid) {
     // Parse only actuator messages. None other is expected anyways.
     case MAVLINK_MSG_ID_HIL_ACTUATOR_CONTROLS:
+            ROS_INFO("Decoding new HIL_ACTUATOR_CONTROLS msg");
             mavlink_hil_actuator_controls_t controls;
             mavlink_msg_hil_actuator_controls_decode(msg, &controls);
 
@@ -742,9 +759,9 @@ int main(int argc, char **argv)
     // ros::XMLRPCManager::instance()->bind("shutdown", controller.shutdown_callback);
 
     //Build a thread to spin for callbacks
-    ros::AsyncSpinner spinner(1); // Use 1 threads
+    // ros::AsyncSpinner spinner(1); // Use 1 threads
     // spinner.start();
-    ros::Rate temp_spinner(1);
+    ros::WallRate temp_spinner(1);
 
     ROS_INFO("PX4-SITL interface spawned");
     while (ros::ok())

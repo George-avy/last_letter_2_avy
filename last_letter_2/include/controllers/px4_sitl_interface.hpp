@@ -126,6 +126,8 @@ private:
     const float home_lat_deg_{52.3936579};
     const float home_lon_deg_{4.8284891};
     Eigen::Vector3d wind_vel_ = Eigen::Vector3d::Zero();
+    uint32_t deltat_us_ = 4000;
+    uint32_t msg_counter_{-deltat_us_};
 
 
 public:
