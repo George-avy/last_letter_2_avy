@@ -146,12 +146,19 @@ void Controller::configure_ports()
     // Specify the outbound MAVLink address
     mavlink_addr_ = htonl(INADDR_ANY);
 
+    memset((char *)&remote_simulator_addr_, 0, sizeof(remote_simulator_addr_));
+    remote_simulator_addr_.sin_family = AF_INET;
+    remote_simulator_addr_len_ = sizeof(remote_simulator_addr_);
+
+    memset((char *)&local_simulator_addr_, 0, sizeof(local_simulator_addr_));
+    local_simulator_addr_.sin_family = AF_INET;
+    local_simulator_addr_len_ = sizeof(local_simulator_addr_);
+
     if (use_tcp_) {
         
         // Configure outbound port
         local_simulator_addr_.sin_addr.s_addr = htonl(mavlink_addr_);
         local_simulator_addr_.sin_port = htons(mavlink_tcp_port_);
-        local_simulator_addr_len_ = sizeof(local_simulator_addr_);
         // Remote address not specified (will be established on connection?)
 
         // Open the socket
@@ -161,7 +168,7 @@ void Controller::configure_ports()
             abort();
         }
 
-        // Set socket option, IPPROTO_TCP/TCP_NODELAY
+        // Do not wait for ACK from sent messages, set socket option, IPPROTO_TCP/TCP_NODELAY
         int yes = 1;
         ROS_INFO("Configuring socket as TCP_NODELAY...");
         int result = setsockopt(simulator_socket_fd_, IPPROTO_TCP, TCP_NODELAY, &yes, sizeof(yes));
@@ -170,7 +177,7 @@ void Controller::configure_ports()
             abort();
         }
 
-        // Set socket option SOL_SOCKET/SO_LINGER
+        // Try to close as fast as possible, set socket option SOL_SOCKET/SO_LINGER
         struct linger nolinger {};
         nolinger.l_onoff = 1;
         nolinger.l_linger = 0;
@@ -202,7 +209,8 @@ void Controller::configure_ports()
             abort();
         }
 
-        // set socket to non-blocking
+        // Set socket to non-blocking
+        // Not used by FlightGear bridge
         ROS_INFO("Setting socket as non-blocking...");
         result = fcntl(simulator_socket_fd_, F_SETFL, O_NONBLOCK);
         if (result == -1) {
@@ -288,6 +296,7 @@ void Controller::configure_ports()
 
 void Controller::close()
 {
+    got_sig_int_ = true;
     ::close(fds_[CONNECTION_FD].fd);
     fds_[CONNECTION_FD] = { 0, 0, 0 };
     fds_[CONNECTION_FD].fd = -1;
@@ -326,6 +335,7 @@ void Controller::poll_for_mavlink_messages()
 
         // For each fds allocated
         for (int i = 0; i < N_FDS; i++) {
+            ROS_INFO("polled successfully");
             // If it has no return events, continue
             if (fds_[i].revents == 0) {
                 continue;
@@ -337,9 +347,11 @@ void Controller::poll_for_mavlink_messages()
             }
 
             if (i == LISTEN_FD) { // if event is raised on the listening socket
+                ROS_INFO("Got poll hit on LISTEN_FD socket");
                 accept_connections();
             }
             else { // if event is raised on connection socket
+                ROS_INFO("Got poll hit on CONNECTION_FD socket");
                 int ret = recvfrom(fds_[i].fd, _buf, sizeof(_buf), 0, (struct sockaddr *)&remote_simulator_addr_, &remote_simulator_addr_len_);
                 if (ret < 0) {
                     // all data is read if EWOULDBLOCK is raised
@@ -409,6 +421,7 @@ void Controller::send_mavlink_message(const mavlink_message_t *message)
 
         size_t len;
         if (use_tcp_) {
+            ROS_INFO("Sending MAVLink message through TCP, with size of %d.", packetlen);
             len = send(fds_[CONNECTION_FD].fd, buffer, packetlen, 0);
         } else {
             len = sendto(fds_[CONNECTION_FD].fd, buffer, packetlen, 0, (struct sockaddr *)&remote_simulator_addr_, remote_simulator_addr_len_);
@@ -636,6 +649,7 @@ void Controller::accept_connections()
     }
 
     // accepting incoming connections on listen fd
+    ROS_INFO("Establishing the remote (SITL) socket");
     int ret = accept(fds_[LISTEN_FD].fd, (struct sockaddr *)&remote_simulator_addr_, &remote_simulator_addr_len_);
 
     if (ret < 0) {
@@ -743,6 +757,6 @@ int main(int argc, char **argv)
         controller.send_ground_truth();
         controller.send_rc_inputs_message();
     } 
-    ros::waitForShutdown();
+    controller.close();
     return 0;
 }
