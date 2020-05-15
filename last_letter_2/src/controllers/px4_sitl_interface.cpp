@@ -472,7 +472,7 @@ void Controller::send_sensor_message()
     // Needs conversion from FLU to Body-frame
     sensor_msg.xacc = model_states_.base_link_states.acc_x + generate_noise(0.001);
     sensor_msg.yacc = -model_states_.base_link_states.acc_y + generate_noise(0.001);
-    sensor_msg.zacc = -model_states_.base_link_states.acc_z + generate_noise(0.001);
+    sensor_msg.zacc = model_states_.base_link_states.acc_z + generate_noise(0.001);
 
     // Insert angular velocity information
     // Needs conversion from FLU to Body-frame
