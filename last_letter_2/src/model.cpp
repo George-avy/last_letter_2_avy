@@ -74,6 +74,7 @@ Model::Model() : environment(this), dynamics(this)
 void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr &msg)
 {
     ROS_DEBUG("Gazebo states callback triggered.");
+    current_time_ = msg->header.stamp;
     model_states.header = msg->header;
     model_states.base_link_states = msg->base_link_states;
     model_states.airfoil_states = msg->airfoil_states;
@@ -140,7 +141,7 @@ void Model::getAirdata()
     environment.calculateAirdata();
 
     airdata.header.frame_id = "inertial_NWU";
-    airdata.header.stamp = ros::Time::now();
+    airdata.header.stamp = current_time_;
     airdata.wind_x = environment.airdata.wind_x;
     airdata.wind_y = environment.airdata.wind_y;
     airdata.wind_z = environment.airdata.wind_z;
@@ -153,7 +154,7 @@ void Model::getAirdata()
                                                                model_states.base_link_states.theta,
                                                                model_states.base_link_states.phi),
                                        KDL::Vector(0, 0, 0));
-    v_out = tf2::Stamped<KDL::Vector>(transformation_matrix.Inverse() * KDL::Vector(airdata.wind_x, airdata.wind_y, airdata.wind_z), ros::Time::now(), "body_FLU");
+    v_out = tf2::Stamped<KDL::Vector>(transformation_matrix.Inverse() * KDL::Vector(airdata.wind_x, airdata.wind_y, airdata.wind_z), current_time_, "body_FLU");
 
     body_wind.x = v_out[0];
     body_wind.y = v_out[1];

@@ -10,6 +10,8 @@ class Model
 public:
   ros::NodeHandle nh;
 
+  ros::Time current_time_;
+
   //Declare service clients
   ros::ServiceClient get_control_inputs_client;
   ros::ServiceClient apply_wrench_client;

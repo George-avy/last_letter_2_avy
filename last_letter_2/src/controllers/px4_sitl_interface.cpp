@@ -78,16 +78,16 @@ bool Controller::return_control_inputs(last_letter_2_msgs::get_control_inputs_sr
 
     if (!received_first_actuator_)
     {
-        starting_timestamp_ = ros::Time::now();
+        starting_timestamp_ = model_states_.header.stamp;
     }
 
-    ros::Duration current_time_ = ros::Time::now() - starting_timestamp_;
+    ros::Duration current_time_ = model_states_.header.stamp - starting_timestamp_;
 
     close_conn_ = false;
     poll_for_mavlink_messages(); // Reads msgs from SITL, updates input_reference_.
 
     // Send previously generated simulation state
-    ROS_DEBUG("Sending HIL_ msgs to SITL");
+    ROS_INFO("Sending HIL_ msgs to SITL, with stamp %g", current_time_.toSec());
     send_sensor_message();
     send_gps_message();
     send_ground_truth();
@@ -99,7 +99,10 @@ bool Controller::return_control_inputs(last_letter_2_msgs::get_control_inputs_sr
 
     //check for model_states_ update. If previous model_states_, spin once to call storeState clb for new onces and then continue
     if (req.header.seq != model_states_.header.seq)
+    {
+        ROS_WARN("model_states msg is stale, waiting for the next one");
         ros::spinOnce();
+    }
 
     // Build actuator controls
     if (received_first_actuator_) {
@@ -691,7 +694,7 @@ void Controller::handle_message(mavlink_message_t *msg, bool &received_actuator)
             bool armed = (controls.mode & MAV_MODE_FLAG_SAFETY_ARMED);
 
             // Store last-received control message time
-            last_actuator_time_ = ros::Time::now();
+            last_actuator_time_ = current_time_;
 
             // Fill in a linearly-increasing input_index array
             for (unsigned int i = 0; i < n_out_max_; i++) {
