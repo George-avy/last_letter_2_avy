@@ -111,7 +111,6 @@ private:
     static const unsigned int n_out_max_{16};
 
     ros::Time last_time_;
-    ros::Time last_imu_time_;
     ros::Time current_time_;
     ros::Time last_actuator_time_{0};
     Eigen::VectorXd input_reference_;
@@ -128,6 +127,7 @@ private:
     Eigen::Vector3d wind_vel_ = Eigen::Vector3d::Zero();
     uint32_t deltat_us_ = 4000;
     uint32_t msg_counter_{-deltat_us_};
+    ros::Time starting_timestamp_;
 
 
 public:

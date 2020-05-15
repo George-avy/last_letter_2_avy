@@ -292,7 +292,8 @@ public:
     void BeforeUpdate()
     {
         std::unique_lock<std::mutex> lk(m);
-        //wait until wrenches are ready
+        // //wait until wrenches are ready
+        // May not be necessary because PX4 interface will skip polling if no actuators are received
         if (step_number > 50) // do 50 steps without being stuck, to be sure that everything is ready
         {
             cv.wait(lk, [] { return wrenches_applied == true; });

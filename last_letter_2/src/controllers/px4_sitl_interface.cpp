@@ -35,8 +35,6 @@ Controller::Controller()
     sprintf(paramMsg, "channels/throttle_in_chan");
     if (!ros::param::getCached(paramMsg, throttle_in_chan)) { ROS_FATAL("Invalid parameters for -%s- in param server!", paramMsg); ros::shutdown();}
 
-    last_imu_time_ = ros::Time::now();
-
     configure_ports();
     init_controller_variables();
 }
@@ -74,14 +72,21 @@ bool Controller::return_control_inputs(last_letter_2_msgs::get_control_inputs_sr
     uint32_t previous_states_seq = model_states_.header.seq;
     // Always run at 250 Hz. At 500 Hz, the skip factor should be 2, at 1000 Hz 4.
     if (!(previous_states_seq % update_skip_factor_ == 0)) {
+        // ROS_INFO("Skipping current controls, simulation factor is higher.");
         return false;
     }
 
-    ros::Time current_time_ = ros::Time::now();
+    if (!received_first_actuator_)
+    {
+        starting_timestamp_ = ros::Time::now();
+    }
+
+    ros::Duration current_time_ = ros::Time::now() - starting_timestamp_;
 
     close_conn_ = false;
     poll_for_mavlink_messages(); // Reads msgs from SITL, updates input_reference_.
 
+    // Send previously generated simulation state
     send_sensor_message();
     send_gps_message();
     send_ground_truth();
@@ -110,8 +115,6 @@ bool Controller::return_control_inputs(last_letter_2_msgs::get_control_inputs_sr
         }
     }
 
-
-    last_imu_time_ = current_time_;
 
     return true;
 }
@@ -338,13 +341,13 @@ void Controller::poll_for_mavlink_messages()
             ROS_INFO("Polled successfully");
             // If it has no return events, continue
             if (fds_[i].revents == 0) {
-                ROS_INFO("Didn't get any events");
+                ROS_INFO_THROTTLE(1.0, "Didn't get any events");
                 continue;
             }
 
             // If only read events are present, continue
             if (!(fds_[i].revents & POLLIN)) {
-                ROS_INFO("Didn't get any POLLIN events");
+                ROS_INFO_THROTTLE(1.0, "Didn't get any POLLIN events");
                 continue;
             }
 
@@ -373,7 +376,7 @@ void Controller::poll_for_mavlink_messages()
                 // data received
                 ROS_INFO("Data received from SITL");
                 int len = ret;
-                ROS_INFO("%d bytes total", len);
+                ROS_DEBUG("%d bytes total", len);
                 mavlink_message_t msg;
                 mavlink_status_t status;
                 for (unsigned i = 0; i < len; ++i) {
@@ -424,7 +427,7 @@ void Controller::send_mavlink_message(const mavlink_message_t *message)
 
         size_t len;
         if (use_tcp_) {
-            ROS_INFO("Sending MAVLink message through TCP, with size of %d.", packetlen);
+            ROS_DEBUG("Sending MAVLink message through TCP, with size of %d.", packetlen);
             len = send(fds_[CONNECTION_FD].fd, buffer, packetlen, 0);
         } else {
             len = sendto(fds_[CONNECTION_FD].fd, buffer, packetlen, 0, (struct sockaddr *)&remote_simulator_addr_, remote_simulator_addr_len_);
@@ -451,8 +454,8 @@ void Controller::send_sensor_message()
  
     // Create and stamp the sensor MAVLink message
     mavlink_hil_sensor_t sensor_msg;
-    // sensor_msg.time_usec = current_time_.toSec() * 1e6;
     msg_counter_ += deltat_us_;
+    // sensor_msg.time_usec = current_time_.toSec() * 1e6;
     sensor_msg.time_usec = msg_counter_;
 
     // Insert acceleration information. Gravity component needs to be removed, i.e. real-world accelerometer reading is expected.

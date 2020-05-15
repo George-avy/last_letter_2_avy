@@ -91,6 +91,7 @@ void Model::modelStep()
 // Get model control inputs from Controller_node
 void Model::getControlInputs()
 {
+    ROS_DEBUG("Requesting model inputs");
     control_inputs_msg.request.header = model_states.header;
     // call get_contol_inputs_srv
     if (get_control_inputs_client.isValid())
@@ -167,6 +168,7 @@ void Model::calcDynamics()
 // Send wrenches to gazebo to apply them
 void Model::applyWrenches()
 {
+    ROS_DEBUG("Applying model wrenches");
     i = 0;
     std::list<Aerodynamics *>::iterator itAero = dynamics.listOfAerodynamics.begin();
     for (itAero = dynamics.listOfAerodynamics.begin(); itAero != dynamics.listOfAerodynamics.end(); ++itAero)

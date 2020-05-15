@@ -1,13 +1,13 @@
 #Physics Parameters
 
 #Simulation calculation rate 
-/updatePhysics/simRate: 400
+/updatePhysics/simRate: 250
 
 #Simulation time-step
-/updatePhysics/deltaT: 0.0025
+/updatePhysics/deltaT: 0.004
 
 # realTimeFactor = simRate * deltaT
 # For real time simulation simRate * deltaT = 1
 
 #Gazebo wolrd Initial State
-/updatePhysics/paused: 1  # 1 for paused, 0 for not paused
+/updatePhysics/paused: 0  # 1 for paused, 0 for not paused
