@@ -129,6 +129,11 @@ private:
     uint32_t msg_counter_{-deltat_us_};
     ros::Time starting_timestamp_;
 
+    const double noise_mean_{0};
+    const double noise_stddev_{1};
+    std::default_random_engine rn_generator_;
+    std::normal_distribution<double> noise_distribution_{noise_mean_, noise_stddev_};
+
 
 public:
     Controller();
@@ -141,6 +146,7 @@ public:
     void configure_ports();
     void close();
     void poll_for_mavlink_messages();
+    double generate_noise(double std_dev);
     void send_mavlink_message(const mavlink_message_t *message);
     void send_sensor_message();
     void send_gps_message();

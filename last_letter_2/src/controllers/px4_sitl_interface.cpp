@@ -4,6 +4,7 @@
 #include <last_letter_2_libs/geo_mag_declination.hpp>
 #include <signal.h>
 #include <ros/xmlrpc_manager.h>
+#include <random>
 
 #include <controllers/px4_sitl_interface.hpp>
 
@@ -87,7 +88,7 @@ bool Controller::return_control_inputs(last_letter_2_msgs::get_control_inputs_sr
     poll_for_mavlink_messages(); // Reads msgs from SITL, updates input_reference_.
 
     // Send previously generated simulation state
-    ROS_INFO("Sending HIL_ msgs to SITL, with stamp %g", current_time_.toSec());
+    ROS_DEBUG("Sending HIL_ msgs to SITL, with stamp %g", current_time_.toSec());
     send_sensor_message();
     send_gps_message();
     send_ground_truth();
@@ -448,6 +449,11 @@ void Controller::send_mavlink_message(const mavlink_message_t *message)
     }
 }
 
+double Controller::generate_noise(double std_dev)
+{
+    return std_dev*noise_distribution_(rn_generator_);
+}
+
 void Controller::send_sensor_message()
 {
     // Construct the orientation quaternion
@@ -464,15 +470,15 @@ void Controller::send_sensor_message()
 
     // Insert acceleration information. Gravity component needs to be removed, i.e. real-world accelerometer reading is expected.
     // Needs conversion from FLU to Body-frame
-    sensor_msg.xacc = model_states_.base_link_states.acc_x,
-    sensor_msg.yacc = -model_states_.base_link_states.acc_y,
-    sensor_msg.zacc = -model_states_.base_link_states.acc_z,
+    sensor_msg.xacc = model_states_.base_link_states.acc_x + generate_noise(0.001);
+    sensor_msg.yacc = -model_states_.base_link_states.acc_y + generate_noise(0.001);
+    sensor_msg.zacc = -model_states_.base_link_states.acc_z + generate_noise(0.001);
 
     // Insert angular velocity information
     // Needs conversion from FLU to Body-frame
-    sensor_msg.xgyro = model_states_.base_link_states.p;
-    sensor_msg.ygyro = -model_states_.base_link_states.q;
-    sensor_msg.zgyro = -model_states_.base_link_states.r;
+    sensor_msg.xgyro = model_states_.base_link_states.p + generate_noise(0.001);
+    sensor_msg.ygyro = -model_states_.base_link_states.q + generate_noise(0.001);
+    sensor_msg.zgyro = -model_states_.base_link_states.r + generate_noise(0.001);
 
     // Insert magnetometer information
     // Magnetic field data from WMM2018 (10^5xnanoTesla (N, E D) n-frame), using the geo_mag_declination library
@@ -490,9 +496,9 @@ void Controller::send_sensor_message()
     float mag_X = H * cosf(declination_rad);
     float mag_Y = H * sinf(declination_rad);
 
-    sensor_msg.xmag = mag_X;
-    sensor_msg.ymag = mag_Y;
-    sensor_msg.zmag = mag_Z;
+    sensor_msg.xmag = mag_X + generate_noise(0.002);
+    sensor_msg.ymag = mag_Y + generate_noise(0.002);
+    sensor_msg.zmag = mag_Z + generate_noise(0.002);
 
     // Insert barometer information
     float pose_n_z = -model_states_.base_link_states.z; // convert Z-component from ENU to NED
@@ -517,13 +523,13 @@ void Controller::send_sensor_message()
     float pressure_altitude = alt_msl;
 
     // calculate temperature in Celsius
-    sensor_msg.temperature = temperature_local - 273.0;
+    sensor_msg.temperature = temperature_local - 273.0 + generate_noise(0.1);
 
-    sensor_msg.abs_pressure = absolute_pressure;
-    sensor_msg.pressure_alt = pressure_altitude;
+    sensor_msg.abs_pressure = absolute_pressure + generate_noise(0.001);
+    sensor_msg.pressure_alt = pressure_altitude + generate_noise(0.002);
 
     // Insert differential pressure information
-    sensor_msg.diff_pressure = 0.005f * rho * powf(model_states_.base_link_states.u, 2.0);
+    sensor_msg.diff_pressure = 0.005f * rho * powf(model_states_.base_link_states.u + generate_noise(0.005), 2.0);
 
     // Tick which fields have been filled
     sensor_msg.fields_updated = SensorSource::ACCEL
@@ -556,17 +562,20 @@ void Controller::send_gps_message() {
     hil_gps_msg.fix_type = 3;
     // Insert coordinate information
     // Small-angle approximation of the coordinates around the home location
-    hil_gps_msg.lat = (home_lat_deg_ +  model_states_.base_link_states.x * 180/M_PI/6378137.0)*1e7;
-    hil_gps_msg.lon = (home_lon_deg_ + -model_states_.base_link_states.y * 180/M_PI/6378137.0)*1e7;
-    hil_gps_msg.alt = model_states_.base_link_states.z * 1000;
+    double x_pos = model_states_.base_link_states.x + generate_noise(0.1);
+    double y_pos = model_states_.base_link_states.y + generate_noise(0.1);
+    double z_pos = model_states_.base_link_states.z + generate_noise(0.2);
+    hil_gps_msg.lat = (home_lat_deg_ + x_pos * 180/M_PI/6378137.0)*1e7;
+    hil_gps_msg.lon = (home_lon_deg_ + -y_pos * 180/M_PI/6378137.0)*1e7;
+    hil_gps_msg.alt = z_pos * 1000;
     hil_gps_msg.eph = 100.0;
     hil_gps_msg.epv = 100.0;
 
     // Insert inertial velocity information
     Eigen::Vector3d v_B = Eigen::Vector3d(
-        model_states_.base_link_states.u,
-        model_states_.base_link_states.v,
-        model_states_.base_link_states.w
+        model_states_.base_link_states.u + generate_noise(0.01),
+        model_states_.base_link_states.v + generate_noise(0.01),
+        model_states_.base_link_states.w + generate_noise(0.01)
     );
     Eigen::Vector3d v_I = q_gr.conjugate()*v_B;
     hil_gps_msg.vn = v_I.x() * 100;
@@ -683,7 +692,7 @@ void Controller::accept_connections()
 // Decoder for incoming MAVLink messages
 void Controller::handle_message(mavlink_message_t *msg, bool &received_actuator)
 {
-    ROS_INFO("Handling MAVLink message with ID:%d", msg->msgid);
+    ROS_DEBUG("Handling MAVLink message with ID:%d", msg->msgid);
     switch (msg->msgid) {
     // Parse only actuator messages. None other is expected anyways.
     case MAVLINK_MSG_ID_HIL_ACTUATOR_CONTROLS:
