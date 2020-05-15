@@ -73,6 +73,7 @@ Model::Model() : environment(this), dynamics(this)
 // This callback start the dynamics calculation step in ROS
 void Model::gazeboStatesClb(const last_letter_2_msgs::model_states::ConstPtr &msg)
 {
+    ROS_DEBUG("Gazebo states callback triggered.");
     model_states.header = msg->header;
     model_states.base_link_states = msg->base_link_states;
     model_states.airfoil_states = msg->airfoil_states;

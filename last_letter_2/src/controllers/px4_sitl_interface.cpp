@@ -63,7 +63,7 @@ void Controller::store_states(const last_letter_2_msgs::model_states msg)
 bool Controller::return_control_inputs(last_letter_2_msgs::get_control_inputs_srv::Request &req,
                                      last_letter_2_msgs::get_control_inputs_srv::Response &res)
 {
-    ROS_INFO("return_control_inputs service called");
+    ROS_DEBUG("return_control_inputs service called");
     if (!ros::ok())
     {
         got_sig_int_ = true;
@@ -87,6 +87,7 @@ bool Controller::return_control_inputs(last_letter_2_msgs::get_control_inputs_sr
     poll_for_mavlink_messages(); // Reads msgs from SITL, updates input_reference_.
 
     // Send previously generated simulation state
+    ROS_DEBUG("Sending HIL_ msgs to SITL");
     send_sensor_message();
     send_gps_message();
     send_ground_truth();
@@ -310,7 +311,7 @@ void Controller::close()
 // Check for inbound MAVLink control messages
 void Controller::poll_for_mavlink_messages()
 {
-    ROS_INFO("Polling for MAVLink msgs");
+    ROS_DEBUG("Polling for MAVLink msgs");
     // Do nothing if node is about to shut down
     if (got_sig_int_) {
         return;
@@ -338,7 +339,7 @@ void Controller::poll_for_mavlink_messages()
 
         // For each fds allocated
         for (int i = 0; i < N_FDS; i++) {
-            ROS_INFO("Polled successfully");
+            ROS_DEBUG("Polled successfully");
             // If it has no return events, continue
             if (fds_[i].revents == 0) {
                 ROS_INFO_THROTTLE(1.0, "Didn't get any events");
@@ -352,11 +353,11 @@ void Controller::poll_for_mavlink_messages()
             }
 
             if (i == LISTEN_FD) { // if event is raised on the listening socket
-                ROS_INFO("Got poll hit on LISTEN_FD socket");
+                ROS_DEBUG("Got poll hit on LISTEN_FD socket");
                 accept_connections();
             }
             else { // if event is raised on connection socket
-                ROS_INFO("Got poll hit on CONNECTION_FD socket");
+                ROS_DEBUG("Got poll hit on CONNECTION_FD socket");
                 int ret = recvfrom(fds_[i].fd, _buf, sizeof(_buf), 0, (struct sockaddr *)&remote_simulator_addr_, &remote_simulator_addr_len_);
                 if (ret < 0) {
                     // all data is read if EWOULDBLOCK is raised
@@ -374,7 +375,7 @@ void Controller::poll_for_mavlink_messages()
                 }
 
                 // data received
-                ROS_INFO("Data received from SITL");
+                ROS_DEBUG("Data received from SITL");
                 int len = ret;
                 ROS_DEBUG("%d bytes total", len);
                 mavlink_message_t msg;
@@ -683,7 +684,7 @@ void Controller::handle_message(mavlink_message_t *msg, bool &received_actuator)
     switch (msg->msgid) {
     // Parse only actuator messages. None other is expected anyways.
     case MAVLINK_MSG_ID_HIL_ACTUATOR_CONTROLS:
-            ROS_INFO("Decoding new HIL_ACTUATOR_CONTROLS msg");
+            ROS_DEBUG("Decoding new HIL_ACTUATOR_CONTROLS msg");
             mavlink_hil_actuator_controls_t controls;
             mavlink_msg_hil_actuator_controls_decode(msg, &controls);
 
