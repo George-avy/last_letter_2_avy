@@ -95,7 +95,7 @@
     </link>
 
     <joint name="body_FLU_to_arm2" type="fixed">
-        <origin xyz="0 0 0" rpy="0 0 ${5/4*pi}"/>
+        <origin xyz="0 0 0" rpy="0 0 ${3/4*pi}"/>
         <parent link="body_FLU" />
         <child link="arm2" />
     </joint>
@@ -125,7 +125,7 @@
     </link>
 
     <joint name="body_FLU_to_arm3" type="fixed">
-        <origin xyz="0 0 0" rpy="0 0 ${3/4*pi}"/>
+        <origin xyz="0 0 0" rpy="0 0 ${1/4*pi}"/>
         <parent link="body_FLU" />
         <child link="arm3" />
     </joint>
@@ -155,7 +155,7 @@
     </link>
 
     <joint name="body_FLU_to_arm4" type="fixed">
-        <origin xyz="0 0 0" rpy="0 0 ${1/4*pi}"/>
+        <origin xyz="0 0 0" rpy="0 0 ${5/4*pi}"/>
         <parent link="body_FLU" />
         <child link="arm4" />
     </joint>

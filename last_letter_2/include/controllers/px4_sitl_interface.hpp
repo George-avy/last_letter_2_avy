@@ -17,6 +17,7 @@
 #include <Eigen/Eigen>
 #include <mavlink/v2.0/common/mavlink.h>
 // #include <boost/bind.hpp>
+#include <iir/Butterworth.h>
 
 #include <last_letter_2_msgs/channels.h>
 #include <last_letter_2_msgs/model_states.h>
@@ -62,6 +63,9 @@ private:
     //Subscribers
     ros::Subscriber sub_chan;
     ros::Subscriber sub_mod_st;
+
+    //Publishers
+    ros::Publisher pub_state;
 
     //Service
     ros::ServiceServer get_control_inputs_service;
@@ -133,6 +137,11 @@ private:
     const double noise_stddev_{1};
     std::default_random_engine rn_generator_;
     std::normal_distribution<double> noise_distribution_{noise_mean_, noise_stddev_};
+
+    static const int filter_order_{6};
+    const float f_sample_ = 250;
+    const float f_cut_ = 50;
+    Iir::Butterworth::LowPass<filter_order_> filt_ax_, filt_ay_, filt_az_;
 
 
 public:

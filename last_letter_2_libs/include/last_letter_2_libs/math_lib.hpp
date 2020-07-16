@@ -1,4 +1,5 @@
 #include <cmath>
+#include <Eigen/Eigen>
 
 class Polynomial
 {
@@ -50,3 +51,5 @@ void FLUtoFRD(float &x, float &y, float &z);
 void FRDtoFLU(float &x, float &y, float &z);
 
 double wrap_to_360(const double angle);
+
+Eigen::Quaterniond euler2quat (const Eigen::Vector3d euler);

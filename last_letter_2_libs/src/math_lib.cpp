@@ -140,3 +140,28 @@ double wrap_to_360(const double angle)
     while (a >= 360.0) a -= 360.0;
     return a;
 }
+
+// Follow the Tait-Brian convention (yaw->pitch-roll)
+// Returns the Earth->Body orientation quaternion
+// i.e. v_b = q * v_e
+Eigen::Quaterniond euler2quat(const Eigen::Vector3d euler)
+{
+  // // Alternate implementation 
+  // double x, y, z, w;
+  // double cpsi, spsi, ctheta, stheta, cphi, sphi;
+  // cpsi = cos (0.5 * euler.z()); spsi = sin (0.5 * euler.z());
+  // ctheta = cos (0.5 * euler.y()); stheta = sin (0.5 * euler.y());
+  // cphi = cos (0.5 * euler.x()); sphi = sin (0.5 * euler.x());
+  // w = cphi*ctheta*cpsi + sphi*stheta*spsi;
+  // x = sphi*ctheta*cpsi - cphi*stheta*spsi;
+  // y = cphi*stheta*cpsi + sphi*ctheta*spsi;
+  // z = cphi*ctheta*spsi - sphi*stheta*cpsi;
+  // Quaterniond q = Quaterniond(w, x, y, z);
+
+  Eigen::Quaterniond q;
+  q = Eigen::AngleAxis<double>(-euler.x(), Eigen::Vector3d::UnitX())
+      * Eigen::AngleAxis<double>(-euler.y(), Eigen::Vector3d::UnitY())
+      * Eigen::AngleAxis<double>(-euler.z(), Eigen::Vector3d::UnitZ());
+
+  return q;
+}

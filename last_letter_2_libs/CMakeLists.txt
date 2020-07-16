@@ -7,6 +7,7 @@ find_package(catkin REQUIRED
   roscpp
 )
 find_package(Boost REQUIRED)
+find_package(Eigen3 REQUIRED)
 
 catkin_package(
   INCLUDE_DIRS include
@@ -22,7 +23,10 @@ include_directories(include
 add_library(math_lib src/math_lib.cpp)
 add_library(geo_mag_declination src/geo_mag_declination.cpp)
 
-target_link_libraries(math_lib ${catkin_LIBRARIES})
+target_link_libraries(math_lib
+  ${catkin_LIBRARIES}
+  Eigen3::Eigen
+)
 target_link_libraries(geo_mag_declination ${catkin_LIBRARIES})
 
 install(TARGETS math_lib

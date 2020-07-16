@@ -65,6 +65,7 @@
   <node pkg="last_letter_2" name="controller_node" type="plane_contr_node" output="screen" if="$(eval uav_name == 'plane_1wing')"/>
   <node pkg="last_letter_2" name="controller_node" type="plane_contr_node" output="screen" if="$(eval uav_name == 'plane_1wing_sensors')"/>
   <node pkg="last_letter_2" name="controller_node" type="plane_contr_node" output="screen" if="$(eval uav_name == 'plane_3wing_2motor')"/>
+  <node pkg="last_letter_2" name="controller_node" type="px4_sitl_interface_node" output="screen" if="$(eval uav_name == 'standard_vtol')"/>
  
   <!-- start rqt_reconfigure node for controller's tuning (optional)-->
   <!-- <node name="rqt_reconfigure" pkg="rqt_reconfigure" type="rqt_reconfigure" /> -->

@@ -5,7 +5,7 @@ nMotors: 4
 
 #motor 1
 motor1/motorType: 1
-motor1/rotationDir: -1.0
+motor1/rotationDir: 1.0
 motor1/input_chan: 0
 
 #features for generic Engine
@@ -41,7 +41,7 @@ motor3/c_prop: 2.0266
 
 #motor 4
 motor4/motorType: 1
-motor4/rotationDir: 1.0
+motor4/rotationDir: -1.0
 motor4/input_chan: 3
 
 #features for generic Engine

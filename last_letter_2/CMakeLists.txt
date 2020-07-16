@@ -15,6 +15,9 @@ find_package(MAVLink REQUIRED)
 find_package(Boost REQUIRED)
 find_package(Eigen3 REQUIRED)
 
+# Have IIR1 already cloned and built
+find_package(iir PATHS externals/iir1)
+
 #add dynamic reconfigure api
 generate_dynamic_reconfigure_options(
   cfg/PD_gains.cfg
@@ -56,7 +59,10 @@ add_dependencies(chan2srv_node ${catkin_EXPORTED_TARGETS})
 target_link_libraries(joy2chan_node ${catkin_LIBRARIES})
 target_link_libraries(hexacopter_contr_node ${catkin_LIBRARIES})
 target_link_libraries(quadcopter_contr_node ${catkin_LIBRARIES})
-target_link_libraries(px4_sitl_interface_node ${catkin_LIBRARIES})
+target_link_libraries(px4_sitl_interface_node
+  ${catkin_LIBRARIES}
+  iir::iir
+)
 target_link_libraries(plane_contr_node ${catkin_LIBRARIES})
 target_link_libraries(core_node ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})
 target_link_libraries(chan2srv_node ${catkin_LIBRARIES} ${GAZEBO_LIBRARIES})

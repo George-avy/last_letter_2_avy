@@ -10,9 +10,16 @@
 
 Controller::Controller()
 {
+    filt_ax_.setup(f_sample_, f_cut_);
+    filt_ay_.setup(f_sample_, f_cut_);
+    filt_az_.setup(f_sample_, f_cut_);
+
     //Init Subscribers
     sub_chan = n.subscribe("last_letter_2/channels", 1, &Controller::chan_2_signal, this, ros::TransportHints().tcpNoDelay());
     sub_mod_st = n.subscribe("last_letter_2/model_states", 1, &Controller::store_states, this, ros::TransportHints().tcpNoDelay());
+
+    //Init publishers
+    pub_state = n.advertise<last_letter_2_msgs::model_states>("last_letter_2/processed_model_state", 1);
 
     //Init service
     get_control_inputs_service = n.advertiseService("last_letter_2/get_control_inputs_srv", &Controller::return_control_inputs, this);
@@ -56,7 +63,50 @@ void Controller::chan_2_signal(last_letter_2_msgs::channels msg)
 // store the model_states_ published by gazebo
 void Controller::store_states(const last_letter_2_msgs::model_states msg)
 {
+    // store base link states
     model_states_ = msg;
+
+    // Manually add gravity component
+    double g = 9.81;
+    Eigen::Vector3d gravity_e = Eigen::Vector3d(0, 0, g);
+    // Get vehicle rotation
+    double phi = model_states_.base_link_states.phi;
+    double theta = model_states_.base_link_states.theta;
+    double psi = model_states_.base_link_states.psi;
+    Eigen::Vector3d euler_angles{phi, theta, psi};
+    // Produce rotation object
+    Eigen::Quaterniond q_eb = euler2quat(euler_angles);
+    // Rotate gravity to body frame
+    Eigen::Vector3d gravity_b = q_eb*gravity_e;
+    // Add gravity to acceleration
+    model_states_.base_link_states.acc_x += gravity_b.x();
+    model_states_.base_link_states.acc_y += gravity_b.y();
+    model_states_.base_link_states.acc_z += gravity_b.z();
+
+    // hand pick quantities for filtering
+    double ax = model_states_.base_link_states.acc_x;
+    double ay = model_states_.base_link_states.acc_y;
+    double az = model_states_.base_link_states.acc_z;
+    // TODO: rotate gravity and add it to accelerometer
+    double gx = model_states_.base_link_states.p;
+    double gy = model_states_.base_link_states.q;
+    double gz = model_states_.base_link_states.r;
+
+    //filter them and store them back
+    model_states_.base_link_states.acc_x = filt_ax_.filter(ax);
+    model_states_.base_link_states.acc_y = filt_ay_.filter(ay);
+    model_states_.base_link_states.acc_z = filt_az_.filter(az);
+    // model_states_.base_link_states.p = filt_gx_.filter(gx);
+    // model_states_.base_link_states.q = filt_gy_.filter(gy);
+    // model_states_.base_link_states.r = filt_gz_.filter(gz);
+
+    // Force static IMU readings to investigate failing AHRS
+    // model_states_.base_link_states.acc_x = 0;
+    // model_states_.base_link_states.acc_y = 0;
+    // model_states_.base_link_states.acc_z = -9.81;
+    // model_states_.base_link_states.p = 0;
+    // model_states_.base_link_states.q = 0;
+    // model_states_.base_link_states.r = 0;
 }
 
 // Entry point for the model_node controls query
@@ -101,7 +151,7 @@ bool Controller::return_control_inputs(last_letter_2_msgs::get_control_inputs_sr
     //check for model_states_ update. If previous model_states_, spin once to call storeState clb for new onces and then continue
     if (req.header.seq != model_states_.header.seq)
     {
-        ROS_WARN("model_states msg is stale, waiting for the next one");
+        ROS_WARN("model_states msg is stale (%i/%i), waiting for the next one", req.header.seq, model_states_.header.seq);
         ros::spinOnce();
     }
 
@@ -379,9 +429,9 @@ void Controller::poll_for_mavlink_messages()
                 }
 
                 // data received
-                ROS_DEBUG("Data received from SITL");
+                ROS_INFO_THROTTLE(1.0, "Data received from SITL");
                 int len = ret;
-                ROS_DEBUG("%d bytes total", len);
+                ROS_INFO_THROTTLE(1.0, "%d bytes total", len);
                 mavlink_message_t msg;
                 mavlink_status_t status;
                 for (unsigned i = 0; i < len; ++i) {
@@ -456,11 +506,21 @@ double Controller::generate_noise(double std_dev)
 
 void Controller::send_sensor_message()
 {
+    // Publish used model state
+    pub_state.publish(model_states_);
+
     // Construct the orientation quaternion
     // Eigen::Quaterniond q_gr;
     // q_gr = Eigen::AngleAxisd(model_states_.base_link_states.phi, Eigen::Vector3d::UnitX())
     //        * Eigen::AngleAxisd(model_states_.base_link_states.theta, Eigen::Vector3d::UnitY())
     //        * Eigen::AngleAxisd(model_states_.base_link_states.psi, Eigen::Vector3d::UnitZ());
+    // Get vehicle rotation
+    double phi = model_states_.base_link_states.phi;
+    double theta = model_states_.base_link_states.theta;
+    double psi = model_states_.base_link_states.psi;
+    Eigen::Vector3d euler_angles{phi, theta, psi};
+    // Produce rotation object
+    Eigen::Quaterniond q_eb = euler2quat(euler_angles);
  
     // Create and stamp the sensor MAVLink message
     mavlink_hil_sensor_t sensor_msg;
@@ -472,7 +532,7 @@ void Controller::send_sensor_message()
     // Needs conversion from FLU to Body-frame
     sensor_msg.xacc = model_states_.base_link_states.acc_x + generate_noise(0.001);
     sensor_msg.yacc = -model_states_.base_link_states.acc_y + generate_noise(0.001);
-    sensor_msg.zacc = model_states_.base_link_states.acc_z + generate_noise(0.001);
+    sensor_msg.zacc = -model_states_.base_link_states.acc_z + generate_noise(0.001);
 
     // Insert angular velocity information
     // Needs conversion from FLU to Body-frame
@@ -488,17 +548,22 @@ void Controller::send_sensor_message()
     float inclination_rad = get_mag_inclination(home_lat_deg_, home_lon_deg_) * M_PI / 180;
 
     // Magnetic strength (10^5xnanoTesla)
-    float strength_ga = 0.01f * get_mag_strength(home_lat_deg_, home_lon_deg_);
+    float strength_ga_ct = get_mag_strength(home_lat_deg_, home_lon_deg_); // Get magnetic field strength in centi Tesla
+    float strength_ga = 0.01f * strength_ga_ct; // Convert to Gauss
 
     // Magnetic filed components are calculated by http://geomag.nrcan.gc.ca/mag_fld/comp-en.php
+    // Resulting field in in NED
     float H = strength_ga * cosf(inclination_rad);
     float mag_Z = tanf(inclination_rad) * H;
     float mag_X = H * cosf(declination_rad);
     float mag_Y = H * sinf(declination_rad);
+    Eigen::Vector3d mag_e{mag_X, mag_Y, mag_Z};
+    // Rotate gravity to body frame
+    Eigen::Vector3d mag_b = q_eb*mag_e;
 
-    sensor_msg.xmag = mag_X + generate_noise(0.002);
-    sensor_msg.ymag = mag_Y + generate_noise(0.002);
-    sensor_msg.zmag = mag_Z + generate_noise(0.002);
+    sensor_msg.xmag = mag_b.x() + generate_noise(0.002);
+    sensor_msg.ymag = mag_b.y() + generate_noise(0.002);
+    sensor_msg.zmag = mag_b.z() + generate_noise(0.002);
 
     // Insert barometer information
     float pose_n_z = -model_states_.base_link_states.z; // convert Z-component from ENU to NED
@@ -574,13 +639,13 @@ void Controller::send_gps_message() {
     // Insert inertial velocity information
     Eigen::Vector3d v_B = Eigen::Vector3d(
         model_states_.base_link_states.u + generate_noise(0.01),
-        model_states_.base_link_states.v + generate_noise(0.01),
-        model_states_.base_link_states.w + generate_noise(0.01)
+        -model_states_.base_link_states.v + generate_noise(0.01),
+        -model_states_.base_link_states.w + generate_noise(0.01)
     );
     Eigen::Vector3d v_I = q_gr.conjugate()*v_B;
     hil_gps_msg.vn = v_I.x() * 100;
     hil_gps_msg.ve = v_I.y() * 100;
-    hil_gps_msg.vd = -v_I.z() * 100;
+    hil_gps_msg.vd = v_I.z() * 100;
     hil_gps_msg.vel = v_I.norm() * 100.0;
 
     double cog{atan2(v_I.y(), v_I.x())};
@@ -621,15 +686,15 @@ void Controller::send_ground_truth()
 
     // Insert coordinate information
     // Small-angle approximation of the coordinates around the home location
-    hil_state_quat.lat = home_lat_deg_ + (model_states_.base_link_states.x*180/M_PI*1e7/6378137.0);
-    hil_state_quat.lon = home_lon_deg_ + (-model_states_.base_link_states.y*180/M_PI*1e7/6378137.0);
+    hil_state_quat.lat = (home_lat_deg_ + model_states_.base_link_states.x*180/M_PI/6378137.0)*1e7;
+    hil_state_quat.lon = (home_lon_deg_ - model_states_.base_link_states.y*180/M_PI/6378137.0)*1e7;
     hil_state_quat.alt = model_states_.base_link_states.z * 1000;
 
     // Insert inertial velocity information
     Eigen::Vector3d v_B = Eigen::Vector3d(
         model_states_.base_link_states.u,
-        model_states_.base_link_states.v,
-        model_states_.base_link_states.w
+        -model_states_.base_link_states.v,
+        -model_states_.base_link_states.w
     );
     Eigen::Vector3d v_I = q_gr.conjugate()*v_B;
     hil_state_quat.vx = v_I.x() * 100;
@@ -639,7 +704,7 @@ void Controller::send_ground_truth()
     // Insert airspeed information
     // assumed indicated airspeed due to flow aligned with pitot (body x)
     hil_state_quat.ind_airspeed = v_B.x() * 100;
-    hil_state_quat.true_airspeed = hil_state_quat.ind_airspeed;
+    hil_state_quat.true_airspeed = hil_state_quat.ind_airspeed; // TODO: change with v_B.norm()
 
     // Insert acceleration information
     hil_state_quat.xacc = model_states_.base_link_states.acc_x * 1000 / 9.81;
