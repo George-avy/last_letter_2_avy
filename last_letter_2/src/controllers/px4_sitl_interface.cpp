@@ -66,23 +66,6 @@ void Controller::store_states(const last_letter_2_msgs::model_states msg)
     // store base link states
     model_states_ = msg;
 
-    // Manually add gravity component
-    double g = 9.81;
-    Eigen::Vector3d gravity_e = Eigen::Vector3d(0, 0, g);
-    // Get vehicle rotation
-    double phi = model_states_.base_link_states.phi;
-    double theta = model_states_.base_link_states.theta;
-    double psi = model_states_.base_link_states.psi;
-    Eigen::Vector3d euler_angles{phi, theta, psi};
-    // Produce rotation object
-    Eigen::Quaterniond q_eb = euler2quat(euler_angles);
-    // Rotate gravity to body frame
-    Eigen::Vector3d gravity_b = q_eb*gravity_e;
-    // Add gravity to acceleration
-    model_states_.base_link_states.acc_x += gravity_b.x();
-    model_states_.base_link_states.acc_y += gravity_b.y();
-    model_states_.base_link_states.acc_z += gravity_b.z();
-
     // hand pick quantities for filtering
     double ax = model_states_.base_link_states.acc_x;
     double ay = model_states_.base_link_states.acc_y;
@@ -93,9 +76,10 @@ void Controller::store_states(const last_letter_2_msgs::model_states msg)
     double gz = model_states_.base_link_states.r;
 
     //filter them and store them back
-    model_states_.base_link_states.acc_x = filt_ax_.filter(ax);
-    model_states_.base_link_states.acc_y = filt_ay_.filter(ay);
+    // model_states_.base_link_states.acc_x = filt_ax_.filter(ax);
+    // model_states_.base_link_states.acc_y = filt_ay_.filter(ay);
     model_states_.base_link_states.acc_z = filt_az_.filter(az);
+
     // model_states_.base_link_states.p = filt_gx_.filter(gx);
     // model_states_.base_link_states.q = filt_gy_.filter(gy);
     // model_states_.base_link_states.r = filt_gz_.filter(gz);
@@ -516,8 +500,8 @@ void Controller::send_sensor_message()
     //        * Eigen::AngleAxisd(model_states_.base_link_states.psi, Eigen::Vector3d::UnitZ());
     // Get vehicle rotation
     double phi = model_states_.base_link_states.phi;
-    double theta = model_states_.base_link_states.theta;
-    double psi = model_states_.base_link_states.psi;
+    double theta = -model_states_.base_link_states.theta;
+    double psi = -model_states_.base_link_states.psi;
     Eigen::Vector3d euler_angles{phi, theta, psi};
     // Produce rotation object
     Eigen::Quaterniond q_eb = euler2quat(euler_angles);
@@ -529,10 +513,15 @@ void Controller::send_sensor_message()
     sensor_msg.time_usec = msg_counter_;
 
     // Insert acceleration information. Gravity component needs to be removed, i.e. real-world accelerometer reading is expected.
+    // Manually remove gravity component
+    double g = 9.81;
+    Eigen::Vector3d gravity_e = Eigen::Vector3d(0, 0, -g);
+    // Rotate gravity to body frame
+    Eigen::Vector3d gravity_b = q_eb*gravity_e;
     // Needs conversion from FLU to Body-frame
-    sensor_msg.xacc = model_states_.base_link_states.acc_x + generate_noise(0.001);
-    sensor_msg.yacc = -model_states_.base_link_states.acc_y + generate_noise(0.001);
-    sensor_msg.zacc = -model_states_.base_link_states.acc_z + generate_noise(0.001);
+    sensor_msg.xacc =  model_states_.base_link_states.acc_x + gravity_b.x() + generate_noise(0.001);
+    sensor_msg.yacc = -model_states_.base_link_states.acc_y + gravity_b.y() + generate_noise(0.001);
+    sensor_msg.zacc = -model_states_.base_link_states.acc_z + gravity_b.z() + generate_noise(0.001);
 
     // Insert angular velocity information
     // Needs conversion from FLU to Body-frame
@@ -614,6 +603,7 @@ void Controller::send_sensor_message()
 void Controller::send_gps_message() {
 
     // Construct the orientation quaternion
+    // TODO: change this to use our own math library
     Eigen::Quaterniond q_gr;
     q_gr = Eigen::AngleAxisd(model_states_.base_link_states.phi, Eigen::Vector3d::UnitX())
            * Eigen::AngleAxisd(model_states_.base_link_states.theta, Eigen::Vector3d::UnitY())
